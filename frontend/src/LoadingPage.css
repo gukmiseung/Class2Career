@@ -1,0 +1,11 @@
+.loading-page { min-height: 100svh; display: grid; place-items: center; background: #f8f9fb; color: #123d88; overflow: hidden; }
+.loading-content { display: flex; flex-direction: column; align-items: center; transform: translateY(-.7rem); }
+.loader { position: relative; width: 318px; height: 318px; display: grid; place-items: center; border: 2px solid #dedede; border-radius: 50%; }
+.loader-ring { position: absolute; inset: 16px; border-radius: 50%; background: conic-gradient(#2864e8 0deg 84deg, #b7cdfb 84deg 360deg); -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px)); mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px)); animation: spin 1.7s linear infinite; }
+.loading-brand-mark { position: relative; z-index: 1; width: 154px; height: 154px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: #2f64e8; font-family: Arial, sans-serif; font-size: 48px; font-weight: 800; letter-spacing: -9px; padding-right: 9px; }
+.loading-copy { margin-top: 82px; text-align: center; }
+.loading-copy h1 { margin: 0; color: #153f86; font-size: 40px; font-weight: 400; line-height: 1.35; letter-spacing: -1.7px; }
+.loading-copy p { margin: 24px 0 0; color: #153f86; font-size: 28px; font-weight: 400; line-height: 1.5; letter-spacing: -1.2px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (max-width: 600px) { .loader { width: 218px; height: 218px; } .loader-ring { inset: 11px; } .loading-brand-mark { width: 106px; height: 106px; font-size: 33px; } .loading-copy { margin-top: 56px; padding: 0 24px; } .loading-copy h1 { font-size: 29px; } .loading-copy p { margin-top: 18px; font-size: 19px; } }
+@media (prefers-reduced-motion: reduce) { .loader-ring { animation-duration: 5s; } }
