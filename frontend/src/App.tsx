@@ -1,5 +1,7 @@
 import './App.css'
 import c2cLogo from './assets/c2c-logo.png'
+import AuthTest from './components/AuthTest'
+import PasswordReset from './components/PasswordReset'
 
 const features = [
   { icon: '📖', title: '01. 전공 개념 탐색', description: '수강한 과목을 선택하고 세부 개념을\n살펴보세요.' },
@@ -53,6 +55,14 @@ function App() {
           ))}
         </div>
       </section>
+
+      <section id="auth-test">
+        <AuthTest />
+      </section>
+      
+      <section id="password-reset">
+        <PasswordReset />
+      </section>    
     </main>
   )
 }
