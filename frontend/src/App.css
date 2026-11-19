@@ -31,6 +31,68 @@ html { scroll-behavior: smooth; }
 .header-nav .login-link { margin-left: clamp(12px, 1.4vw, 22px); color: #1760ef; }
 .header-logo:focus-visible, .header-nav a:focus-visible, .header-nav button:focus-visible { outline: 2px solid #2d63e9; outline-offset: 4px; border-radius: 2px; }
 
+.logout-modal-backdrop {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 29, 55, .38);
+  backdrop-filter: blur(5px);
+  animation: logout-fade-in .18s ease-out;
+}
+
+.logout-modal {
+  width: min(100%, 420px);
+  padding: 34px 32px 30px;
+  border: 1px solid rgba(198, 214, 239, .85);
+  border-radius: 24px;
+  color: #141c2e;
+  background: rgba(255, 255, 255, .97);
+  box-shadow: 0 24px 70px rgba(31, 67, 128, .24);
+  text-align: center;
+  animation: logout-modal-in .22s ease-out;
+}
+
+.logout-modal-icon {
+  width: 70px;
+  height: 70px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 22px;
+  border-radius: 22px;
+  color: #2865ec;
+  background: linear-gradient(145deg, #e8f0ff, #dce9ff);
+  font-size: 34px;
+  font-weight: 700;
+}
+
+.logout-modal h2 { margin: 0; font-size: 26px; letter-spacing: -.6px; }
+.logout-modal p { margin: 12px 0 0; color: #65738b; font-size: 16px; line-height: 1.55; }
+.logout-modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 30px; }
+
+.logout-modal-actions button {
+  min-height: 48px;
+  padding: 0 18px;
+  border: 1px solid #d7e0ed;
+  border-radius: 12px;
+  color: #45536a;
+  background: #f5f7fb;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.logout-modal-actions button:hover { background: #edf1f7; }
+.logout-modal-actions .logout-confirm-button { border-color: #2865ec; color: #fff; background: #2865ec; }
+.logout-modal-actions .logout-confirm-button:hover { background: #1f56d1; }
+.logout-modal-actions button:focus-visible { outline: 3px solid rgba(40, 101, 236, .28); outline-offset: 3px; }
+
+@keyframes logout-fade-in { from { opacity: 0; } }
+@keyframes logout-modal-in { from { opacity: 0; transform: translateY(10px) scale(.97); } }
+
 .hero-section { min-height: 900px; padding: 210px 24px 80px; text-align: center; }
 .hero-copy { margin: 0 auto; max-width: 900px; }
 .eyebrow { display: block; width: max-content; margin: 0 0 0 4px; padding: 2px 16px 4px; border-radius: 999px; color: #2865ec; background: #dfedff; font-size: 27px; line-height: 1.25; letter-spacing: -.8px; }
