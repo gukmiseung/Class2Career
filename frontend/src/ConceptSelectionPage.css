@@ -1,7 +1,7 @@
 .concept-content {
   width: min(1112px, calc(100% - 48px));
   margin: 0 auto;
-  padding: 28px 0 64px;
+  padding: 104px 0 64px;
 }
 
 .concept-content h1 {
@@ -113,7 +113,7 @@
 
 @media (max-width: 680px) {
   .concept-content { width: calc(100% - 32px); }
-  .concept-content { padding-top: 24px; }
+  .concept-content { padding-top: 92px; }
   .concept-course { margin: 28px 0 26px; padding-inline: 16px; }
   .concept-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; margin-top: 18px; }
   .concept-card { min-height: 90px; padding: 14px; gap: 12px; }

@@ -1,7 +1,7 @@
 .analysis-content {
   width: min(1112px, calc(100% - clamp(32px, 11.3vw, 128px)));
   margin: 0 auto;
-  padding: 26px 0 64px;
+  padding: 102px 0 64px;
   word-break: keep-all;
   overflow-wrap: anywhere;
 }
@@ -147,7 +147,7 @@
 }
 
 @media (max-width: 680px) {
-  .analysis-content { width: calc(100% - 32px); padding: 24px 0 48px; }
+  .analysis-content { width: calc(100% - 32px); padding: 92px 0 48px; }
   .analysis-intro { margin-top: 24px; }
   .analysis-examples, .analysis-roles { margin-top: 30px; }
   .analysis-example-group { margin-top: 15px; }
