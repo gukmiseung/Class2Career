@@ -9,6 +9,7 @@ import RoadmapPage from './RoadmapPage'
 import ConceptAnalysisPage from './ConceptAnalysisPage'
 import ConceptSelectionPage from './ConceptSelectionPage'
 import CourseAddPage from './CourseAddPage'
+import CourseDetailPage from './CourseDetailPage'
 import LoadingPage from './LoadingPage'
 import LearningPage from './LearningPage'
 import PasswordResetPage from './PasswordResetPage'
@@ -58,6 +59,16 @@ function App() {
       <div className="home-page dashboard-shell course-shell">
         <SiteHeader />
         <CourseAddPage />
+      </div>
+    )
+  }
+
+  const courseDetail = /^#explore\/courses\/([a-z0-9-]+)$/.exec(hash)
+  if (courseDetail) {
+    return (
+      <div className="home-page dashboard-shell course-shell">
+        <SiteHeader />
+        <CourseDetailPage key={courseDetail[1]} slug={courseDetail[1]} />
       </div>
     )
   }

@@ -1,5 +1,3 @@
-import { courses } from './courses'
-
 export const registrationKey = 'class2career.course-registrations'
 export const statusLabels = { completed: '수강 완료', planned: '수강 예정' } as const
 
@@ -16,8 +14,8 @@ export function parseRegistrations(value: string | null): Registrations {
     const entries = stored as Record<string, unknown>
     const registrations: Registrations = {}
 
-    for (const { id } of courses) {
-      const status = entries[id]
+    for (const [id, status] of Object.entries(entries)) {
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)) continue
       if (status === 'completed' || status === 'planned') registrations[id] = status
     }
 

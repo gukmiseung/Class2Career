@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useRef, useState, type FormEvent } from 'react'
+import { hasCourseCatalog, useCourseCatalog } from './courseCatalog'
 import { getCourseConcepts } from './courseConcepts'
 import {
   loadRegistrations,
@@ -11,23 +12,24 @@ import {
   courses,
   courseYears,
   departments,
-  type CourseCategory,
   type CourseYear,
   type Department,
 } from './courses'
 import './CourseAddPage.css'
 
 const pageSize = 4
-const categoryOptions = ['전체', ...courseCategories] as const
+const catalogCategories = ['전공필수', '전공', '교양', '일반선택', '교직', '기본소양', '전공기반', '공학전공']
+const categoryOptions = ['전체', ...(hasCourseCatalog ? catalogCategories : courseCategories)]
 type Filters = {
   department: Department
-  category: CourseCategory | '전체'
+  major: string
+  category: string
   year: CourseYear | null
 }
 
 type FilterSection = 'department' | 'category' | 'year'
 
-const defaultFilters: Filters = { department: '컴퓨터학부', category: '전체', year: null }
+const defaultFilters: Filters = { department: '컴퓨터학부', major: '', category: '전체', year: null }
 
 function CoursePagination({ page, pageCount, onPageChange }: {
   page: number
@@ -67,6 +69,7 @@ function CoursePagination({ page, pageCount, onPageChange }: {
 }
 
 export default function CourseAddPage() {
+  const filterScrollTimer = useRef<number | undefined>(undefined)
   const titleRef = useRef<HTMLHeadingElement>(null)
   const [searchInput, setSearchInput] = useState('')
   const [query, setQuery] = useState('')
@@ -96,14 +99,53 @@ export default function CourseAddPage() {
     return () => window.removeEventListener('storage', syncRegistrations)
   }, [])
 
-  const results = courses.filter((course) =>
-    course.department === filters.department &&
-    (filters.category === '전체' || course.category === filters.category) &&
-    (filters.year === null || course.year === filters.year) &&
-    (course.name.toLowerCase().includes(query) || course.description.toLowerCase().includes(query)),
-  )
+  const catalog = useCourseCatalog()
+  const search = useCourseCatalog(query, hasCourseCatalog && query !== '')
+  const request = query === '' ? catalog : search
+  const majors = Array.from(new Set(catalog.data?.flatMap((course) =>
+    course.c2c_curriculum_courses.map(({ c2c_curricula }) => c2c_curricula.c2c_majors.name),
+  ))).sort((left, right) => left.localeCompare(right, 'ko'))
+  const results = hasCourseCatalog
+    ? (request.data ?? []).flatMap((course) => {
+      const placements = course.c2c_curriculum_courses.filter((placement) =>
+        (!filters.major || placement.c2c_curricula.c2c_majors.name === filters.major) &&
+        (filters.year === null || placement.recommended_year === filters.year) &&
+        (filters.category === '전체' || placement.course_category === filters.category),
+      )
+      const hasFilters = filters.major !== '' || filters.year !== null || filters.category !== '전체'
+      if (hasFilters && placements.length === 0) return []
+
+      const categories = catalogCategories.filter((category) =>
+        placements.some((placement) => placement.course_category === category),
+      )
+      const years = courseYears.filter((year) => placements.some((placement) => placement.recommended_year === year))
+      return [{
+        id: course.slug,
+        name: course.name,
+        code: course.course_code,
+        credits: course.credits,
+        categories,
+        years,
+        description: course.description,
+        href: `#explore/courses/${course.slug}`,
+      }]
+    })
+    : courses.filter((course) =>
+      course.department === filters.department &&
+      (filters.category === '전체' || course.category === filters.category) &&
+      (filters.year === null || course.year === filters.year) &&
+      (course.name.toLowerCase().includes(query) || course.description.toLowerCase().includes(query)),
+    ).map((course) => ({
+      ...course,
+      code: null,
+      categories: [course.category],
+      years: [course.year],
+      href: getCourseConcepts(course.id) ? `#explore/concepts/${course.id}` : null,
+    }))
   const pageCount = Math.ceil(results.length / pageSize)
   const visibleCourses = results.slice((page - 1) * pageSize, page * pageSize)
+
+  useEffect(() => () => window.clearTimeout(filterScrollTimer.current), [])
 
   function changeFilters(nextFilters: Filters) {
     setFilters(nextFilters)
@@ -164,8 +206,8 @@ export default function CourseAddPage() {
           <span className="course-search-icon" aria-hidden="true" />
           <input
             type="search"
-            aria-label="과목명 또는 키워드"
-            placeholder="과목명 또는 키워드로 검색하세요"
+            aria-label={hasCourseCatalog ? '과목명 또는 학수번호' : '과목명 또는 키워드'}
+            placeholder={hasCourseCatalog ? '과목명 또는 학수번호로 검색하세요' : '과목명 또는 키워드로 검색하세요'}
             value={searchInput}
             onChange={(event) => {
               const value = event.target.value
@@ -186,121 +228,149 @@ export default function CourseAddPage() {
               <button type="button" onClick={resetCoursePage}>초기화</button>
             </div>
 
-            <fieldset>
-              <legend>
-                <span>학과</span>
-                <button
-                  className="course-filter-toggle"
-                  type="button"
-                  aria-label={`학과 필터 ${expandedFilters.department ? '접기' : '펼치기'}`}
-                  aria-expanded={expandedFilters.department}
-                  aria-controls="department-filter-options"
-                  onClick={() => toggleFilter('department')}
-                >
-                  <span aria-hidden="true" />
-                </button>
-              </legend>
-              <div className="course-filter-options" id="department-filter-options" hidden={!expandedFilters.department}>
-                {departments.map((department) => (
+            <div
+              className="course-filters-body"
+              role="region"
+              aria-label="필터 옵션"
+              tabIndex={0}
+              onScroll={({ currentTarget }) => {
+                currentTarget.dataset.scrolling = ''
+                window.clearTimeout(filterScrollTimer.current)
+                filterScrollTimer.current = window.setTimeout(() => {
+                  delete currentTarget.dataset.scrolling
+                }, 650)
+              }}
+            >
+              <fieldset>
+                <legend>
+                  <span>{hasCourseCatalog ? '전공' : '학과'}</span>
                   <button
+                    className="course-filter-toggle"
                     type="button"
-                    key={department}
-                    aria-pressed={filters.department === department}
-                    onClick={() => changeFilters({ ...filters, department })}
+                    aria-label={`${hasCourseCatalog ? '전공' : '학과'} 필터 ${expandedFilters.department ? '접기' : '펼치기'}`}
+                    aria-expanded={expandedFilters.department}
+                    aria-controls="department-filter-options"
+                    onClick={() => toggleFilter('department')}
                   >
-                    {department}
+                    <span aria-hidden="true" />
                   </button>
-                ))}
-              </div>
-            </fieldset>
+                </legend>
+                <div className="course-filter-options" id="department-filter-options" hidden={!expandedFilters.department}>
+                  {hasCourseCatalog ? ['', ...majors].map((major) => (
+                    <button type="button" key={major} aria-pressed={filters.major === major}
+                      onClick={() => changeFilters({ ...filters, major })}>
+                      {major || '컴퓨터학부'}
+                    </button>
+                  )) : departments.map((department) => (
+                    <button
+                      type="button"
+                      key={department}
+                      aria-pressed={filters.department === department}
+                      onClick={() => changeFilters({ ...filters, department })}
+                    >
+                      {department}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
 
-            <fieldset>
-              <legend>
-                <span>이수 구분</span>
-                <button
-                  className="course-filter-toggle"
-                  type="button"
-                  aria-label={`이수 구분 필터 ${expandedFilters.category ? '접기' : '펼치기'}`}
-                  aria-expanded={expandedFilters.category}
-                  aria-controls="category-filter-options"
-                  onClick={() => toggleFilter('category')}
-                >
-                  <span aria-hidden="true" />
-                </button>
-              </legend>
-              <div className="course-filter-options" id="category-filter-options" hidden={!expandedFilters.category}>
-                {categoryOptions.map((category) => (
+              <fieldset>
+                <legend>
+                  <span>이수 구분</span>
                   <button
+                    className="course-filter-toggle"
                     type="button"
-                    key={category}
-                    aria-pressed={filters.category === category}
-                    onClick={() => changeFilters({ ...filters, category })}
+                    aria-label={`이수 구분 필터 ${expandedFilters.category ? '접기' : '펼치기'}`}
+                    aria-expanded={expandedFilters.category}
+                    aria-controls="category-filter-options"
+                    onClick={() => toggleFilter('category')}
                   >
-                    {category}
+                    <span aria-hidden="true" />
                   </button>
-                ))}
-              </div>
-            </fieldset>
+                </legend>
+                <div className="course-filter-options" id="category-filter-options" hidden={!expandedFilters.category}>
+                  {categoryOptions.map((category) => (
+                    <button
+                      type="button"
+                      key={category}
+                      aria-pressed={filters.category === category}
+                      onClick={() => changeFilters({ ...filters, category })}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
 
-            <fieldset>
-              <legend>
-                <span>수강 학년</span>
-                <button
-                  className="course-filter-toggle"
-                  type="button"
-                  aria-label={`수강 학년 필터 ${expandedFilters.year ? '접기' : '펼치기'}`}
-                  aria-expanded={expandedFilters.year}
-                  aria-controls="year-filter-options"
-                  onClick={() => toggleFilter('year')}
-                >
-                  <span aria-hidden="true" />
-                </button>
-              </legend>
-              <div className="course-filter-options course-filter-years" id="year-filter-options" hidden={!expandedFilters.year}>
-                {courseYears.map((year) => (
+              <fieldset>
+                <legend>
+                  <span>수강 학년</span>
                   <button
+                    className="course-filter-toggle"
                     type="button"
-                    key={year}
-                    aria-pressed={filters.year === year}
-                    onClick={() => changeFilters({ ...filters, year: filters.year === year ? null : year })}
+                    aria-label={`수강 학년 필터 ${expandedFilters.year ? '접기' : '펼치기'}`}
+                    aria-expanded={expandedFilters.year}
+                    aria-controls="year-filter-options"
+                    onClick={() => toggleFilter('year')}
                   >
-                    {year}학년
+                    <span aria-hidden="true" />
                   </button>
-                ))}
-              </div>
-            </fieldset>
+                </legend>
+                <div className="course-filter-options course-filter-years" id="year-filter-options" hidden={!expandedFilters.year}>
+                  {courseYears.map((year) => (
+                    <button
+                      type="button"
+                      key={year}
+                      aria-pressed={filters.year === year}
+                      onClick={() => changeFilters({ ...filters, year: filters.year === year ? null : year })}
+                    >
+                      {year}학년
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+            </div>
           </aside>
 
           <section className="course-results" aria-labelledby="course-results-title">
             <header className="course-results-heading">
               <div>
                 <h2 id="course-results-title">과목 검색 결과</h2>
-                <p>{filters.department}에서 개설하는 과목을 보여드려요.</p>
+                <p>{hasCourseCatalog ? '경북대학교 컴퓨터학부 공개 교육과정 기준' : `${filters.department}에서 개설하는 과목을 보여드려요.`}</p>
               </div>
-              <p className="course-result-count" aria-live="polite">총 {results.length}개 과목</p>
+              {!request.loading && !request.error && <p className="course-result-count" aria-live="polite">총 {results.length}개 과목</p>}
             </header>
 
-            {visibleCourses.length > 0 ? (
+            {request.loading ? <p className="course-empty" role="status">과목을 불러오는 중이에요.</p> : request.error ? (
+              <div className="course-empty" role="alert">
+                <p>{request.error}</p>
+                <button type="button" className="course-primary-button" onClick={request.retry}>다시 시도</button>
+              </div>
+            ) : visibleCourses.length > 0 ? (
               <ul className="course-list">
                 {visibleCourses.map((course) => {
                   const status = registrations[course.id]
                   return (
-                    <li className="course-card" key={course.id}>
+                    <li className="course-card course-list-card" key={course.id}>
                       <div>
                         <h3>
-                          {getCourseConcepts(course.id) ? (
-                            <a className="course-concept-link" href={`#explore/concepts/${course.id}`}>
+                          {course.href ? (
+                            <a className="course-concept-link" href={course.href}>
                               {course.name}
                             </a>
                           ) : course.name}
                         </h3>
                         <p className="course-card-meta">
-                          <span className="course-category">{course.category}</span>
-                          <span>{course.credits}학점</span>
-                          <span aria-hidden="true">·</span>
-                          <span>{course.year}학년</span>
+                          {course.categories.map((category) => <span className="course-category" key={category}>{category}</span>)}
+                          <span className="course-card-facts">
+                            {[
+                              course.credits === null ? null : `${course.credits}학점`,
+                              course.years.length ? `${course.years.join('·')}학년` : null,
+                              course.code,
+                            ].filter(Boolean).join(' · ')}
+                          </span>
                         </p>
-                        <p className="course-card-description">{course.description}</p>
+                        {course.description && <p className="course-card-description">{course.description}</p>}
                       </div>
                       <div className="course-register-actions">
                         <button
@@ -326,8 +396,8 @@ export default function CourseAddPage() {
               <p className="course-empty">검색 결과가 없어요. 검색어나 필터를 바꿔 보세요.</p>
             )}
 
-            <CoursePagination page={page} pageCount={pageCount} onPageChange={setPage} />
           </section>
+          <CoursePagination page={page} pageCount={pageCount} onPageChange={setPage} />
         </div>
       </div>
     </main>

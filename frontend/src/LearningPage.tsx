@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { careerInterestsKey, loadCareerInterests } from './careerInterests'
 import { loadRegistrations, parseRegistrations, registrationKey, statusLabels, type CourseStatus } from './courseRegistrations'
+import { hasCourseCatalog, useCourseCatalog } from './courseCatalog'
 import { courses } from './courses'
 import './LearningPage.css'
 
@@ -18,7 +19,19 @@ export default function LearningPage({ locked = false }: { locked?: boolean }) {
       return {}
     }
   })
-  const registeredCourses = courses.flatMap((course) => {
+  const hasCatalogRegistration = Object.keys(registrations).some((id) =>
+    !courses.some((course) => course.id === id),
+  )
+  const catalog = useCourseCatalog('', hasCourseCatalog && hasCatalogRegistration && !locked)
+  const catalogCourses = (catalog.data ?? []).map((course) => ({
+    id: course.slug,
+    name: course.name,
+    category: course.category,
+    credits: course.credits,
+    year: course.recommended_year,
+    description: course.description,
+  }))
+  const registeredCourses = [...courses, ...catalogCourses].flatMap((course) => {
     const status = registrations[course.id]
     return status ? [{ ...course, status }] : []
   })
@@ -76,6 +89,8 @@ export default function LearningPage({ locked = false }: { locked?: boolean }) {
         </article>
       </section>
 
+      {catalog.loading && <p role="status">등록한 과목을 불러오는 중이에요.</p>}
+      {catalog.error && <div role="alert"><p>{catalog.error}</p><button type="button" onClick={catalog.retry}>다시 시도</button></div>}
       <section className="learning-courses" aria-labelledby="learning-courses-title">
         <div className="learning-status-tabs" aria-label="학습 항목 선택">
           <button
@@ -150,11 +165,11 @@ export default function LearningPage({ locked = false }: { locked?: boolean }) {
                   <span className={`learning-status ${course.status}`}>{statusLabels[course.status]}</span>
                 </div>
                 <p className="learning-course-meta">
-                  <span>{course.category}</span>
-                  <span>{course.credits}학점</span>
-                  <span>{course.year}학년</span>
+                  {course.category && <span>{course.category}</span>}
+                  {course.credits !== null && <span>{course.credits}학점</span>}
+                  {course.year !== null && <span>{course.year}학년</span>}
                 </p>
-                <p className="learning-course-description">{course.description}</p>
+                {course.description && <p className="learning-course-description">{course.description}</p>}
                 <div className="learning-course-note">
                   <label htmlFor={`course-note-${course.id}`}>간단 메모</label>
                   <textarea
