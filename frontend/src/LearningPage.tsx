@@ -1,7 +1,7 @@
 import './LearningPage.css'
 
 const learningSummary = [
-  { label: '수강 완료 과목', value: 0, caption: '등록한 과목 기준', primary: true },
+  { label: '수강 완료 과목', value: 0, caption: '등록한 과목 기준' },
   { label: '수강 예정 과목', value: 0, caption: '앞으로 배울 과목' },
   { label: '관심 직무', value: 0, caption: '저장한 직무' },
 ]
@@ -13,7 +13,7 @@ export default function LearningPage() {
 
       <section className="learning-summary" aria-label="학습 현황 요약">
         {learningSummary.map((item) => (
-          <article className={item.primary ? 'primary' : ''} key={item.label}>
+          <article key={item.label}>
             <h2>{item.label}</h2>
             <strong>{item.value}개</strong>
             <p>{item.caption}</p>

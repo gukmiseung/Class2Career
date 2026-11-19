@@ -22,7 +22,6 @@
   background: rgba(255, 255, 255, .94);
 }
 
-.learning-summary article.primary { border: 3px solid #2865ec; background: #dfe9ff; }
 .learning-summary h2 { margin: 0; color: #65738b; font-size: 15px; font-weight: 600; }
 .learning-summary strong { display: block; margin-top: 22px; color: #2865ec; font-size: 30px; line-height: 1; }
 .learning-summary p { margin: 20px 0 0; color: #96a4b8; font-size: 13px; }

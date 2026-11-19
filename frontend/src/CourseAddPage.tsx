@@ -92,25 +92,18 @@ function CoursePagination({ page, pageCount, onPageChange }: {
   )
 }
 
-export default function CourseAddPage({ showLearning = false }: { showLearning?: boolean }) {
+export default function CourseAddPage() {
   const titleRef = useRef<HTMLHeadingElement>(null)
-  const learningRef = useRef<HTMLHeadingElement>(null)
   const [searchInput, setSearchInput] = useState('')
   const [query, setQuery] = useState('')
   const [filters, setFilters] = useState(defaultFilters)
   const [page, setPage] = useState(1)
-  const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [registrations, setRegistrations] = useState(loadRegistrations)
-  const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null)
 
   useEffect(() => {
-    if (showLearning) {
-      learningRef.current?.focus()
-    } else {
-      window.scrollTo({ top: 0, behavior: 'instant' })
-      titleRef.current?.focus({ preventScroll: true })
-    }
-  }, [showLearning])
+    window.scrollTo({ top: 0, behavior: 'instant' })
+    titleRef.current?.focus({ preventScroll: true })
+  }, [])
 
   useEffect(() => {
     function syncRegistrations(event: StorageEvent) {
@@ -118,7 +111,6 @@ export default function CourseAddPage({ showLearning = false }: { showLearning?:
 
       const current = parseRegistrations(event.newValue)
       setRegistrations(current)
-      setSelectedIds((ids) => ids.filter((id) => !current[id]))
     }
 
     window.addEventListener('storage', syncRegistrations)
@@ -133,9 +125,6 @@ export default function CourseAddPage({ showLearning = false }: { showLearning?:
   )
   const pageCount = Math.ceil(results.length / pageSize)
   const visibleCourses = results.slice((page - 1) * pageSize, page * pageSize)
-  const statuses = Object.values(registrations)
-  const completedCount = statuses.filter((status) => status === 'completed').length
-  const plannedCount = statuses.filter((status) => status === 'planned').length
 
   function changeFilters(nextFilters: Filters) {
     setFilters(nextFilters)
@@ -148,33 +137,16 @@ export default function CourseAddPage({ showLearning = false }: { showLearning?:
     setPage(1)
   }
 
-  function toggleCourse(id: string) {
-    setSelectedIds((ids) => ids.includes(id) ? ids.filter((selectedId) => selectedId !== id) : [...ids, id])
-    setMessage(null)
-  }
-
-  function registerCourses(status: CourseStatus) {
-    if (selectedIds.length === 0) return
-
+  function registerCourse(id: string, status: CourseStatus) {
     try {
       const storage = window.localStorage
       const current = parseRegistrations(storage.getItem(registrationKey))
-      const newIds = selectedIds.filter((id) => !current[id])
-
-      if (newIds.length > 0) {
-        for (const id of newIds) current[id] = status
-        storage.setItem(registrationKey, JSON.stringify(current))
-      }
+      current[id] = status
+      storage.setItem(registrationKey, JSON.stringify(current))
 
       setRegistrations(current)
-      setSelectedIds([])
-      setMessage({
-        text: newIds.length > 0
-          ? `${newIds.length}개 과목을 ${statusLabels[status]}로 등록했어요.`
-          : '선택한 과목은 이미 등록되어 있어요.',
-      })
     } catch {
-      setMessage({ text: '과목을 저장하지 못했어요. 다시 시도해 주세요.', error: true })
+      return
     }
   }
 
@@ -274,8 +246,6 @@ export default function CourseAddPage({ showLearning = false }: { showLearning?:
               <ul className="course-list">
                 {visibleCourses.map((course) => {
                   const status = registrations[course.id]
-                  const selected = selectedIds.includes(course.id)
-
                   return (
                     <li className="course-card" key={course.id}>
                       <div>
@@ -297,15 +267,14 @@ export default function CourseAddPage({ showLearning = false }: { showLearning?:
                       {status ? (
                         <span className="course-registered">{statusLabels[status]}</span>
                       ) : (
-                        <button
-                          className="course-select"
-                          type="button"
-                          aria-label={`${course.name} ${selected ? '선택됨. 선택 해제' : '추가'}`}
-                          data-selected={selected}
-                          onClick={() => toggleCourse(course.id)}
-                        >
-                          {selected ? '✓ 선택됨' : '+ 추가'}
-                        </button>
+                        <div className="course-register-actions">
+                          <button type="button" onClick={() => registerCourse(course.id, 'completed')}>
+                            수강 완료
+                          </button>
+                          <button type="button" onClick={() => registerCourse(course.id, 'planned')}>
+                            수강 예정
+                          </button>
+                        </div>
                       )}
                     </li>
                   )
@@ -318,31 +287,6 @@ export default function CourseAddPage({ showLearning = false }: { showLearning?:
             <CoursePagination page={page} pageCount={pageCount} onPageChange={setPage} />
           </section>
         </div>
-
-        <footer className="course-registration">
-          <div>
-            <h2 ref={learningRef} tabIndex={-1} aria-live="polite">선택한 과목 {selectedIds.length}개</h2>
-            <p>수강 완료 {completedCount}개 <span aria-hidden="true">·</span> 수강 예정 {plannedCount}개</p>
-            {message && (
-              <p className={message.error ? 'course-error' : 'course-success'} role={message.error ? 'alert' : 'status'}>
-                {message.text}
-              </p>
-            )}
-          </div>
-          <div className="course-registration-actions">
-            <button type="button" disabled={selectedIds.length === 0} onClick={() => registerCourses('completed')}>
-              수강 완료로 등록
-            </button>
-            <button
-              className="course-primary-button"
-              type="button"
-              disabled={selectedIds.length === 0}
-              onClick={() => registerCourses('planned')}
-            >
-              수강 예정으로 등록
-            </button>
-          </div>
-        </footer>
       </div>
     </main>
   )
