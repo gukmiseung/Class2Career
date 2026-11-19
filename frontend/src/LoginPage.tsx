@@ -1,7 +1,12 @@
+import { useState } from 'react'
 import './LoginPage.css'
-import { setLoginStatus } from './auth'
+import { getSavedEmail, saveEmail, setLoginStatus } from './auth'
 
 export default function LoginPage() {
+  const savedEmail = getSavedEmail()
+  const [email, setEmail] = useState(savedEmail)
+  const [rememberLogin, setRememberLogin] = useState(Boolean(savedEmail))
+
   return (
     <main className="login-page">
       <p className="login-welcome">WELCOME</p>
@@ -12,7 +17,8 @@ export default function LoginPage() {
         className="login-card"
         onSubmit={(event) => {
           event.preventDefault()
-          setLoginStatus(true)
+          setLoginStatus(true, rememberLogin)
+          saveEmail(rememberLogin ? email : null)
           window.location.hash = 'dashboard'
         }}
       >
@@ -26,6 +32,8 @@ export default function LoginPage() {
             type="email"
             autoComplete="username"
             placeholder="학교 이메일 또는 가입한 이메일을 입력하세요"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
             required
           />
         </div>
@@ -42,7 +50,17 @@ export default function LoginPage() {
           />
         </div>
 
-        <p className="login-forgot">비밀번호를 잊으셨나요?</p>
+        <div className="login-options">
+          <label className="login-remember">
+            <input
+              type="checkbox"
+              checked={rememberLogin}
+              onChange={(event) => setRememberLogin(event.target.checked)}
+            />
+            <span>로그인 정보 저장하기</span>
+          </label>
+          <p className="login-forgot">비밀번호를 잊으셨나요?</p>
+        </div>
         <button type="submit">로그인</button>
 
         <p className="login-signup">
