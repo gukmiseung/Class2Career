@@ -24,6 +24,8 @@ type Filters = {
   year: CourseYear | null
 }
 
+type FilterSection = 'department' | 'category' | 'year'
+
 const defaultFilters: Filters = { department: '컴퓨터학부', category: '전체', year: null }
 
 function parseRegistrations(value: string | null): Registrations {
@@ -97,6 +99,11 @@ export default function CourseAddPage() {
   const [searchInput, setSearchInput] = useState('')
   const [query, setQuery] = useState('')
   const [filters, setFilters] = useState(defaultFilters)
+  const [expandedFilters, setExpandedFilters] = useState<Record<FilterSection, boolean>>({
+    department: true,
+    category: true,
+    year: true,
+  })
   const [page, setPage] = useState(1)
   const [registrations, setRegistrations] = useState(loadRegistrations)
 
@@ -129,6 +136,10 @@ export default function CourseAddPage() {
   function changeFilters(nextFilters: Filters) {
     setFilters(nextFilters)
     setPage(1)
+  }
+
+  function toggleFilter(section: FilterSection) {
+    setExpandedFilters((current) => ({ ...current, [section]: !current[section] }))
   }
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
@@ -189,8 +200,20 @@ export default function CourseAddPage() {
             </div>
 
             <fieldset>
-              <legend>학과</legend>
-              <div className="course-filter-options">
+              <legend>
+                <span>학과</span>
+                <button
+                  className="course-filter-toggle"
+                  type="button"
+                  aria-label={`학과 필터 ${expandedFilters.department ? '접기' : '펼치기'}`}
+                  aria-expanded={expandedFilters.department}
+                  aria-controls="department-filter-options"
+                  onClick={() => toggleFilter('department')}
+                >
+                  <span aria-hidden="true">⌄</span>
+                </button>
+              </legend>
+              <div className="course-filter-options" id="department-filter-options" hidden={!expandedFilters.department}>
                 {departments.map((department) => (
                   <button
                     type="button"
@@ -205,8 +228,20 @@ export default function CourseAddPage() {
             </fieldset>
 
             <fieldset>
-              <legend>이수 구분</legend>
-              <div className="course-filter-options">
+              <legend>
+                <span>이수 구분</span>
+                <button
+                  className="course-filter-toggle"
+                  type="button"
+                  aria-label={`이수 구분 필터 ${expandedFilters.category ? '접기' : '펼치기'}`}
+                  aria-expanded={expandedFilters.category}
+                  aria-controls="category-filter-options"
+                  onClick={() => toggleFilter('category')}
+                >
+                  <span aria-hidden="true">⌄</span>
+                </button>
+              </legend>
+              <div className="course-filter-options" id="category-filter-options" hidden={!expandedFilters.category}>
                 {categoryOptions.map((category) => (
                   <button
                     type="button"
@@ -221,8 +256,20 @@ export default function CourseAddPage() {
             </fieldset>
 
             <fieldset>
-              <legend>수강 학년</legend>
-              <div className="course-filter-options course-filter-years">
+              <legend>
+                <span>수강 학년</span>
+                <button
+                  className="course-filter-toggle"
+                  type="button"
+                  aria-label={`수강 학년 필터 ${expandedFilters.year ? '접기' : '펼치기'}`}
+                  aria-expanded={expandedFilters.year}
+                  aria-controls="year-filter-options"
+                  onClick={() => toggleFilter('year')}
+                >
+                  <span aria-hidden="true">⌄</span>
+                </button>
+              </legend>
+              <div className="course-filter-options course-filter-years" id="year-filter-options" hidden={!expandedFilters.year}>
                 {courseYears.map((year) => (
                   <button
                     type="button"

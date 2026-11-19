@@ -166,12 +166,34 @@
 }
 
 .course-filters legend {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   margin-bottom: 11px;
   padding: 0;
   color: #354056;
   font-size: 14px;
   font-weight: 700;
 }
+
+.course-filter-toggle {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  color: #65738b;
+  background: transparent;
+}
+
+.course-filter-toggle:hover { color: var(--course-accent-text); background: #eef3ff; }
+.course-filter-toggle span { display: block; font-size: 19px; line-height: 1; transition: transform .18s ease; }
+.course-filter-toggle[aria-expanded='true'] span { transform: rotate(180deg); }
+.course-filter-options[hidden] { display: none; }
 
 .course-filter-options {
   display: flex;
