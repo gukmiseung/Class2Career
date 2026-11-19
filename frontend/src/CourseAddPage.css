@@ -258,9 +258,14 @@
 .course-card .course-card-description { margin-top: 7px; }
 
 .course-concept-link {
-  color: var(--course-accent-text);
-  text-underline-offset: .2em;
+  color: var(--course-ink);
+  text-decoration: none;
+  transition: color .18s ease;
 }
+
+.course-concept-link:hover,
+.course-concept-link:active,
+.course-concept-link:visited { color: var(--course-accent-text); }
 
 .course-concept-link:focus-visible {
   outline: 2px solid var(--course-accent);
