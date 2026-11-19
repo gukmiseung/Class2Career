@@ -10,6 +10,7 @@ import ConceptAnalysisPage from './ConceptAnalysisPage'
 import ConceptSelectionPage from './ConceptSelectionPage'
 import CourseAddPage from './CourseAddPage'
 import LoadingPage from './LoadingPage'
+import LearningPage from './LearningPage'
 import SiteHeader from './SiteHeader'
 import { getCourseConcepts } from './courseConcepts'
 import { courses } from './courses'
@@ -60,9 +61,9 @@ function App() {
 
   if (hash === '#explore/learning') {
     return (
-      <div className="home-page dashboard-shell course-shell">
+      <div className="home-page dashboard-shell learning-shell">
         <SiteHeader />
-        <CourseAddPage showLearning />
+        <LearningPage />
       </div>
     )
   }
