@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { loadCareerInterests, toggleCareerInterest } from './careerInterests'
+import { courses as catalogCourses } from './courses'
+import { loadRegistrations, registrationKey, statusLabels, type CourseStatus } from './courseRegistrations'
 import './CareerDetailPage.css'
 
 type Course = {
@@ -93,6 +95,26 @@ const careerDetails: Record<string, CareerDetail> = {
 export default function CareerDetailPage({ careerName }: { careerName: string }) {
   const career = careerDetails[careerName]
   const [isInterested, setIsInterested] = useState(() => loadCareerInterests().includes(careerName))
+  const [registrations, setRegistrations] = useState(loadRegistrations)
+
+  useEffect(() => {
+    const syncRegistrations = (event: StorageEvent) => {
+      if (event.key === registrationKey || event.key === null) setRegistrations(loadRegistrations())
+    }
+    window.addEventListener('storage', syncRegistrations)
+    return () => window.removeEventListener('storage', syncRegistrations)
+  }, [])
+
+  const getCourseStatus = (courseName: string): CourseStatus | undefined => {
+    const normalizedName = courseName.replaceAll(' ', '')
+    const matchingCourses = catalogCourses.filter(({ name }) => {
+      const catalogName = name.replaceAll(' ', '')
+      return catalogName === normalizedName || catalogName.includes(normalizedName) || normalizedName.includes(catalogName)
+    })
+    if (matchingCourses.some(({ id }) => registrations[id] === 'completed')) return 'completed'
+    if (matchingCourses.some(({ id }) => registrations[id] === 'planned')) return 'planned'
+    return undefined
+  }
 
   if (!career) {
     return (
@@ -133,18 +155,20 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
         <p>과목을 수강했는지에 따라 현재 학습 이력을 비교해요.</p>
 
         <div className="course-list">
-          {career.courses.map((course) => (
-            <article className="course-row" key={course.name}>
+          {career.courses.map((course) => {
+            const status = getCourseStatus(course.name)
+            return (
+            <article className={`course-row${status ? ` ${status}` : ''}`} key={course.name}>
               <div>
                 <h3>{course.name}</h3>
                 <p>{course.concepts}</p>
               </div>
               <div className="course-actions">
-                <span className="course-status">미수강</span>
-                <a href={`#job-concept/${encodeURIComponent(career.title)}/${encodeURIComponent(course.name)}/${encodeURIComponent(course.concepts)}`}>개념 보기</a>
+                <span className={`course-status${status ? ` ${status}` : ''}`}>{status ? statusLabels[status] : '미수강'}</span>
+                <a href={`#job-concept/${encodeURIComponent(career.title)}/${encodeURIComponent(course.name)}/${encodeURIComponent(course.concepts)}`}>과목 노트</a>
               </div>
             </article>
-          ))}
+          )})}
         </div>
 
         <p className="course-note">※ 과목 수강 이력은 학습 경험을 나타내며, 개별 개념의 숙련도를 의미하지는 않아요.</p>

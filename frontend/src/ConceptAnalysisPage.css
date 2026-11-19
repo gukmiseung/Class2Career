@@ -26,6 +26,7 @@
 
 .analysis-examples { margin-top: 38px; }
 .analysis-roles { margin-top: 42px; }
+.analysis-roles > p { margin: 10px 0 0; color: var(--concept-muted); font-size: 13px; }
 .analysis-content h2 { margin: 0; font-size: 19px; letter-spacing: -.025em; }
 
 .analysis-example-group { margin-top: 22px; }
@@ -75,16 +76,32 @@
   background: #e8edff;
 }
 
-.analysis-roles ul {
+.analysis-role-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 12px;
-  margin: 17px 0 0;
-  padding: 0;
-  list-style: none;
+  margin-top: 17px;
 }
 
-.analysis-roles li { padding: 5px 20px; color: #354056; }
+.analysis-role-list button {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 15px;
+  border: 1px solid var(--concept-border);
+  border-radius: 999px;
+  color: #354056;
+  background: #fff;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.analysis-role-list button:hover { border-color: #7486f3; color: #364ac8; }
+.analysis-role-list button.active { border-color: #7486f3; color: #fff; background: #4d63de; }
+.analysis-role-list button span { font-weight: 700; }
+.analysis-role-description { margin-top: 15px; padding: 18px 20px; border-left: 4px solid #5c71e4; border-radius: 0 10px 10px 0; background: #f3f6ff; }
+.analysis-role-description strong { color: #263b9d; font-size: 15px; }
+.analysis-role-description p { margin: 7px 0 0; color: #536079; font-size: 14px; line-height: 1.65; }
 
 .analysis-roadmap {
   margin-top: 30px;
@@ -103,24 +120,8 @@
 }
 
 .analysis-roadmap h2 { color: #233477; font-size: 17px; }
+.analysis-roadmap-role { display: inline-block; margin-bottom: 6px; color: #4661d9; font-size: 12px; font-weight: 800; }
 .analysis-roadmap-summary p { margin-top: 9px; }
-
-.analysis-roadmap button {
-  flex: 0 0 auto;
-  min-width: 182px;
-  min-height: 44px;
-  padding: 8px 16px;
-  border: 0;
-  border-radius: 8px;
-  color: #fff;
-  background: var(--concept-accent);
-  font: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.analysis-roadmap button:hover { background: #394ccd; }
 
 .analysis-roadmap-steps {
   margin-top: 12px;
@@ -133,6 +134,8 @@
 .analysis-roadmap-steps h3 { margin: 0 0 6px; color: #233477; font-size: 15px; }
 .analysis-roadmap-steps ol { margin: 0; padding-inline-start: 20px; }
 .analysis-roadmap-steps li + li { margin-top: 6px; }
+.analysis-roadmap-steps li strong { display: inline-block; min-width: 82px; color: #233477; }
+.analysis-roadmap-steps li span { line-height: 1.55; }
 .analysis-roadmap-steps > div + div { margin-top: 16px; }
 
 @media (min-width: 681px) {

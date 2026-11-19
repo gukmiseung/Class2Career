@@ -101,6 +101,10 @@
   font-size: 14px;
   font-weight: 700;
 }
+.course-status.completed { color: #1760ef; background: #e5edff; }
+.course-status.planned { color: #08795b; background: #e3f4ef; }
+.course-row.completed { border-color: #c8d7fb; }
+.course-row.planned { border-color: #c5e4da; }
 
 .course-actions a {
   width: 96px;

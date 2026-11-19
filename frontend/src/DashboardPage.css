@@ -72,13 +72,46 @@
 }
 
 .explore-card a {
+  display: inline-flex;
+  align-items: center;
+  margin-left: -12px;
+  padding: 9px 12px;
+  border-radius: 10px;
   font-size: 22px;
   font-weight: 700;
   text-decoration: none;
+  cursor: pointer;
+  transition: color 160ms ease, background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
 .explore-card a.blue { color: #1760ef; }
 .explore-card a.green { color: #07835b; }
+
+.explore-card a.blue:hover,
+.explore-card a.blue:focus-visible { background: #eaf0ff; }
+
+.explore-card a.green:hover,
+.explore-card a.green:focus-visible { background: #e5f5f0; }
+
+.explore-card a:hover {
+  box-shadow: 0 5px 14px rgba(20, 28, 46, .12);
+  transform: translateY(-2px);
+}
+
+.explore-card a:active {
+  box-shadow: 0 2px 6px rgba(20, 28, 46, .1);
+  transform: translateY(1px) scale(.98);
+  transition-duration: 70ms;
+}
+
+.explore-card a:focus-visible {
+  outline: 3px solid rgba(40, 101, 236, .28);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .explore-card a { transition: none; }
+}
 
 @media (max-height: 900px) and (min-width: 761px) {
   .dashboard-page { padding: 120px 0 40px; }

@@ -1,30 +1,25 @@
-.career-concept-page {
-  width: min(100% - 48px, 1120px);
-  margin: 0 auto;
-  padding: 112px 0 80px;
-  color: #141c2e;
-}
-
+.career-concept-page { width: min(100% - 48px, 920px); margin: 0 auto; padding: 112px 0 80px; color: #182033; }
 .career-concept-breadcrumb { display: flex; flex-wrap: wrap; gap: 10px; color: #65738b; font-size: 14px; }
 .career-concept-breadcrumb a { color: inherit; text-decoration: none; }
 .career-concept-breadcrumb a:hover { color: #2865ec; }
-
 .career-concept-intro { margin-top: 34px; }
 .career-concept-intro > p { margin: 0; color: #2865ec; font-size: 15px; font-weight: 700; }
-.career-concept-intro h1 { margin: 12px 0 0; font-size: clamp(30px, 4vw, 42px); letter-spacing: -1.2px; }
-.career-concept-intro > span { display: inline-flex; margin-top: 22px; padding: 10px 18px; border-radius: 999px; color: #1760ef; background: #e8f0ff; font-size: 15px; }
-
-.career-concept-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; margin-top: 48px; }
-.career-concept-list article { min-height: 190px; padding: 26px; border: 1px solid #d9e1ec; border-radius: 18px; background: #fff; }
-.career-concept-list h2 { margin: 0; font-size: 20px; }
-.career-concept-list p { margin: 18px 0 0; color: #65738b; font-size: 15px; line-height: 1.7; }
-
-.career-concept-note { margin-top: 28px; padding: 22px 24px; border: 1px solid #cddcff; border-radius: 16px; background: #edf4ff; }
-.career-concept-note strong { color: #234fb8; font-size: 15px; }
-.career-concept-note p { margin: 8px 0 0; color: #5b6d89; font-size: 14px; line-height: 1.6; }
-
-@media (max-width: 760px) {
-  .career-concept-page { width: min(100% - 32px, 1120px); padding-top: 100px; }
-  .career-concept-list { grid-template-columns: 1fr; gap: 14px; margin-top: 34px; }
-  .career-concept-list article { min-height: 0; }
-}
+.career-concept-intro h1 { margin: 10px 0 0; font-size: clamp(30px, 4vw, 42px); letter-spacing: -1.2px; }
+.career-concept-intro > span { display: inline-flex; margin-top: 18px; padding: 9px 17px; border-radius: 999px; color: #1760ef; background: #e8f0ff; font-size: 14px; }
+.course-notebook { position: relative; margin-top: 38px; padding: 42px 48px; border: 1px solid #d7dce5; border-radius: 8px; background: repeating-linear-gradient(#fff 0, #fff 39px, #dce8f5 40px); box-shadow: 0 14px 35px rgba(36,48,74,.09); overflow: hidden; }
+.course-notebook section { position: relative; margin-bottom: 34px; }
+.course-notebook h2 { margin: 8px 0 7px; font-size: 21px; }
+.course-notebook p { margin: 0; color: #4c5970; font-size: 15px; line-height: 1.8; }
+.note-label { color: #61728f; font-size: 12px; font-weight: 800; letter-spacing: .04em; }
+.note-keywords { display: flex; flex-wrap: wrap; gap: 8px; margin: 11px 0 0; padding: 0; list-style: none; }
+.note-keywords li { padding: 5px 11px; border-radius: 6px; color: #245ac2; background: #e9f0ff; font-size: 13px; font-weight: 700; }
+.note-flow { display: grid; gap: 10px; margin: 12px 0 0; padding: 0; list-style: none; }
+.note-flow li { display: flex; align-items: center; gap: 11px; color: #3d4960; font-size: 14px; }
+.note-flow b { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; color: #fff; background: #4b72d6; font-size: 12px; }
+.note-example { padding: 18px 20px; border-left: 4px solid #f2b84b; background: rgba(255,248,218,.88); }
+.note-checkpoint { position: relative; padding: 18px 20px; border: 1px dashed #7693da; border-radius: 8px; background: rgba(239,244,255,.92); }
+.note-checkpoint strong { color: #2857bd; font-size: 14px; }
+.note-checkpoint p { margin-top: 6px; }
+.back-to-career { display: inline-block; margin-top: 28px; color: #315dcc; font-size: 14px; font-weight: 700; text-decoration: none; }
+.back-to-career:hover { text-decoration: underline; }
+@media (max-width: 760px) { .career-concept-page { width: min(100% - 32px, 920px); padding-top: 100px; } .course-notebook { padding: 32px 24px; } }

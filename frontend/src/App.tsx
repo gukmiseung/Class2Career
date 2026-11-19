@@ -12,6 +12,7 @@ import CourseAddPage from './CourseAddPage'
 import LoadingPage from './LoadingPage'
 import LearningPage from './LearningPage'
 import PasswordResetPage from './PasswordResetPage'
+import ProfilePage from './ProfilePage'
 import SiteHeader from './SiteHeader'
 import { getCourseConcepts } from './courseConcepts'
 import { courses } from './courses'
@@ -145,6 +146,8 @@ function App() {
         <PasswordResetPage />
       ) : hash === '#signup' ? (
         <SignupPage />
+      ) : hash === '#profile' ? (
+        isLoggedIn ? <ProfilePage /> : <LoginPage />
       ) : hash === '#dashboard' ? (
         <DashboardPage />
       ) : hash === '#career' ? (
