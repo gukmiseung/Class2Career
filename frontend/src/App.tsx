@@ -5,6 +5,11 @@ import DashboardPage from './DashboardPage'
 import CareerPage from './CareerPage'
 import CareerDetailPage from './CareerDetailPage'
 import RoadmapPage from './RoadmapPage'
+import ConceptAnalysisPage from './ConceptAnalysisPage'
+import ConceptSelectionPage from './ConceptSelectionPage'
+import CourseAddPage from './CourseAddPage'
+import { getCourseConcepts } from './courseConcepts'
+import { courses } from './courses'
 import './App.css'
 
 const features = [
@@ -22,6 +27,57 @@ function App() {
     window.addEventListener('hashchange', updateHash)
     return () => window.removeEventListener('hashchange', updateHash)
   }, [])
+
+  if (hash === '#explore') {
+    return <CourseAddPage />
+  }
+
+  if (hash === '#explore/learning') {
+    return <CourseAddPage showLearning />
+  }
+
+  const conceptRoute = '#explore/concepts/'
+  if (hash.startsWith(conceptRoute)) {
+    const [path, query] = hash.slice(conceptRoute.length).split('?', 2)
+    const [courseId] = path.split('/', 1)
+    const analysisPath = `${courseId}/analysis`
+    const course = courses.find(({ id }) => id === courseId)
+    const concepts = getCourseConcepts(courseId)
+
+    if (!course || !concepts || (path !== courseId && path !== analysisPath)) {
+      return <CourseAddPage />
+    }
+
+    const selectionHref = `${conceptRoute}${courseId}`
+    const requestedIds = new Set(new URLSearchParams(query).getAll('concept'))
+    const selectedConcepts = concepts.filter(({ id }) => requestedIds.has(id))
+
+    if (path === analysisPath && selectedConcepts.length > 0) {
+      return (
+        <ConceptAnalysisPage
+          key={hash}
+          courseName={course.name}
+          concepts={selectedConcepts}
+          selectionHref={`${selectionHref}?${query}`}
+        />
+      )
+    }
+
+    return (
+      <ConceptSelectionPage
+        key={hash}
+        courseName={course.name}
+        concepts={concepts}
+        initialSelectedIds={selectedConcepts.map(({ id }) => id)}
+        onAnalyze={(conceptIds) => {
+          const params = new URLSearchParams()
+          for (const id of conceptIds) params.append('concept', id)
+          window.history.replaceState(window.history.state, '', `${selectionHref}?${params}`)
+          window.location.hash = `${conceptRoute}${analysisPath}?${params}`
+        }}
+      />
+    )
+  }
 
   return (
     <div className={`home-page${hash === '#dashboard' || hash === '#career' || hash.startsWith('#career-') || hash.startsWith('#roadmap-') ? ' dashboard-shell' : ''}`}>

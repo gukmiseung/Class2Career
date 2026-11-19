@@ -1,0 +1,57 @@
+.concept-page {
+  --concept-ink: #151a2d;
+  --concept-muted: #5f6c85;
+  --concept-border: #dfe5ee;
+  --concept-accent: #465be4;
+  min-height: 100vh;
+  color: var(--concept-ink);
+  background: #f6f7f9;
+  line-height: 1.5;
+}
+
+.concept-header {
+  border-bottom: 1px solid #e9ecf2;
+  background: #fff;
+}
+
+.concept-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: min(1152px, calc(100% - 48px));
+  min-height: 65px;
+  margin: 0 auto;
+}
+
+.concept-header nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px clamp(16px, 4.7vw, 58px);
+  margin-inline-end: clamp(0px, calc((100vw - 760px) / 14), 34px);
+  color: #323d53;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.concept-page a { color: inherit; text-decoration: none; }
+.concept-page a:hover { text-decoration: underline; text-underline-offset: .2em; }
+.concept-page :is(a, input, button):focus-visible { outline: 2px solid var(--concept-accent); outline-offset: 3px; }
+.concept-header nav [aria-disabled='true'] { color: var(--concept-muted); }
+.concept-header .concept-login,
+.concept-header .concept-brand { color: var(--concept-accent); }
+.concept-header .concept-brand { font-size: 26px; font-weight: 800; letter-spacing: -.04em; }
+
+.concept-breadcrumb {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--concept-muted);
+  font-size: 12px;
+}
+
+@media (max-width: 680px) {
+  .concept-header-inner { width: calc(100% - 32px); }
+  .concept-header nav { gap: 4px 12px; font-size: 13px; }
+}

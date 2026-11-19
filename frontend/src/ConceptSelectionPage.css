@@ -1,0 +1,128 @@
+.concept-content {
+  width: min(1112px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 28px 0 64px;
+}
+
+.concept-content h1 {
+  margin: 17px 0 0;
+  font-size: clamp(25px, 4vw, 30px);
+  line-height: 1.3;
+  letter-spacing: -.035em;
+}
+
+.concept-content h1:focus { outline: none; }
+
+.concept-intro {
+  margin: 14px 0 0;
+  color: var(--concept-muted);
+  font-size: 14px;
+}
+
+.concept-course {
+  margin: 41px 0 35px;
+  padding: 12px 22px;
+  border-radius: 13px;
+  background: #eaf0fb;
+}
+
+.concept-course dt { color: var(--concept-muted); font-size: 12px; }
+.concept-course dd { margin: 2px 0 0; color: #233477; font-size: 18px; font-weight: 700; }
+
+.concept-fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.concept-fieldset legend { margin: 0; padding: 0; font-size: 19px; font-weight: 700; letter-spacing: -.025em; }
+.concept-fieldset > p { margin: 5px 0 0; color: var(--concept-muted); font-size: 13px; }
+
+.concept-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 26px 35px;
+  margin: 27px 0 0;
+}
+
+.concept-card {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  min-height: 113px;
+  padding: 18px 18px 30px;
+  border: 1px solid var(--concept-border);
+  border-radius: 14px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.concept-card:hover { border-color: #9caaf3; }
+.concept-card:has(input:checked) { border-color: var(--concept-accent); background: #f0f3ff; }
+
+.concept-card input {
+  appearance: none;
+  display: grid;
+  place-content: center;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  border: 1px solid #c5cfe0;
+  border-radius: 6px;
+  background: #fff;
+  cursor: inherit;
+}
+
+.concept-card input:checked { border-color: var(--concept-accent); background: var(--concept-accent); }
+
+.concept-card input:checked::after {
+  width: 5px;
+  height: 10px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  content: '';
+  transform: translateY(-1px) rotate(45deg);
+}
+
+.concept-card-copy { display: grid; gap: 9px; }
+.concept-card-copy strong { font-size: 17px; letter-spacing: -.02em; }
+.concept-card-copy > span { color: var(--concept-muted); font-size: 13px; }
+
+.concept-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 42px;
+}
+
+.concept-actions p { margin: 0; color: var(--concept-muted); font-size: 13px; }
+
+.concept-actions button {
+  width: min(100%, 278px);
+  min-height: 49px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 9px;
+  color: #fff;
+  background: var(--concept-accent);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.concept-actions button:hover:not(:disabled) { background: #394ccd; }
+.concept-actions button:disabled { background: #4b60dc; cursor: default; }
+
+@media (max-width: 680px) {
+  .concept-content { width: calc(100% - 32px); }
+  .concept-content { padding-top: 24px; }
+  .concept-course { margin: 28px 0 26px; padding-inline: 16px; }
+  .concept-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; margin-top: 18px; }
+  .concept-card { min-height: 90px; padding: 14px; gap: 12px; }
+  .concept-card-copy { gap: 4px; }
+  .concept-actions { flex-direction: column; align-items: stretch; margin-top: 24px; }
+  .concept-actions button { width: 100%; }
+}
+
+@media (forced-colors: active) {
+  .concept-card input { appearance: auto; }
+  .concept-card input:checked::after { content: none; }
+}
