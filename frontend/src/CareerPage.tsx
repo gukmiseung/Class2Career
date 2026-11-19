@@ -65,9 +65,13 @@ export default function CareerPage() {
             {visibleCareers.map((career) => (
               <article className="career-card" key={career.title}>
                 <span className="career-category">{career.category}</span>
-                <h3>{career.title}</h3>
+                <h3>
+                  <a className="career-title-link" href={`#career-${encodeURIComponent(career.title)}`}>
+                    {career.title}
+                  </a>
+                </h3>
                 <p>{career.description}</p>
-                <a href={`#career-${encodeURIComponent(career.title)}`}>관련 과목 {career.courses}개 →</a>
+                <span className="career-course-count">관련 과목 {career.courses}개</span>
               </article>
             ))}
           </div>

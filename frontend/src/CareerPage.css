@@ -125,12 +125,22 @@
   line-height: 1.45;
 }
 
-.career-card a {
+.career-card .career-title-link {
+  color: #141c2e;
+  text-decoration: none;
+  transition: color .18s ease;
+}
+
+.career-card .career-title-link:hover,
+.career-card .career-title-link:focus-visible {
+  color: #1760ef;
+}
+
+.career-course-count {
   margin-top: auto;
   color: #1760ef;
   font-size: 13px;
   font-weight: 700;
-  text-decoration: none;
 }
 
 .career-empty {
