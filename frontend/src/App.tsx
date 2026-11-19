@@ -16,41 +16,36 @@ import './App.css'
 
 const loadingDuration = 700
 
-function getLoadingMessage(hash: string) {
-  if (hash.includes('/analysis')) return '선택한 전공 개념을 분석하고 있어요...'
-  if (hash.startsWith('#explore/concepts/')) return '과목의 세부 개념을 불러오고 있어요...'
-  if (hash.startsWith('#explore')) return '나의 과목 정보를 불러오고 있어요...'
-  if (hash.startsWith('#roadmap-')) return '맞춤 학습 로드맵을 준비하고 있어요...'
-  if (hash.startsWith('#career-')) return '선택한 직무의 상세 정보를 찾고 있어요...'
-  if (hash === '#career') return '희망 직무 정보를 찾고 있어요...'
-  if (hash === '#login') return '로그인 화면을 준비하고 있어요...'
-  if (hash === '#signup') return '회원가입 화면을 준비하고 있어요...'
-  return '나의 대시보드를 준비하고 있어요...'
-}
-
 function App() {
   const [hash, setHash] = useState(window.location.hash)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    let loadingTimer = window.setTimeout(() => setIsLoading(false), loadingDuration)
+    let loadingTimer: number | undefined
 
     const updateHash = () => {
-      window.clearTimeout(loadingTimer)
-      setHash(window.location.hash)
-      setIsLoading(true)
-      loadingTimer = window.setTimeout(() => setIsLoading(false), loadingDuration)
+      if (loadingTimer !== undefined) window.clearTimeout(loadingTimer)
+
+      const nextHash = window.location.hash
+      setHash(nextHash)
+
+      if (nextHash.includes('/analysis')) {
+        setIsLoading(true)
+        loadingTimer = window.setTimeout(() => setIsLoading(false), loadingDuration)
+      } else {
+        setIsLoading(false)
+      }
     }
 
     window.addEventListener('hashchange', updateHash)
     return () => {
-      window.clearTimeout(loadingTimer)
+      if (loadingTimer !== undefined) window.clearTimeout(loadingTimer)
       window.removeEventListener('hashchange', updateHash)
     }
   }, [])
 
   if (isLoading) {
-    return <LoadingPage message={getLoadingMessage(hash)} />
+    return <LoadingPage message="선택한 전공 개념을 분석하고 있어요..." />
   }
 
   if (hash === '#explore') {
