@@ -17,14 +17,17 @@ html { scroll-behavior: smooth; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 28px;
+  padding: 0 6.65% 0 3.9%;
+  border: 1px solid #d8e0ea;
+  background: #fff;
 }
 
-.logo-link { color: inherit; text-decoration: none; }
-.logo { display: block; width: 47px; height: 44px; object-fit: contain; }
-.site-header nav { display: flex; align-items: center; gap: 80px; }
-.site-header nav a { color: #2763e8; font-size: 25px; font-weight: 400; text-decoration: none; transition: opacity .2s ease; }
-.site-header nav a:hover { opacity: .65; }
+.header-logo { color: #2d63e9; font-family: Arial, Helvetica, sans-serif; font-size: 31px; font-weight: 800; letter-spacing: -.5px; text-decoration: none; }
+.header-nav { display: flex; align-items: center; gap: clamp(40px, 4.8vw, 69px); }
+.header-nav a { padding: 25px 0 24px; color: #23324b; font-size: 16px; font-weight: 600; line-height: 1.5; text-decoration: none; white-space: nowrap; transition: color .2s ease; }
+.header-nav a:hover, .header-nav a:focus-visible { color: #2d63e9; }
+.header-nav .login-link { margin-left: clamp(12px, 1.4vw, 22px); color: #1760ef; }
+.header-logo:focus-visible, .header-nav a:focus-visible { outline: 2px solid #2d63e9; outline-offset: 4px; border-radius: 2px; }
 
 .hero-section { min-height: 900px; padding: 210px 24px 80px; text-align: center; }
 .hero-copy { margin: 0 auto; max-width: 900px; }
@@ -49,9 +52,9 @@ html { scroll-behavior: smooth; }
 .feature-card p { margin: 0 0 0 34px; white-space: pre-line; font-size: 19px; line-height: 1.45; letter-spacing: -.4px; }
 
 @media (max-width: 900px) {
-  .site-header { height: 68px; padding: 0 18px; }
-  .site-header nav { gap: 24px; }
-  .site-header nav a { font-size: 17px; }
+  .site-header { padding: 0 24px; }
+  .header-nav { gap: 24px; }
+  .header-nav .login-link { margin-left: 0; }
   .hero-section { min-height: 850px; padding-top: 170px; }
   .eyebrow { font-size: 20px; }
   .hero-copy h1 { font-size: clamp(54px, 12vw, 86px); letter-spacing: -3px; }
@@ -68,9 +71,10 @@ html { scroll-behavior: smooth; }
 
 @media (max-width: 680px) {
   .home-page { min-height: 100%; }
-  .logo { width: 42px; height: auto; }
-  .site-header nav { gap: 14px; }
-  .site-header nav a { font-size: 14px; }
+  .site-header { height: 68px; padding: 0 16px; }
+  .header-logo { font-size: 24px; }
+  .header-nav { gap: 13px; }
+  .header-nav a { padding: 22px 0 21px; font-size: 12px; }
   .hero-section { min-height: 760px; padding: 145px 20px 70px; }
   .hero-copy h1 { font-size: 52px; letter-spacing: -2px; }
   .hero-copy h2 { margin-top: 25px; font-size: 25px; }

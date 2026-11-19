@@ -1,0 +1,125 @@
+.dashboard-shell {
+  min-height: 100vh;
+  color: #141c2e;
+  background: #f7f9fc;
+}
+
+.dashboard-page {
+  width: min(100% - 48px, 1280px);
+  margin: 0 auto;
+  padding: 134px 0 96px;
+}
+
+.dashboard-intro h1 {
+  margin: 0;
+  color: #141c2e;
+  font-size: clamp(26px, 2.3vw, 32px);
+  line-height: 1.35;
+  letter-spacing: -1.1px;
+}
+
+.dashboard-intro p {
+  margin: 20px 0 0;
+  color: #65738b;
+  font-size: 17px;
+}
+
+.dashboard-section { margin-top: 68px; }
+
+.dashboard-section h2 {
+  margin: 0 0 30px;
+  color: #141c2e;
+  font-size: 24px;
+  letter-spacing: -.6px;
+}
+
+.explore-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 60px;
+}
+
+.explore-card {
+  min-height: 260px;
+  padding: 31px;
+  border: 1px solid #d9e1ec;
+  border-radius: 17px;
+  background: #fff;
+}
+
+.dashboard-icon {
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  font-size: 27px;
+}
+
+.dashboard-icon.blue { background: #dfe9ff; }
+.dashboard-icon.green { background: #e3f4ef; }
+
+.explore-card h3 {
+  margin: 22px 0 18px;
+  color: #141c2e;
+  font-size: 24px;
+  letter-spacing: -.7px;
+}
+
+.explore-card p {
+  margin: 0 0 18px;
+  color: #65738b;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.explore-card a {
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.explore-card a.blue { color: #1760ef; }
+.explore-card a.green { color: #07835b; }
+.learning-section { margin-top: 64px; }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 40px;
+}
+
+.stat-card {
+  min-height: 151px;
+  padding: 22px 23px;
+  border: 1px solid #d9e1ec;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.stat-card h3 {
+  margin: 0 0 18px;
+  color: #65738b;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.stat-card strong {
+  display: block;
+  color: #2865ec;
+  font-size: 30px;
+  line-height: 1;
+}
+
+.stat-card p {
+  margin: 18px 0 0;
+  color: #96a4b8;
+  font-size: 13px;
+}
+
+@media (max-width: 760px) {
+  .dashboard-page { width: min(100% - 32px, 1280px); padding-top: 112px; }
+  .dashboard-section { margin-top: 50px; }
+  .explore-grid, .stats-grid { grid-template-columns: 1fr; gap: 18px; }
+  .explore-card { min-height: auto; }
+}

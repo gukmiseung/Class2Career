@@ -1,0 +1,76 @@
+.roadmap-page {
+  width: min(100% - 48px, 1280px);
+  margin: 0 auto;
+  padding: 112px 0 100px;
+  color: #141c2e;
+}
+
+.roadmap-breadcrumb { display: flex; flex-wrap: wrap; gap: 11px; color: #65738b; font-size: 14px; }
+.roadmap-breadcrumb a { color: #65738b; text-decoration: none; }
+.roadmap-intro { margin-top: 28px; }
+.roadmap-intro h1 { margin: 0; font-size: clamp(29px, 3vw, 36px); letter-spacing: -1.2px; }
+.roadmap-intro p { margin: 20px 0 0; color: #65738b; font-size: 16px; }
+.roadmap-progress { margin-top: 48px; }
+.progress-track { height: 12px; overflow: hidden; border-radius: 999px; background: #e1e7f0; }
+.progress-track span { height: 100%; display: block; border-radius: inherit; background: #2865ec; }
+.roadmap-progress p { margin: 14px 0 0; color: #1760ef; font-size: 14px; }
+
+.roadmap-list {
+  display: grid;
+  gap: 21px;
+  margin: 48px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.roadmap-step {
+  min-height: 91px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 16px 18px 16px 17px;
+  border: 1px solid #d9e1ec;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.step-number {
+  width: 54px;
+  height: 54px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #dfe9ff;
+  color: #1760ef;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.step-copy { min-width: 0; }
+.step-copy h2 { margin: 0; font-size: 18px; }
+.step-copy p { margin: 13px 0 0; color: #65738b; font-size: 14px; }
+.step-action { margin-left: auto; display: flex; align-items: center; gap: 60px; }
+
+.step-action > span {
+  min-width: 125px;
+  min-height: 39px;
+  display: grid;
+  place-items: center;
+  padding: 0 16px;
+  border: 1px solid #d9e1ec;
+  border-radius: 999px;
+  color: #65738b;
+  font-size: 14px;
+}
+
+.step-action button { border: 0; background: transparent; color: #1760ef; font: inherit; font-size: 13px; font-weight: 700; white-space: nowrap; cursor: pointer; }
+.roadmap-not-found { padding-top: 160px; }
+.roadmap-not-found a { color: #1760ef; }
+
+@media (max-width: 720px) {
+  .roadmap-page { width: min(100% - 32px, 1280px); padding-top: 100px; }
+  .roadmap-step { align-items: flex-start; flex-wrap: wrap; gap: 16px; padding: 18px; }
+  .step-copy { flex: 1; }
+  .step-action { width: 100%; margin-left: 70px; gap: 20px; justify-content: space-between; }
+}

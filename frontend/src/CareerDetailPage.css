@@ -1,0 +1,126 @@
+.career-detail-page {
+  width: min(100% - 48px, 1280px);
+  margin: 0 auto;
+  padding: 112px 0 72px;
+  color: #141c2e;
+}
+
+.career-breadcrumb {
+  display: flex;
+  gap: 12px;
+  color: #65738b;
+  font-size: 14px;
+}
+
+.career-breadcrumb a { color: #65738b; text-decoration: none; }
+.career-detail-intro { margin-top: 28px; }
+
+.career-detail-intro h1 {
+  margin: 0;
+  font-size: clamp(30px, 3vw, 38px);
+  letter-spacing: -1.2px;
+}
+
+.career-detail-intro > p {
+  margin: 20px 0 0;
+  color: #65738b;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.career-tags { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 42px; }
+
+.career-tags span {
+  min-width: 104px;
+  min-height: 39px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  border: 1px solid #d9e1ec;
+  border-radius: 999px;
+  background: #fff;
+  color: #43526a;
+  font-size: 14px;
+}
+
+.career-tags span.primary { border-color: #2865ec; background: #edf3ff; color: #1760ef; }
+.roadmap-link {
+  min-width: 180px;
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 28px;
+  padding: 0 22px;
+  border-radius: 9px;
+  background: #2865ec;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.roadmap-link:hover { background: #174fc9; }
+.connected-courses { margin-top: 46px; }
+.connected-courses > h2 { margin: 0; font-size: 23px; letter-spacing: -.7px; }
+.connected-courses > p { margin: 16px 0 0; color: #65738b; font-size: 14px; }
+.course-list { display: grid; gap: 19px; margin-top: 40px; }
+
+.course-row {
+  min-height: 93px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 15px 10px 15px 21px;
+  border: 1px solid #d9e1ec;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.course-row h3 { margin: 0; font-size: 18px; }
+.course-row p { margin: 14px 0 0; color: #65738b; font-size: 14px; }
+.course-actions {
+  min-width: 282px;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.course-status {
+  width: 180px;
+  min-height: 39px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #f0f3f7;
+  color: #65738b;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.course-actions button {
+  width: 80px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #1760ef;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.connected-courses > .course-note { margin-top: 42px; color: #91a0b7; font-size: 13px; }
+.career-not-found { padding-top: 160px; }
+.career-not-found a { color: #1760ef; }
+
+@media (max-width: 680px) {
+  .career-detail-page { width: min(100% - 32px, 1280px); padding-top: 100px; }
+  .career-tags { margin-top: 28px; }
+  .course-row { align-items: flex-start; flex-direction: column; padding: 20px; }
+  .course-actions { width: 100%; min-width: 0; justify-content: space-between; }
+  .course-status { width: min(180px, 70%); }
+}

@@ -1,5 +1,11 @@
+import { useEffect, useState } from 'react'
+import LoginPage from './LoginPage'
+import SignupPage from './SignupPage'
+import DashboardPage from './DashboardPage'
+import CareerPage from './CareerPage'
+import CareerDetailPage from './CareerDetailPage'
+import RoadmapPage from './RoadmapPage'
 import './App.css'
-import c2cLogo from './assets/c2c-logo.png'
 
 const features = [
   { icon: '📖', title: '01. 전공 개념 탐색', description: '수강한 과목을 선택하고 세부 개념을\n살펴보세요.' },
@@ -7,22 +13,42 @@ const features = [
   { icon: '🎓', title: '03. 학습 방향 추천', description: '관심 직무에 필요한 학습과 프로젝트\n를 추천받으세요.' },
 ]
 
-function Logo() {
-  return <img className="logo" src={c2cLogo} alt="Class2Career" />
-}
-
 function App() {
+  const [hash, setHash] = useState(window.location.hash)
+
+  useEffect(() => {
+    const updateHash = () => setHash(window.location.hash)
+
+    window.addEventListener('hashchange', updateHash)
+    return () => window.removeEventListener('hashchange', updateHash)
+  }, [])
+
   return (
-    <main className="home-page">
+    <div className={`home-page${hash === '#dashboard' || hash === '#career' || hash.startsWith('#career-') || hash.startsWith('#roadmap-') ? ' dashboard-shell' : ''}`}>
       <header className="site-header">
-        <a className="logo-link" href="#top"><Logo /></a>
-        <nav aria-label="주요 메뉴">
-          <a href="#top">홈</a>
-          <a href="#login">로그인</a>
-          <a href="#signup">회원가입</a>
+        <a className="header-logo" href="#dashboard" aria-label="C2C 대시보드">C2C</a>
+        <nav className="header-nav" aria-label="주요 메뉴">
+          <a href="#career">직무 탐색</a>
+          <a href="#explore">전공 탐색</a>
+          <a href="#features">내 학습</a>
+          <a className="login-link" href="#login">로그인</a>
         </nav>
       </header>
 
+      {hash === '#login' ? (
+        <LoginPage />
+      ) : hash === '#signup' ? (
+        <SignupPage />
+      ) : hash === '#dashboard' ? (
+        <DashboardPage />
+      ) : hash === '#career' ? (
+        <CareerPage />
+      ) : hash.startsWith('#career-') ? (
+        <CareerDetailPage careerName={decodeURIComponent(hash.slice('#career-'.length))} />
+      ) : hash.startsWith('#roadmap-') ? (
+        <RoadmapPage careerName={decodeURIComponent(hash.slice('#roadmap-'.length))} />
+      ) : (
+      <main>
       <section className="hero-section" id="top">
         <div className="hero-copy">
           <p className="eyebrow">전공지식과 미래를 연결하다</p>
@@ -53,7 +79,9 @@ function App() {
           ))}
         </div>
       </section>
-    </main>
+      </main>
+      )}
+    </div>
   )
 }
 
