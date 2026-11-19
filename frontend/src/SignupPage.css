@@ -1,0 +1,105 @@
+.signup-page {
+  box-sizing: border-box;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 120px 24px 64px;
+  color: #151a2d;
+}
+
+.signup-eyebrow {
+  margin: 0 0 16px;
+  color: #485bdd;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.signup-page h1 {
+  margin: 0;
+  font-size: clamp(26px, 4vw, 36px);
+}
+
+.signup-description {
+  margin: 16px 0 48px;
+  color: #62708a;
+}
+
+.signup-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  gap: clamp(20px, 4vw, 56px);
+}
+
+.signup-card,
+.signup-guide {
+  padding: clamp(24px, 4vw, 42px);
+  border-radius: 18px;
+}
+
+.signup-card {
+  border: 1px solid #dfe5ef;
+  background: #fff;
+}
+
+.signup-card label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.signup-card input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 54px;
+  margin-bottom: 26px;
+  padding: 0 16px;
+  border: 1px solid #ccd5e4;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 14px;
+}
+
+.signup-card input[aria-invalid="true"] {
+  border-color: #b42318;
+}
+
+.signup-error {
+  margin: -16px 0 20px;
+  color: #b42318;
+  font-size: 14px;
+}
+
+.signup-card button {
+  width: 100%;
+  min-height: 52px;
+  border: 0;
+  border-radius: 9px;
+  background: #485bdd;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.signup-guide {
+  background: #ebf0fc;
+  color: #243273;
+}
+
+.signup-guide h2 {
+  margin: 32px 0;
+  font-size: clamp(22px, 3vw, 30px);
+}
+
+.signup-guide p:last-child {
+  color: #536380;
+}
+
+@media (max-width: 760px) {
+  .signup-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .signup-description {
+    margin-bottom: 28px;
+  }
+}

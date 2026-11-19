@@ -1,3 +1,7 @@
+import { useEffect, useState } from 'react'
+import LoginPage from './LoginPage'
+import SignupPage from './SignupPage'
+
 import './App.css'
 import c2cLogo from './assets/c2c-logo.png'
 
@@ -12,8 +16,18 @@ function Logo() {
 }
 
 function App() {
+  const [hash, setHash] = useState(window.location.hash)
+
+useEffect(() => {
+  function updateHash() {
+    setHash(window.location.hash)
+  }
+
+  window.addEventListener('hashchange', updateHash)
+  return () => window.removeEventListener('hashchange', updateHash)
+}, [])
   return (
-    <main className="home-page">
+    <div className="home-page">
       <header className="site-header">
         <a className="logo-link" href="#top"><Logo /></a>
         <nav aria-label="주요 메뉴">
@@ -22,6 +36,13 @@ function App() {
           <a href="#signup">회원가입</a>
         </nav>
       </header>
+
+      {hash === '#login' ? (
+        <LoginPage />
+      ) : hash === '#signup' ? (
+        <SignupPage />
+      ) : (
+      <main>
 
       <section className="hero-section" id="top">
         <div className="hero-copy">
@@ -54,6 +75,8 @@ function App() {
         </div>
       </section>
     </main>
+    )}
+    </div>
   )
 }
 
