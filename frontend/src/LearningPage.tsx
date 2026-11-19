@@ -6,6 +6,7 @@ import './LearningPage.css'
 export default function LearningPage() {
   const [registrations, setRegistrations] = useState(loadRegistrations)
   const [activeStatus, setActiveStatus] = useState<CourseStatus>('completed')
+  const [savedCourseId, setSavedCourseId] = useState<string | null>(null)
   const [notes, setNotes] = useState<Record<string, string>>(() => {
     try {
       return JSON.parse(window.localStorage.getItem('class2career.course-notes') ?? '{}')
@@ -22,11 +23,14 @@ export default function LearningPage() {
   const visibleCourses = registeredCourses.filter(({ status }) => status === activeStatus)
 
   function updateNote(courseId: string, note: string) {
-    const nextNotes = { ...notes, [courseId]: note }
-    setNotes(nextNotes)
+    setNotes((current) => ({ ...current, [courseId]: note }))
+    setSavedCourseId(null)
+  }
 
+  function saveNote(courseId: string) {
     try {
-      window.localStorage.setItem('class2career.course-notes', JSON.stringify(nextNotes))
+      window.localStorage.setItem('class2career.course-notes', JSON.stringify(notes))
+      setSavedCourseId(courseId)
     } catch {
       return
     }
@@ -98,16 +102,23 @@ export default function LearningPage() {
                   <span>{course.year}학년</span>
                 </p>
                 <p className="learning-course-description">{course.description}</p>
-                <label className="learning-course-note">
-                  <span>간단 메모</span>
+                <div className="learning-course-note">
+                  <label htmlFor={`course-note-${course.id}`}>간단 메모</label>
                   <textarea
+                    id={`course-note-${course.id}`}
                     value={notes[course.id] ?? ''}
                     onChange={(event) => updateNote(course.id, event.target.value)}
                     placeholder="이 과목에 대해 기억할 내용을 적어보세요"
                     maxLength={300}
                   />
-                  <small>{(notes[course.id] ?? '').length}/300</small>
-                </label>
+                  <div className="learning-note-footer">
+                    <small>{(notes[course.id] ?? '').length}/300</small>
+                    <div>
+                      {savedCourseId === course.id && <span role="status">저장됨</span>}
+                      <button type="button" onClick={() => saveNote(course.id)}>메모 저장</button>
+                    </div>
+                  </div>
+                </div>
               </li>
             ))}
           </ul>

@@ -49,11 +49,17 @@
 .learning-course-meta span + span::before { margin-right: 8px; color: #a7b2c2; content: '·'; }
 .learning-course-description { margin: 12px 0 0; color: #65738b; font-size: 14px; line-height: 1.6; }
 
-.learning-course-note { position: relative; display: block; margin-top: 20px; }
-.learning-course-note > span { display: block; margin-bottom: 8px; color: #43526a; font-size: 14px; font-weight: 700; }
-.learning-course-note textarea { box-sizing: border-box; width: 100%; min-height: 86px; resize: vertical; padding: 13px 15px 28px; border: 1px solid #d4ddea; border-radius: 11px; color: #253149; background: #f9fbfe; font: inherit; font-size: 14px; line-height: 1.5; }
+.learning-course-note { display: block; margin-top: 20px; }
+.learning-course-note > label { display: block; margin-bottom: 8px; color: #43526a; font-size: 14px; font-weight: 700; }
+.learning-course-note textarea { box-sizing: border-box; width: 100%; min-height: 86px; resize: vertical; padding: 13px 15px; border: 1px solid #d4ddea; border-radius: 11px; color: #253149; background: #f9fbfe; font: inherit; font-size: 14px; line-height: 1.5; }
 .learning-course-note textarea:focus { border-color: #2865ec; outline: 3px solid rgba(40, 101, 236, .1); }
-.learning-course-note small { position: absolute; right: 12px; bottom: 9px; color: #96a4b8; font-size: 12px; }
+.learning-note-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 9px; }
+.learning-note-footer small { color: #96a4b8; font-size: 12px; }
+.learning-note-footer > div { display: flex; align-items: center; gap: 10px; }
+.learning-note-footer span { color: #16815f; font-size: 13px; font-weight: 700; }
+.learning-note-footer button { min-height: 36px; padding: 0 15px; border: 0; border-radius: 9px; color: #fff; background: #2865ec; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.learning-note-footer button:hover { background: #1f56d1; }
+.learning-note-footer button:focus-visible { outline: 3px solid rgba(40, 101, 236, .2); outline-offset: 2px; }
 
 .learning-empty {
   min-height: 260px;
