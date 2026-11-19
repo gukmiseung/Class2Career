@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react'
+import { careerInterestsKey, loadCareerInterests } from './careerInterests'
 import { loadRegistrations, parseRegistrations, registrationKey, statusLabels, type CourseStatus } from './courseRegistrations'
 import { courses } from './courses'
 import './LearningPage.css'
 
+type LearningTab = CourseStatus | 'career'
+
 export default function LearningPage() {
   const [registrations, setRegistrations] = useState(loadRegistrations)
-  const [activeStatus, setActiveStatus] = useState<CourseStatus>('completed')
+  const [activeTab, setActiveTab] = useState<LearningTab>('completed')
+  const [interestedCareers, setInterestedCareers] = useState(loadCareerInterests)
   const [savedCourseId, setSavedCourseId] = useState<string | null>(null)
   const [notes, setNotes] = useState<Record<string, string>>(() => {
     try {
@@ -20,7 +24,7 @@ export default function LearningPage() {
   })
   const completedCount = registeredCourses.filter(({ status }) => status === 'completed').length
   const plannedCount = registeredCourses.filter(({ status }) => status === 'planned').length
-  const visibleCourses = registeredCourses.filter(({ status }) => status === activeStatus)
+  const visibleCourses = registeredCourses.filter(({ status }) => status === activeTab)
 
   function updateNote(courseId: string, note: string) {
     setNotes((current) => ({ ...current, [courseId]: note }))
@@ -38,8 +42,12 @@ export default function LearningPage() {
 
   useEffect(() => {
     function syncRegistrations(event: StorageEvent) {
-      if (event.key !== registrationKey && event.key !== null) return
-      setRegistrations(parseRegistrations(event.newValue))
+      if (event.key === registrationKey || event.key === null) {
+        setRegistrations(parseRegistrations(event.newValue))
+      }
+      if (event.key === careerInterestsKey || event.key === null) {
+        setInterestedCareers(loadCareerInterests())
+      }
     }
 
     window.addEventListener('storage', syncRegistrations)
@@ -63,32 +71,77 @@ export default function LearningPage() {
         </article>
         <article>
           <h2>관심 직무</h2>
-          <strong>0개</strong>
+          <strong>{interestedCareers.length}개</strong>
           <p>저장한 직무</p>
         </article>
       </section>
 
       <section className="learning-courses" aria-labelledby="learning-courses-title">
-        <div className="learning-status-tabs" aria-label="과목 상태 선택">
+        <div className="learning-status-tabs" aria-label="학습 항목 선택">
           <button
             type="button"
-            aria-pressed={activeStatus === 'completed'}
-            onClick={() => setActiveStatus('completed')}
+            aria-pressed={activeTab === 'completed'}
+            onClick={() => setActiveTab('completed')}
           >
             수강 완료
           </button>
           <button
             type="button"
-            aria-pressed={activeStatus === 'planned'}
-            onClick={() => setActiveStatus('planned')}
+            aria-pressed={activeTab === 'planned'}
+            onClick={() => setActiveTab('planned')}
           >
             수강 예정
           </button>
+          <button
+            type="button"
+            aria-pressed={activeTab === 'career'}
+            onClick={() => setActiveTab('career')}
+          >
+            관심 직무
+          </button>
         </div>
         <p id="learning-courses-title">
-          {statusLabels[activeStatus]} · 총 {visibleCourses.length}개 과목
+          {activeTab === 'career'
+            ? `관심 직무 · 총 ${interestedCareers.length}개`
+            : `${statusLabels[activeTab]} · 총 ${visibleCourses.length}개 과목`}
         </p>
-        {visibleCourses.length > 0 ? (
+        {activeTab === 'career' ? (
+          interestedCareers.length > 0 ? (
+            <ul className="learning-course-list">
+              {interestedCareers.map((careerName) => {
+                const noteKey = `career:${careerName}`
+                return (
+                  <li key={careerName}>
+                    <div className="learning-course-heading">
+                      <h2>{careerName}</h2>
+                      <span className="learning-status career">관심 직무</span>
+                    </div>
+                    <p className="learning-course-description">관심 직무로 저장한 직무예요. 상세 페이지에서 관련 과목과 로드맵을 확인할 수 있어요.</p>
+                    <a className="learning-career-link" href={`#career-${encodeURIComponent(careerName)}`}>직무 상세 보기</a>
+                    <div className="learning-course-note">
+                      <label htmlFor={`career-note-${encodeURIComponent(careerName)}`}>간단 메모</label>
+                      <textarea id={`career-note-${encodeURIComponent(careerName)}`} value={notes[noteKey] ?? ''} onChange={(event) => updateNote(noteKey, event.target.value)} placeholder="이 직무에 대해 기억할 내용을 적어보세요" maxLength={300} />
+                      <div className="learning-note-footer">
+                        <small>{(notes[noteKey] ?? '').length}/300</small>
+                        <div>
+                          {savedCourseId === noteKey && <span role="status">저장됨</span>}
+                          <button type="button" onClick={() => saveNote(noteKey)}>메모 저장</button>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          ) : (
+            <div className="learning-empty">
+              <div aria-hidden="true">💼</div>
+              <h2>관심 직무가 없어요</h2>
+              <p>직무 상세 화면에서 관심 직무로 등록하면 이곳에 표시돼요.</p>
+              <a href="#career">직무 탐색하기</a>
+            </div>
+          )
+        ) : visibleCourses.length > 0 ? (
           <ul className="learning-course-list">
             {visibleCourses.map((course) => (
               <li key={course.id}>
@@ -125,8 +178,8 @@ export default function LearningPage() {
         ) : (
           <div className="learning-empty">
             <div aria-hidden="true">📚</div>
-            <h2>{statusLabels[activeStatus]} 과목이 없어요</h2>
-            <p>과목 관리에서 과목을 {statusLabels[activeStatus]}로 등록하면 이곳에 표시돼요.</p>
+            <h2>{statusLabels[activeTab]} 과목이 없어요</h2>
+            <p>과목 관리에서 과목을 {statusLabels[activeTab]}로 등록하면 이곳에 표시돼요.</p>
             <a href="#explore">과목 등록하기</a>
           </div>
         )}

@@ -45,9 +45,11 @@
 .learning-status { flex: 0 0 auto; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 700; }
 .learning-status.completed { color: #1760ef; background: #e5edff; }
 .learning-status.planned { color: #08795b; background: #e3f4ef; }
+.learning-status.career { color: #7748b5; background: #f0e8fb; }
 .learning-course-meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; color: #65738b; font-size: 13px; }
 .learning-course-meta span + span::before { margin-right: 8px; color: #a7b2c2; content: '·'; }
 .learning-course-description { margin: 12px 0 0; color: #65738b; font-size: 14px; line-height: 1.6; }
+.learning-career-link { display: inline-flex; margin-top: 14px; color: #2865ec; font-size: 14px; font-weight: 700; text-decoration: none; }
 
 .learning-course-note { display: block; margin-top: 20px; }
 .learning-course-note > label { display: block; margin-bottom: 8px; color: #43526a; font-size: 14px; font-weight: 700; }

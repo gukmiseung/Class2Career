@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { loadCareerInterests, toggleCareerInterest } from './careerInterests'
 import './CareerDetailPage.css'
 
 type Course = {
@@ -90,6 +92,7 @@ const careerDetails: Record<string, CareerDetail> = {
 
 export default function CareerDetailPage({ careerName }: { careerName: string }) {
   const career = careerDetails[careerName]
+  const [isInterested, setIsInterested] = useState(() => loadCareerInterests().includes(careerName))
 
   if (!career) {
     return (
@@ -112,7 +115,17 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
         <div className="career-tags">
           {career.tags.map((tag, index) => <span className={index === 0 ? 'primary' : ''} key={tag}>{tag}</span>)}
         </div>
-        <a className="roadmap-link" href={`#roadmap-${encodeURIComponent(career.title)}`}>로드맵 확인하기 →</a>
+        <div className="career-detail-actions">
+          <a className="roadmap-link" href={`#roadmap-${encodeURIComponent(career.title)}`}>로드맵 확인하기 →</a>
+          <button
+            className="career-interest-button"
+            type="button"
+            aria-pressed={isInterested}
+            onClick={() => setIsInterested(toggleCareerInterest(career.title))}
+          >
+            {isInterested ? '관심 직무 해제' : '관심 직무 등록'}
+          </button>
+        </div>
       </section>
 
       <section className="connected-courses" aria-labelledby="course-heading">
