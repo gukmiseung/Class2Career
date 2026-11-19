@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
+import ConceptSelectionPage from './ConceptSelectionPage'
 import CourseAddPage from './CourseAddPage'
 import LoginPage from './LoginPage'
 import SignupPage from './SignupPage'
+import { getCourseConcepts } from './courseConcepts'
+import { courses } from './courses'
 
 import './App.css'
 import c2cLogo from './assets/c2c-logo.png'
@@ -30,6 +33,21 @@ function App() {
 
   if (hash === '#explore') {
     return <CourseAddPage />
+  }
+
+  if (hash === '#explore/learning') {
+    return <CourseAddPage showLearning />
+  }
+
+  const conceptRoute = '#explore/concepts/'
+  if (hash.startsWith(conceptRoute)) {
+    const courseId = hash.slice(conceptRoute.length)
+    const course = courses.find(({ id }) => id === courseId)
+    const concepts = getCourseConcepts(courseId)
+
+    return course && concepts
+      ? <ConceptSelectionPage key={courseId} courseName={course.name} concepts={concepts} />
+      : <CourseAddPage />
   }
 
   return (

@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useRef, useState, type FormEvent } from 'react'
+import { getCourseConcepts } from './courseConcepts'
 import {
   courseCategories,
   courses,
@@ -91,8 +92,9 @@ function CoursePagination({ page, pageCount, onPageChange }: {
   )
 }
 
-export default function CourseAddPage() {
+export default function CourseAddPage({ showLearning = false }: { showLearning?: boolean }) {
   const titleRef = useRef<HTMLHeadingElement>(null)
+  const learningRef = useRef<HTMLHeadingElement>(null)
   const [searchInput, setSearchInput] = useState('')
   const [query, setQuery] = useState('')
   const [filters, setFilters] = useState(defaultFilters)
@@ -102,9 +104,15 @@ export default function CourseAddPage() {
   const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null)
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' })
-    titleRef.current?.focus({ preventScroll: true })
+    if (showLearning) {
+      learningRef.current?.focus()
+    } else {
+      window.scrollTo({ top: 0, behavior: 'instant' })
+      titleRef.current?.focus({ preventScroll: true })
+    }
+  }, [showLearning])
 
+  useEffect(() => {
     function syncRegistrations(event: StorageEvent) {
       if (event.key !== registrationKey && event.key !== null) return
 
@@ -271,7 +279,13 @@ export default function CourseAddPage() {
                   return (
                     <li className="course-card" key={course.id}>
                       <div>
-                        <h3>{course.name}</h3>
+                        <h3>
+                          {getCourseConcepts(course.id) ? (
+                            <a className="course-concept-link" href={`#explore/concepts/${course.id}`}>
+                              {course.name}
+                            </a>
+                          ) : course.name}
+                        </h3>
                         <p className="course-card-meta">
                           <span className="course-category">{course.category}</span>
                           <span>{course.credits}학점</span>
@@ -307,7 +321,7 @@ export default function CourseAddPage() {
 
         <footer className="course-registration">
           <div>
-            <h2 aria-live="polite">선택한 과목 {selectedIds.length}개</h2>
+            <h2 ref={learningRef} tabIndex={-1} aria-live="polite">선택한 과목 {selectedIds.length}개</h2>
             <p>수강 완료 {completedCount}개 <span aria-hidden="true">·</span> 수강 예정 {plannedCount}개</p>
             {message && (
               <p className={message.error ? 'course-error' : 'course-success'} role={message.error ? 'alert' : 'status'}>
