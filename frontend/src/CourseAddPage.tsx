@@ -138,6 +138,21 @@ export default function CourseAddPage() {
     setPage(1)
   }
 
+  function resetCoursePage() {
+    setFilters(defaultFilters)
+    setExpandedFilters({ department: true, category: true, year: true })
+    setSearchInput('')
+    setQuery('')
+    setPage(1)
+    setRegistrations({})
+
+    try {
+      window.localStorage.removeItem(registrationKey)
+    } catch {
+      return
+    }
+  }
+
   function toggleFilter(section: FilterSection) {
     setExpandedFilters((current) => ({ ...current, [section]: !current[section] }))
   }
@@ -196,7 +211,7 @@ export default function CourseAddPage() {
           <aside className="course-filters" aria-labelledby="course-filters-title">
             <div className="course-filters-heading">
               <h2 id="course-filters-title">필터</h2>
-              <button type="button" onClick={() => changeFilters(defaultFilters)}>초기화</button>
+              <button type="button" onClick={resetCoursePage}>초기화</button>
             </div>
 
             <fieldset>
