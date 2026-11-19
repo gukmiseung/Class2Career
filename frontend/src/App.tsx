@@ -4,6 +4,7 @@ import SignupPage from './SignupPage'
 import DashboardPage from './DashboardPage'
 import CareerPage from './CareerPage'
 import CareerDetailPage from './CareerDetailPage'
+import CareerConceptPage from './CareerConceptPage'
 import RoadmapPage from './RoadmapPage'
 import ConceptAnalysisPage from './ConceptAnalysisPage'
 import ConceptSelectionPage from './ConceptSelectionPage'
@@ -107,6 +108,27 @@ function App() {
         }}
       />
     )
+  }
+
+  const jobConceptRoute = '#job-concept/'
+  if (hash.startsWith(jobConceptRoute)) {
+    const [encodedCareerName, encodedCourseName, encodedConceptSummary] = hash.slice(jobConceptRoute.length).split('/', 3)
+    const careerName = decodeURIComponent(encodedCareerName ?? '')
+    const courseName = decodeURIComponent(encodedCourseName ?? '')
+    const conceptSummary = decodeURIComponent(encodedConceptSummary ?? '')
+
+    if (careerName && courseName && conceptSummary) {
+      return (
+        <div className="home-page dashboard-shell">
+          <SiteHeader />
+          <CareerConceptPage
+            careerName={careerName}
+            courseName={courseName}
+            conceptSummary={conceptSummary}
+          />
+        </div>
+      )
+    }
   }
 
   return (

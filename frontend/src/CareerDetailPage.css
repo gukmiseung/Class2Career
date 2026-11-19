@@ -99,7 +99,7 @@
   font-weight: 700;
 }
 
-.course-actions button {
+.course-actions a {
   width: 80px;
   padding: 0;
   border: 0;
@@ -109,8 +109,9 @@
   font-size: 12px;
   font-weight: 600;
   line-height: 1.25;
+  text-align: center;
+  text-decoration: none;
   white-space: nowrap;
-  cursor: pointer;
 }
 
 .connected-courses > .course-note { margin-top: 42px; color: #91a0b7; font-size: 13px; }

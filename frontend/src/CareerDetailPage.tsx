@@ -128,7 +128,7 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
               </div>
               <div className="course-actions">
                 <span className="course-status">미수강</span>
-                <button type="button">개념 보기 →</button>
+                <a href={`#job-concept/${encodeURIComponent(career.title)}/${encodeURIComponent(course.name)}/${encodeURIComponent(course.concepts)}`}>개념 보기</a>
               </div>
             </article>
           ))}
