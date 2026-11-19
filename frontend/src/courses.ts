@@ -1,8 +1,8 @@
-export const departments = ['컴퓨터학부', '소프트웨어학과'] as const
+export const departments = ['컴퓨터학부'] as const
 export const courseCategories = ['전공 필수', '전공 선택', '기본 소양', '교양'] as const
 export const courseYears = [1, 2, 3, 4] as const
 
-export type Department = typeof departments[number]
+export type Department = '컴퓨터학부' | '소프트웨어학과'
 export type CourseCategory = typeof courseCategories[number]
 export type CourseYear = typeof courseYears[number]
 

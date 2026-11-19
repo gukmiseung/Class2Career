@@ -179,20 +179,25 @@
 }
 
 .course-filter-toggle {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   display: grid;
   place-items: center;
   padding: 0;
   border: 0;
-  border-radius: 8px;
+  border: 1px solid #dce3ee;
+  border-radius: 10px;
   color: #65738b;
   background: transparent;
 }
 
-.course-filter-toggle:hover { color: var(--course-accent-text); background: #eef3ff; }
-.course-filter-toggle span { display: block; font-size: 19px; line-height: 1; transition: transform .18s ease; }
-.course-filter-toggle[aria-expanded='true'] span { transform: rotate(180deg); }
+.course-filter-toggle:hover { border-color: #b8c6de; color: #40506a; background: #f3f6fb; }
+.course-filter-toggle[aria-expanded='true'] { border-color: #9aadd0; color: #233477; background: #e4ebf8; }
+.course-filter-toggle span { position: relative; display: block; width: 12px; height: 12px; }
+.course-filter-toggle span::before,
+.course-filter-toggle span::after { position: absolute; top: 5px; left: 1px; width: 10px; height: 2px; border-radius: 999px; background: currentColor; content: ''; }
+.course-filter-toggle span::after { transform: rotate(90deg); transition: opacity .15s ease; }
+.course-filter-toggle[aria-expanded='true'] span::after { opacity: 0; }
 .course-filter-options[hidden] { display: none; }
 
 .course-filter-options {

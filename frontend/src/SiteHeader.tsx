@@ -32,7 +32,11 @@ export default function SiteHeader() {
         {isLoggedIn ? (
           <button className="login-link" type="button" onClick={() => setShowLogoutModal(true)}>로그아웃</button>
         ) : (
-          <a className="login-link" href="#login">로그인 / 회원가입</a>
+          <span className="auth-links">
+            <a className="login-link" href="#login">로그인</a>
+            <span aria-hidden="true">/</span>
+            <a className="login-link" href="#signup">회원가입</a>
+          </span>
         )}
       </nav>
       {showLogoutModal && (

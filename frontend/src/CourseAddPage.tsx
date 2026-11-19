@@ -210,7 +210,7 @@ export default function CourseAddPage() {
                   aria-controls="department-filter-options"
                   onClick={() => toggleFilter('department')}
                 >
-                  <span aria-hidden="true">⌄</span>
+                  <span aria-hidden="true" />
                 </button>
               </legend>
               <div className="course-filter-options" id="department-filter-options" hidden={!expandedFilters.department}>
@@ -238,7 +238,7 @@ export default function CourseAddPage() {
                   aria-controls="category-filter-options"
                   onClick={() => toggleFilter('category')}
                 >
-                  <span aria-hidden="true">⌄</span>
+                  <span aria-hidden="true" />
                 </button>
               </legend>
               <div className="course-filter-options" id="category-filter-options" hidden={!expandedFilters.category}>
@@ -266,7 +266,7 @@ export default function CourseAddPage() {
                   aria-controls="year-filter-options"
                   onClick={() => toggleFilter('year')}
                 >
-                  <span aria-hidden="true">⌄</span>
+                  <span aria-hidden="true" />
                 </button>
               </legend>
               <div className="course-filter-options course-filter-years" id="year-filter-options" hidden={!expandedFilters.year}>

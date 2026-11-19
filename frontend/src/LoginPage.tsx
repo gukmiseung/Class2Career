@@ -59,7 +59,7 @@ export default function LoginPage() {
             />
             <span>로그인 정보 저장하기</span>
           </label>
-          <p className="login-forgot">비밀번호를 잊으셨나요?</p>
+          <a className="login-forgot" href="#reset-password">비밀번호를 잊으셨나요?</a>
         </div>
         <button type="submit">로그인</button>
 
