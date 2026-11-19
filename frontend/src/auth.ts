@@ -1,35 +1,55 @@
-import { useEffect, useState } from 'react'
 
-const authStorageKey = 'class2career.is-logged-in'
+import { supabase } from './lib/supabase'
+
+// 회원가입
+export async function signUp(
+  email: string,
+  password: string,
+  name?: string,
+) {
+  return await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: window.location.origin,
+      data: name === undefined ? undefined : { name },
+    },
+  })
+}
+
+// 로그인
+export async function signIn(
+  email: string,
+  password: string
+) {
+  return await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
+}
+
+// 로그아웃
+export async function signOut() {
+  return await supabase.auth.signOut()
+}
+
+// 비밀번호 재설정 이메일 발송
+export async function resetPassword(email: string) {
+  return await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/`,
+  })
+}
+
+// 복구 인증 후 새 비밀번호 저장
+export async function updatePassword(
+  newPassword: string
+) {
+  return await supabase.auth.updateUser({
+    password: newPassword,
+  })
+}
+
 const savedEmailKey = 'class2career.saved-email'
-const authChangeEvent = 'class2career:auth-change'
-
-export function getLoginStatus() {
-  try {
-    return window.localStorage.getItem(authStorageKey) === 'true' ||
-      window.sessionStorage.getItem(authStorageKey) === 'true'
-  } catch {
-    return false
-  }
-}
-
-export function setLoginStatus(isLoggedIn: boolean, remember = true) {
-  try {
-    if (isLoggedIn) {
-      window.localStorage.removeItem(authStorageKey)
-      window.sessionStorage.removeItem(authStorageKey)
-      const storage = remember ? window.localStorage : window.sessionStorage
-      storage.setItem(authStorageKey, 'true')
-    } else {
-      window.localStorage.removeItem(authStorageKey)
-      window.sessionStorage.removeItem(authStorageKey)
-    }
-  } catch {
-    // 저장소를 사용할 수 없는 환경에서도 현재 탭의 UI는 갱신합니다.
-  }
-
-  window.dispatchEvent(new CustomEvent(authChangeEvent, { detail: isLoggedIn }))
-}
 
 export function getSavedEmail() {
   try {
@@ -46,21 +66,4 @@ export function saveEmail(email: string | null) {
   } catch {
     // 저장소를 사용할 수 없는 환경에서는 이메일을 저장하지 않습니다.
   }
-}
-
-export function useLoginStatus() {
-  const [isLoggedIn, setIsLoggedIn] = useState(getLoginStatus)
-
-  useEffect(() => {
-    const updateLoginStatus = () => setIsLoggedIn(getLoginStatus())
-
-    window.addEventListener('storage', updateLoginStatus)
-    window.addEventListener(authChangeEvent, updateLoginStatus)
-    return () => {
-      window.removeEventListener('storage', updateLoginStatus)
-      window.removeEventListener(authChangeEvent, updateLoginStatus)
-    }
-  }, [])
-
-  return isLoggedIn
 }
