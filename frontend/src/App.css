@@ -7,6 +7,12 @@ html { scroll-behavior: smooth; }
   background: linear-gradient(180deg, #fafcff 0%, #f8fbff 42%, #e6f4ff 73%, #cceaff 100%);
 }
 
+.home-page.dashboard-home-shell {
+  height: 100svh;
+  min-height: 100svh;
+  overflow-y: hidden;
+}
+
 .site-header {
   position: absolute;
   z-index: 10;
@@ -138,6 +144,7 @@ html { scroll-behavior: smooth; }
 
 @media (max-width: 680px) {
   .home-page { min-height: 100%; }
+  .home-page.dashboard-home-shell { height: auto; min-height: 100svh; overflow-y: visible; }
   .site-header { height: 68px; padding: 0 16px; }
   .header-logo { font-size: 24px; }
   .header-nav { gap: 13px; }

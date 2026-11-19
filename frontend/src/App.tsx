@@ -134,7 +134,7 @@ function App() {
   }
 
   return (
-    <div className={`home-page${hash !== '#login' && hash !== '#signup' ? ' dashboard-shell' : ''}`}>
+    <div className={`home-page${hash !== '#login' && hash !== '#signup' ? ' dashboard-shell' : ''}${hash === '' || hash === '#dashboard' ? ' dashboard-home-shell' : ''}`}>
       <SiteHeader />
 
       {hash === '#login' ? (
