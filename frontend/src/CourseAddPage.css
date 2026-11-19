@@ -265,7 +265,7 @@
 
 .course-concept-link:hover,
 .course-concept-link:active,
-.course-concept-link:visited { color: var(--course-accent-text); }
+.course-concept-link:focus-visible { color: var(--course-accent-text); }
 
 .course-concept-link:focus-visible {
   outline: 2px solid var(--course-accent);
