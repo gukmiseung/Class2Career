@@ -1,44 +1,21 @@
 
-import { useEffect, useState } from 'react'
-import { resetPassword, updatePassword } from '../lib/auth'
-import { supabase } from '../lib/supabase'
+import { useRef, useState } from 'react'
+import { useAuth } from '../contexts/AuthContext'
+import { resetPassword, signOut, updatePassword } from '../lib/auth'
 
 export default function PasswordReset() {
   const [email, setEmail] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [recoveryMode, setRecoveryMode] = useState(false)
+  const { recoveringPassword, loading: authLoading } = useAuth()
+  const pending = useRef(false)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
 
-  useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange(
-      (event) => {
-        if (event === 'PASSWORD_RECOVERY') {
-          setRecoveryMode(true)
-          setMessage('새 비밀번호를 입력해 주세요.')
-        }
-      }
-    )
-
-    const hash = new URLSearchParams(
-      window.location.hash.slice(1)
-    )
-
-    if (hash.get('error')) {
-      setMessage(
-        '인증 링크가 만료되었거나 유효하지 않습니다. 새 재설정 메일을 요청해 주세요.'
-      )
-    }
-
-    return () => {
-      data.subscription.unsubscribe()
-    }
-  }, [])
-
   async function handleResetRequest() {
-    if (loading || !email.trim()) return
+    if (pending.current || authLoading || !email.trim()) return
 
+    pending.current = true
     setLoading(true)
     setMessage('')
 
@@ -53,15 +30,16 @@ export default function PasswordReset() {
     } catch {
       setMessage('재설정 요청 중 오류가 발생했습니다.')
     } finally {
+      pending.current = false
       setLoading(false)
     }
   }
 
   async function handlePasswordUpdate() {
-    if (loading) return
+    if (pending.current || !recoveringPassword) return
 
-    if (newPassword.length < 6) {
-      setMessage('비밀번호는 6자 이상이어야 합니다.')
+    if (newPassword.length < 8) {
+      setMessage('비밀번호는 8자 이상이어야 합니다.')
       return
     }
 
@@ -70,6 +48,7 @@ export default function PasswordReset() {
       return
     }
 
+    pending.current = true
     setLoading(true)
     setMessage('')
 
@@ -79,71 +58,87 @@ export default function PasswordReset() {
       if (error) {
         setMessage(`변경 오류: ${error.message}`)
       } else {
-        setMessage('비밀번호 변경 완료! 다시 로그인해 주세요.')
-        setRecoveryMode(false)
         setNewPassword('')
         setConfirmPassword('')
-        await supabase.auth.signOut()
+        const { error: logoutError } = await signOut()
+        setMessage(logoutError
+          ? '비밀번호를 변경했지만 로그아웃하지 못했습니다.'
+          : '비밀번호를 변경했습니다. 다시 로그인해 주세요.')
       }
     } catch {
       setMessage('비밀번호 변경 중 오류가 발생했습니다.')
     } finally {
+      pending.current = false
       setLoading(false)
     }
   }
 
   return (
-    <section style={{
-      maxWidth: 420,
-      margin: '40px auto',
-      padding: 24,
-    }}>
+    <section className="login-card">
       <h2>비밀번호 재설정</h2>
 
-      {recoveryMode ? (
-        <div>
+      {recoveringPassword ? (
+        <form onSubmit={(event) => {
+          event.preventDefault()
+          void handlePasswordUpdate()
+        }}>
+          <label htmlFor="reset-password">새 비밀번호</label>
           <input
+            id="reset-password"
             type="password"
+            autoComplete="new-password"
+            minLength={8}
+            required
             placeholder="새 비밀번호"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
           />
 
+          <label htmlFor="reset-confirm">새 비밀번호 확인</label>
           <input
+            id="reset-confirm"
             type="password"
+            autoComplete="new-password"
+            required
             placeholder="새 비밀번호 확인"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
           />
 
           <button
-            type="button"
-            onClick={handlePasswordUpdate}
+            type="submit"
             disabled={loading}
           >
-            비밀번호 변경
+            {loading ? '변경 중…' : '비밀번호 변경'}
           </button>
-        </div>
+        </form>
       ) : (
-        <div>
+        <form onSubmit={(event) => {
+          event.preventDefault()
+          void handleResetRequest()
+        }}>
+          <label htmlFor="reset-email">가입한 이메일</label>
           <input
+            id="reset-email"
             type="email"
+            autoComplete="email"
+            required
             placeholder="가입한 이메일"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
 
           <button
-            type="button"
-            onClick={handleResetRequest}
-            disabled={loading}
+            type="submit"
+            disabled={loading || authLoading}
           >
-            재설정 메일 보내기
+            {loading ? '발송 중…' : '재설정 메일 보내기'}
           </button>
-        </div>
+        </form>
       )}
 
       <p role="status">{message}</p>
+      {!recoveringPassword && <p className="login-signup"><a href="#login">로그인으로 돌아가기</a></p>}
     </section>
   )
 }

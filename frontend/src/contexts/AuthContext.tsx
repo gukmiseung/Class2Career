@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from 'react'
 import type { User } from '@supabase/supabase-js'
@@ -12,6 +13,28 @@ import { supabase } from '../lib/supabase'
 type AuthContextType = {
   user: User | null
   loading: boolean
+  recoveringPassword: boolean
+}
+
+let recoveringPassword = false
+const recoveryListeners = new Set<() => void>()
+
+// Register before React mounts so a fast email callback is also captured.
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'PASSWORD_RECOVERY') {
+    recoveringPassword = true
+  } else if (!session) {
+    recoveringPassword = false
+  } else {
+    return
+  }
+
+  recoveryListeners.forEach((listener) => listener())
+})
+
+function subscribeToRecovery(listener: () => void) {
+  recoveryListeners.add(listener)
+  return () => { recoveryListeners.delete(listener) }
 }
 
 export const AuthContext =
@@ -24,35 +47,24 @@ export function AuthProvider({
 }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const recovery = useSyncExternalStore(
+    subscribeToRecovery,
+    () => recoveringPassword,
+  )
 
   useEffect(() => {
-    let active = true
-
-    // 처음 접속했을 때 로그인 상태 확인
-    supabase.auth.getUser().then(({ data, error }) => {
-      if (!active) return
-
-      setUser(error ? null : data.user)
-      setLoading(false)
-    })
-
-    // 로그인·로그아웃 상태 변경 감지
+    // INITIAL_SESSION and subsequent events use the same source of truth.
     const { data: listener } =
       supabase.auth.onAuthStateChange((_event, session) => {
-        if (active) {
-          setUser(session?.user ?? null)
-          setLoading(false)
-        }
+        setUser(session?.user ?? null)
+        setLoading(false)
       })
 
-    return () => {
-      active = false
-      listener.subscription.unsubscribe()
-    }
+    return () => listener.subscription.unsubscribe()
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, recoveringPassword: recovery }}>
       {children}
     </AuthContext.Provider>
   )

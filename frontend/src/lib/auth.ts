@@ -4,13 +4,15 @@ import { supabase } from './supabase'
 // 회원가입
 export async function signUp(
   email: string,
-  password: string
+  password: string,
+  name?: string,
 ) {
   return await supabase.auth.signUp({
     email,
     password,
     options: {
       emailRedirectTo: window.location.origin,
+      data: name === undefined ? undefined : { name },
     },
   })
 }

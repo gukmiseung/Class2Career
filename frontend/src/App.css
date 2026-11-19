@@ -25,6 +25,8 @@ html { scroll-behavior: smooth; }
 .site-header nav { display: flex; align-items: center; gap: 80px; }
 .site-header nav a { color: #2763e8; font-size: 25px; font-weight: 400; text-decoration: none; transition: opacity .2s ease; }
 .site-header nav a:hover { opacity: .65; }
+.header-logout { padding: 0; border: 0; background: none; color: #2763e8; font: inherit; cursor: pointer; }
+.header-auth-status:not(:empty) { position: absolute; top: 76px; right: 28px; margin: 0; }
 
 .hero-section { min-height: 900px; padding: 210px 24px 80px; text-align: center; }
 .hero-copy { margin: 0 auto; max-width: 900px; }
