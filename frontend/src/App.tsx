@@ -18,6 +18,20 @@ const features = [
   { icon: '🎓', title: '03. 학습 방향 추천', description: '관심 직무에 필요한 학습과 프로젝트\n를 추천받으세요.' },
 ]
 
+function SiteHeader() {
+  return (
+    <header className="site-header">
+      <a className="header-logo" href="#dashboard" aria-label="C2C 대시보드">C2C</a>
+      <nav className="header-nav" aria-label="주요 메뉴">
+        <a href="#career">직무 탐색</a>
+        <a href="#explore">전공 탐색</a>
+        <a href="#explore/learning">내 학습</a>
+        <a className="login-link" href="#login">로그인</a>
+      </nav>
+    </header>
+  )
+}
+
 function App() {
   const [hash, setHash] = useState(window.location.hash)
 
@@ -29,11 +43,21 @@ function App() {
   }, [])
 
   if (hash === '#explore') {
-    return <CourseAddPage />
+    return (
+      <div className="home-page dashboard-shell">
+        <SiteHeader />
+        <CourseAddPage />
+      </div>
+    )
   }
 
   if (hash === '#explore/learning') {
-    return <CourseAddPage showLearning />
+    return (
+      <div className="home-page dashboard-shell">
+        <SiteHeader />
+        <CourseAddPage showLearning />
+      </div>
+    )
   }
 
   const conceptRoute = '#explore/concepts/'
@@ -81,15 +105,7 @@ function App() {
 
   return (
     <div className={`home-page${hash === '#dashboard' || hash === '#career' || hash.startsWith('#career-') || hash.startsWith('#roadmap-') ? ' dashboard-shell' : ''}`}>
-      <header className="site-header">
-        <a className="header-logo" href="#dashboard" aria-label="C2C 대시보드">C2C</a>
-        <nav className="header-nav" aria-label="주요 메뉴">
-          <a href="#career">직무 탐색</a>
-          <a href="#explore">전공 탐색</a>
-          <a href="#features">내 학습</a>
-          <a className="login-link" href="#login">로그인</a>
-        </nav>
-      </header>
+      <SiteHeader />
 
       {hash === '#login' ? (
         <LoginPage />
