@@ -271,23 +271,6 @@
   outline-offset: 3px;
 }
 
-.course-registered {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 36px;
-  flex-shrink: 0;
-  padding: 0 14px;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  color: var(--course-accent-text);
-  background: #eff3fc;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.course-registered { color: #43516a; background: #f0f2f6; }
-
 .course-register-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 
 .course-register-actions button {
@@ -303,9 +286,9 @@
   white-space: nowrap;
 }
 
-.course-register-actions button:last-child { border-color: #5269ff; color: #fff; background: #5269ff; }
 .course-register-actions button:hover { border-color: #5269ff; color: var(--course-accent-text); background: var(--course-accent-light); }
-.course-register-actions button:last-child:hover { color: #fff; background: #4055db; }
+.course-register-actions button[aria-pressed='true'] { border-color: #5269ff; color: #fff; background: #5269ff; }
+.course-register-actions button[aria-pressed='true']:hover { color: #fff; background: #4055db; }
 
 .course-results .course-empty {
   padding: 42px 20px;

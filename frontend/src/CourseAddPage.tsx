@@ -141,7 +141,11 @@ export default function CourseAddPage() {
     try {
       const storage = window.localStorage
       const current = parseRegistrations(storage.getItem(registrationKey))
-      current[id] = status
+      if (current[id] === status) {
+        delete current[id]
+      } else {
+        current[id] = status
+      }
       storage.setItem(registrationKey, JSON.stringify(current))
 
       setRegistrations(current)
@@ -264,18 +268,22 @@ export default function CourseAddPage() {
                         </p>
                         <p className="course-card-description">{course.description}</p>
                       </div>
-                      {status ? (
-                        <span className="course-registered">{statusLabels[status]}</span>
-                      ) : (
-                        <div className="course-register-actions">
-                          <button type="button" onClick={() => registerCourse(course.id, 'completed')}>
-                            수강 완료
-                          </button>
-                          <button type="button" onClick={() => registerCourse(course.id, 'planned')}>
-                            수강 예정
-                          </button>
-                        </div>
-                      )}
+                      <div className="course-register-actions">
+                        <button
+                          type="button"
+                          aria-pressed={status === 'completed'}
+                          onClick={() => registerCourse(course.id, 'completed')}
+                        >
+                          수강 완료
+                        </button>
+                        <button
+                          type="button"
+                          aria-pressed={status === 'planned'}
+                          onClick={() => registerCourse(course.id, 'planned')}
+                        >
+                          수강 예정
+                        </button>
+                      </div>
                     </li>
                   )
                 })}
