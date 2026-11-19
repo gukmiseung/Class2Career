@@ -1,4 +1,5 @@
 import './LoginPage.css'
+import { setLoginStatus } from './auth'
 
 export default function LoginPage() {
   return (
@@ -11,6 +12,7 @@ export default function LoginPage() {
         className="login-card"
         onSubmit={(event) => {
           event.preventDefault()
+          setLoginStatus(true)
           window.location.hash = 'dashboard'
         }}
       >
