@@ -29,6 +29,17 @@
 .learning-courses { margin-top: 72px; }
 .learning-courses > p { margin: 0 0 20px; color: #65738b; font-size: 14px; }
 
+.learning-course-list { display: grid; gap: 18px; margin: 0; padding: 0; list-style: none; }
+.learning-course-list > li { padding: 22px 24px; border: 1px solid #d9e1ec; border-radius: 16px; background: rgba(255, 255, 255, .94); }
+.learning-course-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.learning-course-heading h2 { margin: 0; font-size: 19px; }
+.learning-status { flex: 0 0 auto; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 700; }
+.learning-status.completed { color: #1760ef; background: #e5edff; }
+.learning-status.planned { color: #08795b; background: #e3f4ef; }
+.learning-course-meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; color: #65738b; font-size: 13px; }
+.learning-course-meta span + span::before { margin-right: 8px; color: #a7b2c2; content: '·'; }
+.learning-course-description { margin: 12px 0 0; color: #65738b; font-size: 14px; line-height: 1.6; }
+
 .learning-empty {
   min-height: 260px;
   display: flex;

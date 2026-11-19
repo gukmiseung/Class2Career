@@ -1,6 +1,12 @@
 import { Fragment, useEffect, useRef, useState, type FormEvent } from 'react'
 import { getCourseConcepts } from './courseConcepts'
 import {
+  loadRegistrations,
+  parseRegistrations,
+  registrationKey,
+  type CourseStatus,
+} from './courseRegistrations'
+import {
   courseCategories,
   courses,
   courseYears,
@@ -12,12 +18,7 @@ import {
 import './CourseAddPage.css'
 
 const pageSize = 4
-const registrationKey = 'class2career.course-registrations'
 const categoryOptions = ['전체', ...courseCategories] as const
-const statusLabels = { completed: '수강 완료', planned: '수강 예정' } as const
-
-type CourseStatus = keyof typeof statusLabels
-type Registrations = Partial<Record<string, CourseStatus>>
 type Filters = {
   department: Department
   category: CourseCategory | '전체'
@@ -27,35 +28,6 @@ type Filters = {
 type FilterSection = 'department' | 'category' | 'year'
 
 const defaultFilters: Filters = { department: '컴퓨터학부', category: '전체', year: null }
-
-function parseRegistrations(value: string | null): Registrations {
-  if (value === null) return {}
-
-  try {
-    const stored: unknown = JSON.parse(value)
-    if (!stored || typeof stored !== 'object' || Array.isArray(stored)) return {}
-
-    const entries = stored as Record<string, unknown>
-    const registrations: Registrations = {}
-
-    for (const { id } of courses) {
-      const status = entries[id]
-      if (status === 'completed' || status === 'planned') registrations[id] = status
-    }
-
-    return registrations
-  } catch {
-    return {}
-  }
-}
-
-function loadRegistrations(): Registrations {
-  try {
-    return parseRegistrations(window.localStorage.getItem(registrationKey))
-  } catch {
-    return {}
-  }
-}
 
 function CoursePagination({ page, pageCount, onPageChange }: {
   page: number

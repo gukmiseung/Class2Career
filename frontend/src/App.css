@@ -8,9 +8,9 @@ html { scroll-behavior: smooth; }
 }
 
 .home-page.dashboard-home-shell {
-  height: 100svh;
-  min-height: 100svh;
-  overflow-y: hidden;
+  height: auto;
+  min-height: calc(100svh + 64px);
+  overflow-y: auto;
 }
 
 .site-header {
