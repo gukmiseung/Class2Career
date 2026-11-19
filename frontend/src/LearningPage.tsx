@@ -6,7 +6,40 @@ import './LearningPage.css'
 
 type LearningTab = CourseStatus | 'career'
 
-export default function LearningPage({ locked = false }: { locked?: boolean }) {
+export default function LearningPage({ locked }: { locked: boolean }) {
+  if (!locked) return <LearningContent />
+
+  return (
+    <main className="learning-page">
+      <h1>?? ?? ??</h1>
+      <div className="learning-login-backdrop" role="presentation">
+        <section
+          className="learning-login-modal"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="learning-login-title"
+          aria-describedby="learning-login-description"
+        >
+          <button
+            className="learning-login-close"
+            type="button"
+            aria-label="안내창 닫기"
+            onClick={() => { window.location.hash = 'dashboard' }}
+          >
+            ×
+          </button>
+          <div className="learning-login-lock" aria-hidden="true"><span /></div>
+          <h2 id="learning-login-title">로그인 후 이용해주세요</h2>
+          <p id="learning-login-description">로그인하면 나의 수강 과목과 학습 현황을<br />확인하고 관리할 수 있어요.</p>
+          <a className="learning-login-button" href="#login">로그인하기</a>
+          <p className="learning-signup-prompt">아직 계정이 없으신가요? <a href="#signup">회원가입</a></p>
+        </section>
+      </div>
+    </main>
+  )
+}
+
+function LearningContent() {
   const [registrations, setRegistrations] = useState(loadRegistrations)
   const [activeTab, setActiveTab] = useState<LearningTab>('completed')
   const [interestedCareers, setInterestedCareers] = useState(loadCareerInterests)
@@ -184,31 +217,6 @@ export default function LearningPage({ locked = false }: { locked?: boolean }) {
           </div>
         )}
       </section>
-      {locked && (
-        <div className="learning-login-backdrop" role="presentation">
-          <section
-            className="learning-login-modal"
-            role="alertdialog"
-            aria-modal="true"
-            aria-labelledby="learning-login-title"
-            aria-describedby="learning-login-description"
-          >
-            <button
-              className="learning-login-close"
-              type="button"
-              aria-label="안내창 닫기"
-              onClick={() => { window.location.hash = 'dashboard' }}
-            >
-              ×
-            </button>
-            <div className="learning-login-lock" aria-hidden="true"><span /></div>
-            <h2 id="learning-login-title">로그인 후 이용해주세요</h2>
-            <p id="learning-login-description">로그인하면 나의 수강 과목과 학습 현황을<br />확인하고 관리할 수 있어요.</p>
-            <a className="learning-login-button" href="#login">로그인하기</a>
-            <p className="learning-signup-prompt">아직 계정이 없으신가요? <a href="#signup">회원가입</a></p>
-          </section>
-        </div>
-      )}
     </main>
   )
 }

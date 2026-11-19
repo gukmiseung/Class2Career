@@ -15,24 +15,30 @@ import PasswordResetPage from './PasswordResetPage'
 import SiteHeader from './SiteHeader'
 import { getCourseConcepts } from './courseConcepts'
 import { courses } from './courses'
-import { useLoginStatus } from './auth'
+import { useAuth } from './contexts/AuthContext'
+import { authCallback, supabase } from './lib/supabase'
 import './App.css'
 
 const loadingDuration = 700
 
 function App() {
-  const [hash, setHash] = useState(window.location.hash)
+  const [locationHash, setHash] = useState(window.location.hash)
   const [isLoading, setIsLoading] = useState(false)
-  const isLoggedIn = useLoginStatus()
+  const [callbackMessage, setCallbackMessage] = useState('')
+  const [handlingCallback, setHandlingCallback] = useState(Boolean(authCallback))
+  const { user, loading, recoveringPassword } = useAuth()
+  const hash = recoveringPassword ? '#reset-password' : locationHash
 
   useEffect(() => {
     let loadingTimer: number | undefined
 
-    const updateHash = () => {
+    const updateHash = (event: HashChangeEvent) => {
+      if (event.newURL !== window.location.href) return
       if (loadingTimer !== undefined) window.clearTimeout(loadingTimer)
 
       const nextHash = window.location.hash
       setHash(nextHash)
+      setCallbackMessage('')
 
       if (nextHash.includes('/analysis')) {
         setIsLoading(true)
@@ -49,7 +55,35 @@ function App() {
     }
   }, [])
 
-  if (isLoading) {
+  useEffect(() => {
+    if (!authCallback) return
+    const { recovery, hasError } = authCallback
+    let active = true
+
+    void supabase.auth.initialize().then(({ error }) => {
+      if (!active) return
+      setHandlingCallback(false)
+      const currentHash = window.location.hash
+      if (currentHash && !currentHash.includes('=')) return
+
+      const destination = recovery ? '#reset-password' : '#login'
+      window.history.replaceState(window.history.state, '', window.location.pathname + destination)
+      setHash(destination)
+      if (error || hasError) {
+        setCallbackMessage('이메일 링크가 만료되었거나 유효하지 않습니다. 새 링크를 요청해 주세요.')
+      } else if (!recovery) {
+        setCallbackMessage('이메일 인증이 완료되었습니다.')
+      }
+    })
+
+    return () => { active = false }
+  }, [])
+
+  if (handlingCallback) {
+    return <LoadingPage message="이메일 인증 링크를 확인하고 있어요..." />
+  }
+
+  if (isLoading && !recoveringPassword) {
     return <LoadingPage message="선택한 전공 개념을 분석하고 있어요..." />
   }
 
@@ -66,7 +100,7 @@ function App() {
     return (
       <div className="home-page dashboard-shell learning-shell">
         <SiteHeader />
-        <LearningPage locked={!isLoggedIn} />
+        {loading ? <p role="status">로그인 상태를 확인하고 있어요...</p> : <LearningPage locked={!user} />}
       </div>
     )
   }
@@ -140,9 +174,9 @@ function App() {
       <SiteHeader />
 
       {hash === '#login' ? (
-        <LoginPage />
+        <LoginPage callbackMessage={callbackMessage} />
       ) : hash === '#reset-password' ? (
-        <PasswordResetPage />
+        <PasswordResetPage callbackMessage={callbackMessage} />
       ) : hash === '#signup' ? (
         <SignupPage />
       ) : hash === '#dashboard' ? (

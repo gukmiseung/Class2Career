@@ -1,22 +1,54 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import './SignupPage.css'
+import { signUp } from './auth'
 
 export default function SignupPage() {
   const [passwordError, setPasswordError] = useState('')
   const [message, setMessage] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const pending = useRef(false)
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const formData = new FormData(event.currentTarget)
+    if (pending.current) return
+    const form = event.currentTarget
+    const formData = new FormData(form)
+    const name = String(formData.get('name') ?? '').trim()
+    const email = String(formData.get('email') ?? '').trim()
+    const password = String(formData.get('password') ?? '')
+    setPasswordError('')
+    setMessage('')
 
-    if (formData.get('password') !== formData.get('confirmPassword')) {
+    if (!name) {
+      setMessage('이름을 입력해 주세요.')
+      return
+    }
+    if (password.length < 8) {
+      setPasswordError('비밀번호를 8자 이상 입력해 주세요.')
+      return
+    }
+    if (password !== formData.get('confirmPassword')) {
       setPasswordError('비밀번호가 일치하지 않아요.')
       return
     }
 
-    setPasswordError('')
-    setMessage('회원가입이 완료되었습니다. 대시보드로 이동합니다.')
-    window.location.hash = 'dashboard'
+    pending.current = true
+    setSubmitting(true)
+    try {
+      const { data, error } = await signUp(email, password, name)
+      if (error) {
+        setMessage(`회원가입 실패: ${error.message}`)
+        return
+      }
+      form.reset()
+      if (data.session) window.location.hash = '#dashboard'
+      else setMessage('회원가입 요청이 완료되었습니다. 이메일에서 인증 링크를 확인해 주세요.')
+    } catch {
+      setMessage('회원가입 요청 중 오류가 발생했습니다.')
+    } finally {
+      pending.current = false
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -56,7 +88,7 @@ export default function SignupPage() {
           />
 
           {passwordError && <p className="signup-error" id="signup-password-error" role="alert">{passwordError}</p>}
-          <button type="submit">회원가입</button>
+          <button type="submit" disabled={submitting}>{submitting ? '가입 요청 중…' : '회원가입'}</button>
           {message && <p role="status">{message}</p>}
         </form>
 

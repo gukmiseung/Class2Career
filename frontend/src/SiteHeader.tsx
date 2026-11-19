@@ -1,10 +1,15 @@
-import { useEffect, useState } from 'react'
-import { setLoginStatus, useLoginStatus } from './auth'
+import { useEffect, useRef, useState } from 'react'
+import { signOut } from './auth'
+import { useAuth } from './contexts/AuthContext'
 
 export default function SiteHeader() {
-  const isLoggedIn = useLoginStatus()
+  const { user, loading, recoveringPassword } = useAuth()
+  const isLoggedIn = Boolean(user) && !recoveringPassword
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [showLearningLoginModal, setShowLearningLoginModal] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
+  const [logoutError, setLogoutError] = useState('')
+  const logoutPending = useRef(false)
 
   useEffect(() => {
     if (!showLogoutModal && !showLearningLoginModal) return
@@ -20,10 +25,25 @@ export default function SiteHeader() {
     return () => window.removeEventListener('keydown', closeOnEscape)
   }, [showLogoutModal, showLearningLoginModal])
 
-  function confirmLogout() {
-    setLoginStatus(false)
-    setShowLogoutModal(false)
-    window.location.hash = 'dashboard'
+  async function confirmLogout() {
+    if (logoutPending.current) return
+    logoutPending.current = true
+    setSigningOut(true)
+    setLogoutError('')
+    try {
+      const { error } = await signOut()
+      if (error) {
+        setLogoutError(`로그아웃 실패: ${error.message}`)
+        return
+      }
+      setShowLogoutModal(false)
+      window.location.hash = '#dashboard'
+    } catch {
+      setLogoutError('로그아웃 중 오류가 발생했습니다.')
+    } finally {
+      logoutPending.current = false
+      setSigningOut(false)
+    }
   }
 
   return (
@@ -35,10 +55,17 @@ export default function SiteHeader() {
         {isLoggedIn ? (
           <a href="#explore/learning">내 학습</a>
         ) : (
-          <button type="button" onClick={() => setShowLearningLoginModal(true)}>내 학습</button>
+          <button type="button" disabled={loading || recoveringPassword} onClick={() => setShowLearningLoginModal(true)}>내 학습</button>
         )}
-        {isLoggedIn ? (
-          <button className="login-link" type="button" onClick={() => setShowLogoutModal(true)}>로그아웃</button>
+        {loading ? (
+          <span role="status">로그인 확인 중…</span>
+        ) : recoveringPassword ? (
+          <span>비밀번호 재설정 중</span>
+        ) : isLoggedIn ? (
+          <button className="login-link" type="button" onClick={() => {
+            setLogoutError('')
+            setShowLogoutModal(true)
+          }}>로그아웃</button>
         ) : (
           <span className="auth-links">
             <a className="login-link" href="#login">로그인</a>
@@ -47,7 +74,7 @@ export default function SiteHeader() {
           </span>
         )}
       </nav>
-      {showLogoutModal && (
+      {showLogoutModal && isLoggedIn && (
         <div className="logout-modal-backdrop" role="presentation" onMouseDown={() => setShowLogoutModal(false)}>
           <section
             className="logout-modal"
@@ -60,14 +87,15 @@ export default function SiteHeader() {
             <div className="logout-modal-icon" aria-hidden="true">↪</div>
             <h2 id="logout-modal-title">로그아웃 할까요?</h2>
             <p id="logout-modal-description">언제든 다시 로그인해서 학습을 이어갈 수 있어요.</p>
+            {logoutError && <p role="alert">{logoutError}</p>}
             <div className="logout-modal-actions">
               <button type="button" autoFocus onClick={() => setShowLogoutModal(false)}>취소</button>
-              <button className="logout-confirm-button" type="button" onClick={confirmLogout}>로그아웃</button>
+              <button className="logout-confirm-button" type="button" disabled={signingOut} onClick={confirmLogout}>{signingOut ? '로그아웃 중…' : '로그아웃'}</button>
             </div>
           </section>
         </div>
       )}
-      {showLearningLoginModal && (
+      {showLearningLoginModal && !isLoggedIn && !loading && !recoveringPassword && (
         <div className="learning-login-backdrop" role="presentation" onMouseDown={() => setShowLearningLoginModal(false)}>
           <section
             className="learning-login-modal"
