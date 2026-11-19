@@ -63,8 +63,8 @@
 .roadmap-link:hover { background: #174fc9; }
 .connected-courses { margin-top: 46px; }
 .connected-courses > h2 { margin: 0; font-size: 23px; letter-spacing: -.7px; }
-.connected-courses > p { margin: 16px 0 0; color: #65738b; font-size: 14px; }
-.course-list { display: grid; gap: 19px; margin-top: 40px; }
+.connected-courses > p { margin: 16px 0 0; color: #65738b; font-size: 14px; line-height: 1.6; }
+.connected-courses .course-list { display: grid; gap: 19px; margin-top: 54px; }
 
 .course-row {
   min-height: 93px;
@@ -100,19 +100,27 @@
 }
 
 .course-actions a {
-  width: 80px;
-  padding: 0;
-  border: 0;
-  background: transparent;
+  width: 96px;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: #f2f7ff;
   color: #1760ef;
   font: inherit;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   line-height: 1.25;
   text-align: center;
   text-decoration: none;
   white-space: nowrap;
+  transition: color .18s ease, background-color .18s ease;
 }
+
+.course-actions a:hover,
+.course-actions a:focus-visible { color: #4c91e8; background: #dfedff; }
 
 .connected-courses > .course-note { margin-top: 42px; color: #91a0b7; font-size: 13px; }
 .career-not-found { padding-top: 160px; }
