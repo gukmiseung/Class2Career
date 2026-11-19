@@ -38,7 +38,11 @@ export default function SiteHeader() {
           <button type="button" onClick={() => setShowLearningLoginModal(true)}>내 학습</button>
         )}
         {isLoggedIn ? (
-          <button className="login-link" type="button" onClick={() => setShowLogoutModal(true)}>로그아웃</button>
+          <span className="auth-links logged-in-links">
+            <a className="login-link" href="#profile">프로필</a>
+            <span aria-hidden="true">/</span>
+            <button className="login-link" type="button" onClick={() => setShowLogoutModal(true)}>로그아웃</button>
+          </span>
         ) : (
           <span className="auth-links">
             <a className="login-link" href="#login">로그인</a>

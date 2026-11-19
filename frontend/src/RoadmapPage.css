@@ -46,6 +46,9 @@
   font-size: 16px;
   font-weight: 700;
 }
+.roadmap-step.completed { border-color: #b7dfc4; background: #fbfffc; }
+.roadmap-step.completed .step-number { color: #fff; background: #25a55f; }
+.roadmap-step.completed .step-action > span { border-color: #b7dfc4; color: #19864b; background: #eaf8ef; font-weight: 700; }
 
 .step-copy { min-width: 0; }
 .step-copy h2 { margin: 0; font-size: 18px; }
@@ -64,7 +67,6 @@
   font-size: 14px;
 }
 
-.step-action button { border: 0; background: transparent; color: #1760ef; font: inherit; font-size: 13px; font-weight: 700; white-space: nowrap; cursor: pointer; }
 .roadmap-not-found { padding-top: 160px; }
 .roadmap-not-found a { color: #1760ef; }
 
