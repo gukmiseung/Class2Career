@@ -1,10 +1,4 @@
-export type CourseConcept = {
-  id: string
-  name: string
-  description: string
-}
-
-const dataStructuresConcepts: readonly CourseConcept[] = [
+const dataStructuresConcepts = [
   {
     id: 'lists',
     name: '배열과 연결 리스트',
@@ -25,7 +19,9 @@ const dataStructuresConcepts: readonly CourseConcept[] = [
     name: '정렬과 탐색',
     description: '데이터를 효율적으로 정리하고 찾는 알고리즘',
   },
-]
+] as const
+
+export type CourseConcept = (typeof dataStructuresConcepts)[number]
 
 const dataStructuresCourseIds = new Set(['cs-data-structures', 'sw-data-structures'])
 

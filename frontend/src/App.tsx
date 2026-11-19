@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import ConceptAnalysisPage from './ConceptAnalysisPage'
 import ConceptSelectionPage from './ConceptSelectionPage'
 import CourseAddPage from './CourseAddPage'
 import LoginPage from './LoginPage'
@@ -41,13 +42,45 @@ function App() {
 
   const conceptRoute = '#explore/concepts/'
   if (hash.startsWith(conceptRoute)) {
-    const courseId = hash.slice(conceptRoute.length)
+    const [path, query] = hash.slice(conceptRoute.length).split('?', 2)
+    const [courseId] = path.split('/', 1)
+    const analysisPath = `${courseId}/analysis`
     const course = courses.find(({ id }) => id === courseId)
     const concepts = getCourseConcepts(courseId)
 
-    return course && concepts
-      ? <ConceptSelectionPage key={courseId} courseName={course.name} concepts={concepts} />
-      : <CourseAddPage />
+    if (!course || !concepts || (path !== courseId && path !== analysisPath)) {
+      return <CourseAddPage />
+    }
+
+    const selectionHref = `${conceptRoute}${courseId}`
+    const requestedIds = new Set(new URLSearchParams(query).getAll('concept'))
+    const selectedConcepts = concepts.filter(({ id }) => requestedIds.has(id))
+
+    if (path === analysisPath && selectedConcepts.length > 0) {
+      return (
+        <ConceptAnalysisPage
+          key={hash}
+          courseName={course.name}
+          concepts={selectedConcepts}
+          selectionHref={`${selectionHref}?${query}`}
+        />
+      )
+    }
+
+    return (
+      <ConceptSelectionPage
+        key={hash}
+        courseName={course.name}
+        concepts={concepts}
+        initialSelectedIds={selectedConcepts.map(({ id }) => id)}
+        onAnalyze={(conceptIds) => {
+          const params = new URLSearchParams()
+          for (const id of conceptIds) params.append('concept', id)
+          window.history.replaceState(window.history.state, '', `${selectionHref}?${params}`)
+          window.location.hash = `${conceptRoute}${analysisPath}?${params}`
+        }}
+      />
+    )
   }
 
   return (

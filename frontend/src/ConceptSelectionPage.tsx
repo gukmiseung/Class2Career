@@ -1,16 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
+import ConceptHeader from './ConceptHeader'
 import type { CourseConcept } from './courseConcepts'
 import './ConceptSelectionPage.css'
 
 type ConceptSelectionPageProps = {
   courseName: string
   concepts: readonly CourseConcept[]
-  onAnalyze?: (conceptIds: readonly string[]) => void
+  initialSelectedIds: readonly string[]
+  onAnalyze: (conceptIds: readonly string[]) => void
 }
 
-export default function ConceptSelectionPage({ courseName, concepts, onAnalyze }: ConceptSelectionPageProps) {
+export default function ConceptSelectionPage({ courseName, concepts, initialSelectedIds, onAnalyze }: ConceptSelectionPageProps) {
   const titleRef = useRef<HTMLHeadingElement>(null)
-  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [selectedIds, setSelectedIds] = useState(initialSelectedIds)
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
@@ -25,17 +27,7 @@ export default function ConceptSelectionPage({ courseName, concepts, onAnalyze }
 
   return (
     <div className="concept-page">
-      <header className="concept-header">
-        <div className="concept-header-inner">
-          <a className="concept-brand" href="#top" aria-label="Class2Career 홈">C2C</a>
-          <nav aria-label="주요 메뉴">
-            <span role="link" aria-disabled="true">직무 탐색</span>
-            <a href="#explore">전공 탐색</a>
-            <a href="#explore/learning">내 학습</a>
-            <a className="concept-login" href="#login">로그인</a>
-          </nav>
-        </div>
-      </header>
+      <ConceptHeader />
 
       <main className="concept-content">
         <nav className="concept-breadcrumb" aria-label="현재 위치">
@@ -83,8 +75,8 @@ export default function ConceptSelectionPage({ courseName, concepts, onAnalyze }
           <p role="status">선택한 개념 {selectedIds.length}개</p>
           <button
             type="button"
-            disabled={!onAnalyze || selectedIds.length === 0}
-            onClick={() => onAnalyze?.(selectedIds)}
+            disabled={selectedIds.length === 0}
+            onClick={() => onAnalyze(selectedIds)}
           >
             선택한 개념 분석하기
           </button>
