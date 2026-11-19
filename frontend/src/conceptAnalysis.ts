@@ -6,7 +6,7 @@ type AnalysisExample = {
   topic: string
 }
 
-type ConceptAnalysis = {
+export type ConceptAnalysis = {
   title: string
   examples: readonly AnalysisExample[]
   roles: readonly string[]
@@ -14,7 +14,7 @@ type ConceptAnalysis = {
   steps: readonly string[]
 }
 
-export const conceptAnalyses: Record<CourseConcept['id'], ConceptAnalysis> = {
+export const conceptAnalyses: Record<string, ConceptAnalysis> = {
   lists: {
     title: '배열과 연결 리스트는 실무에서 이렇게 활용돼요',
     examples: [
@@ -123,4 +123,37 @@ export const conceptAnalyses: Record<CourseConcept['id'], ConceptAnalysis> = {
       '상품 수를 늘리며 순차 검색과 이진 탐색의 비교 횟수를 측정해 보세요.',
     ],
   },
+}
+
+export function getConceptAnalysis(concept: CourseConcept): ConceptAnalysis {
+  const savedAnalysis = conceptAnalyses[concept.id]
+  if (savedAnalysis) return savedAnalysis
+
+  return {
+    title: `${concept.name}은 실무에서 이렇게 활용돼요`,
+    examples: [
+      {
+        title: '서비스 기능 설계',
+        description: `${concept.name}의 원리를 활용해 사용자 요구사항을 기능과 데이터 흐름으로 구체화해요.`,
+        topic: '서비스 설계',
+      },
+      {
+        title: '문제 원인 분석',
+        description: `${concept.name}의 핵심 요소를 기준으로 문제의 원인을 나누고 해결 방법을 비교해요.`,
+        topic: '문제 해결',
+      },
+      {
+        title: '프로젝트 구현',
+        description: `작은 프로젝트에 ${concept.name}을 적용하고 결과를 측정하며 개선해요.`,
+        topic: '프로젝트 실습',
+      },
+    ],
+    roles: ['소프트웨어 개발자', '서비스 기획자', '데이터 분석가'],
+    recommendation: `${concept.name}의 기본 원리를 익힌 뒤 작은 예제 프로젝트에 직접 적용해 보세요.`,
+    steps: [
+      `${concept.name}의 핵심 용어와 동작 과정을 정리해 보세요.`,
+      '대표 예제를 따라 만들며 각 요소가 하는 일을 확인해 보세요.',
+      '직접 정한 문제에 개념을 적용하고 결과를 기록해 보세요.',
+    ],
+  }
 }

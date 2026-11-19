@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import ConceptHeader from './ConceptHeader'
-import { conceptAnalyses } from './conceptAnalysis'
+import { getConceptAnalysis } from './conceptAnalysis'
 import type { CourseConcept } from './courseConcepts'
 import './ConceptAnalysisPage.css'
 
@@ -13,7 +13,11 @@ type ConceptAnalysisPageProps = {
 export default function ConceptAnalysisPage({ courseName, concepts, selectionHref }: ConceptAnalysisPageProps) {
   const titleRef = useRef<HTMLHeadingElement>(null)
   const [showRoadmap, setShowRoadmap] = useState(false)
-  const analyses = concepts.map(({ id, name }) => ({ id, name, ...conceptAnalyses[id] }))
+  const analyses = concepts.map((concept) => ({
+    id: concept.id,
+    name: concept.name,
+    ...getConceptAnalysis(concept),
+  }))
   const primaryAnalysis = analyses[0]
   const multipleConcepts = analyses.length > 1
   const roles = [...new Set(analyses.flatMap(({ roles }) => roles))]
