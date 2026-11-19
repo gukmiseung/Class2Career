@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import CourseAddPage from './CourseAddPage'
 import LoginPage from './LoginPage'
 import SignupPage from './SignupPage'
 
@@ -18,14 +19,19 @@ function Logo() {
 function App() {
   const [hash, setHash] = useState(window.location.hash)
 
-useEffect(() => {
-  function updateHash() {
-    setHash(window.location.hash)
+  useEffect(() => {
+    function updateHash() {
+      setHash(window.location.hash)
+    }
+
+    window.addEventListener('hashchange', updateHash)
+    return () => window.removeEventListener('hashchange', updateHash)
+  }, [])
+
+  if (hash === '#explore') {
+    return <CourseAddPage />
   }
 
-  window.addEventListener('hashchange', updateHash)
-  return () => window.removeEventListener('hashchange', updateHash)
-}, [])
   return (
     <div className="home-page">
       <header className="site-header">
