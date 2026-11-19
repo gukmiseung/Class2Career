@@ -20,7 +20,7 @@ function SiteHeader() {
         <a href="#career">직무 탐색</a>
         <a href="#explore">전공 탐색</a>
         <a href="#explore/learning">내 학습</a>
-        <a className="login-link" href="#login">로그인</a>
+        <a className="login-link" href="#login">로그인 / 회원가입</a>
       </nav>
     </header>
   )
