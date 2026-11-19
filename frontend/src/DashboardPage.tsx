@@ -4,7 +4,7 @@ const exploreCards = [
   {
     icon: '💼',
     tone: 'blue',
-    title: '희망 직무로 탐색하기',
+    title: '희망 직무 탐색하기',
     description: <>관심 있는 직무에 필요한 전공 과목과<br />세부 개념, 추가 학습 방향을 확인해요.</>,
     link: '직무 선택하기 →',
     href: '#career',
@@ -12,7 +12,7 @@ const exploreCards = [
   {
     icon: '📚',
     tone: 'green',
-    title: '전공 과목으로 탐색하기',
+    title: '전공 과목 탐색하기',
     description: <>수강한 과목의 세부 개념을 선택하고<br />실무 활용 사례와 관련 직무를 살펴봐요.</>,
     link: '과목 선택하기 →',
     href: '#explore',

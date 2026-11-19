@@ -44,7 +44,7 @@ function App() {
 
   if (hash === '#explore') {
     return (
-      <div className="home-page dashboard-shell">
+      <div className="home-page dashboard-shell course-shell">
         <SiteHeader />
         <CourseAddPage />
       </div>
@@ -53,7 +53,7 @@ function App() {
 
   if (hash === '#explore/learning') {
     return (
-      <div className="home-page dashboard-shell">
+      <div className="home-page dashboard-shell course-shell">
         <SiteHeader />
         <CourseAddPage showLearning />
       </div>
