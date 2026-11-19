@@ -87,7 +87,7 @@ export default function ConceptAnalysisPage({ courseName, concepts, selectionHre
               aria-controls="analysis-roadmap-steps"
               onClick={() => setShowRoadmap((open) => !open)}
             >
-              {showRoadmap ? '학습 로드맵 접기' : '학습 로드맵 보기'}
+              {showRoadmap ? '접기' : '펼쳐보기'}
             </button>
           </div>
 
