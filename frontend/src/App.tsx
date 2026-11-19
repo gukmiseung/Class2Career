@@ -15,6 +15,7 @@ import PasswordResetPage from './PasswordResetPage'
 import SiteHeader from './SiteHeader'
 import { getCourseConcepts } from './courseConcepts'
 import { courses } from './courses'
+import { useLoginStatus } from './auth'
 import './App.css'
 
 const loadingDuration = 700
@@ -22,6 +23,7 @@ const loadingDuration = 700
 function App() {
   const [hash, setHash] = useState(window.location.hash)
   const [isLoading, setIsLoading] = useState(false)
+  const isLoggedIn = useLoginStatus()
 
   useEffect(() => {
     let loadingTimer: number | undefined
@@ -64,7 +66,7 @@ function App() {
     return (
       <div className="home-page dashboard-shell learning-shell">
         <SiteHeader />
-        <LearningPage />
+        <LearningPage locked={!isLoggedIn} />
       </div>
     )
   }

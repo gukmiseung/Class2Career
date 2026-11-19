@@ -82,9 +82,47 @@
 .learning-empty a { margin-top: 22px; padding: 11px 20px; border-radius: 10px; color: #fff; background: #2865ec; font-size: 14px; font-weight: 700; text-decoration: none; }
 .learning-empty a:hover { background: #1f56d1; }
 
+.learning-login-backdrop {
+  position: fixed;
+  z-index: 90;
+  inset: 76px 0 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(37, 49, 70, .48);
+  backdrop-filter: blur(1px);
+}
+
+.learning-login-modal {
+  position: relative;
+  width: min(100%, 600px);
+  padding: 54px 56px 28px;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(23, 42, 76, .22);
+  text-align: center;
+}
+
+.learning-login-close { position: absolute; top: 22px; right: 26px; width: 36px; height: 36px; border: 0; color: #65738b; background: transparent; font: inherit; font-size: 34px; font-weight: 300; line-height: 1; cursor: pointer; }
+.learning-login-close:hover { color: #2865ec; }
+.learning-login-lock { position: relative; width: 80px; height: 80px; margin: 0 auto 28px; border-radius: 18px; background: #e1ebff; }
+.learning-login-lock::before { position: absolute; top: 15px; left: 29px; width: 22px; height: 27px; border: 6px solid #2865ec; border-bottom: 0; border-radius: 18px 18px 0 0; content: ''; }
+.learning-login-lock span { position: absolute; left: 22px; bottom: 15px; width: 36px; height: 35px; border-radius: 7px; background: #2865ec; }
+.learning-login-lock span::after { position: absolute; top: 12px; left: 16px; width: 5px; height: 9px; border-radius: 4px; background: #fff; content: ''; }
+.learning-login-modal h2 { margin: 0; font-size: 30px; letter-spacing: -.8px; }
+.learning-login-modal > p { margin: 26px 0 0; color: #65738b; font-size: 16px; line-height: 1.6; }
+.learning-login-button { min-height: 58px; display: flex; align-items: center; justify-content: center; margin-top: 54px; border-radius: 11px; color: #fff; background: #2865ec; font-size: 17px; font-weight: 700; text-decoration: none; }
+.learning-login-button:hover { background: #1f56d1; }
+.learning-login-modal .learning-signup-prompt { margin-top: 18px; color: #2865ec; font-size: 14px; }
+.learning-signup-prompt a { margin-left: 7px; color: inherit; font-weight: 700; }
+
 @media (max-width: 760px) {
   .learning-page { width: min(100% - 32px, 1328px); padding: 112px 0 72px; }
   .learning-summary { grid-template-columns: 1fr; gap: 14px; }
   .learning-summary > * { min-height: 132px; }
   .learning-courses { margin-top: 48px; }
+  .learning-login-backdrop { inset: 68px 0 0; padding: 16px; }
+  .learning-login-modal { padding: 48px 24px 26px; }
+  .learning-login-modal h2 { font-size: 25px; }
+  .learning-login-button { margin-top: 38px; }
 }
