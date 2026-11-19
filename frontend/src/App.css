@@ -29,8 +29,8 @@ html { scroll-behavior: smooth; }
 .header-nav a:hover, .header-nav a:focus-visible,
 .header-nav button:hover, .header-nav button:focus-visible { color: #2d63e9; }
 .header-nav .login-link { color: #1760ef; }
-.header-nav > .login-link { margin-left: clamp(12px, 1.4vw, 22px); }
-.auth-links { display: inline-flex; align-items: center; gap: 5px; margin-left: clamp(12px, 1.4vw, 22px); color: #1760ef; white-space: nowrap; }
+.header-nav > .login-link { margin-left: 0; }
+.auth-links { display: inline-flex; align-items: center; gap: 5px; margin-left: 0; color: #1760ef; white-space: nowrap; }
 .header-logo:focus-visible, .header-nav a:focus-visible, .header-nav button:focus-visible { outline: 2px solid #2d63e9; outline-offset: 4px; border-radius: 2px; }
 
 .logout-modal-backdrop {
