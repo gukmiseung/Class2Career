@@ -161,3 +161,10 @@ html { scroll-behavior: smooth; }
   .feature-grid { grid-template-columns: 1fr; }
   .feature-card { min-height: 260px; }
 }
+.home-page.learning-shell {
+  background: linear-gradient(180deg, #f8fafc 51.442%, #e9f4ff 100%);
+}
+
+.home-page:has(> .password-reset-page) {
+  background: #f7f9ff;
+}
