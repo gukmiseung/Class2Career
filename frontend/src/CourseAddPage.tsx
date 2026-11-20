@@ -320,7 +320,7 @@ export default function CourseAddPage() {
                 {visibleCourses.map((course) => {
                   const status = registrations[course.id]
                   return (
-                    <li className="course-card" key={course.id}>
+                    <li className="course-card" key={`${course.id}:${course.major}:${course.year}`}>
                       <div>
                         <h3>
                           {getCourseConcepts(course.id) ? (
