@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { loadCareerInterests, toggleCareerInterest } from './careerInterests'
 import { useCourseCatalog } from './useCourseCatalog'
-import { loadRegistrations, registrationKey, statusLabels, type CourseStatus } from './courseRegistrations'
+import { statusLabels } from './courseRegistrations'
+import { useCourseRegistrations } from './contexts/CourseRegistrationsContext'
 import { useAuth } from './contexts/AuthContext'
 import LearningLoginModal from './LearningLoginModal'
 import { EmptyState, ErrorMessage, Loading } from './AsyncState'
@@ -50,18 +51,10 @@ const careerDetails: Record<string, CareerDetail> = {
 export default function CareerDetailPage({ careerName }: { careerName: string }) {
   const career = careerDetails[careerName]
   const [isInterested, setIsInterested] = useState(() => loadCareerInterests().includes(careerName))
-  const [registrations, setRegistrations] = useState(loadRegistrations)
-  const { catalog, loading: catalogLoading, error: catalogError, retry } = useCourseCatalog()
+  const { registrations, loading: registrationsLoading, error: registrationsError, retryLoad } = useCourseRegistrations()
+  const { catalog, loading: catalogLoading, error: catalogError, retry: retryCatalog } = useCourseCatalog()
   const [showLoginModal, setShowLoginModal] = useState(false)
   const { loading, user } = useAuth()
-
-  useEffect(() => {
-    const syncRegistrations = (event: StorageEvent) => {
-      if (event.key === registrationKey || event.key === null) setRegistrations(loadRegistrations())
-    }
-    window.addEventListener('storage', syncRegistrations)
-    return () => window.removeEventListener('storage', syncRegistrations)
-  }, [])
 
   const connections = careerCourseConnections[careerName] ?? []
   const coursesByCode = new Map((catalog?.courses ?? []).map((course) => [course.code, course]))
@@ -69,8 +62,6 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
     const course = coursesByCode.get(connection.code)
     return course ? [{ course, concepts: connection.concepts }] : []
   })
-
-  const getCourseStatus = (courseId: string): CourseStatus | undefined => registrations[courseId]
 
   if (!career) {
     return (
@@ -118,12 +109,18 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
         <p>과목을 수강했는지에 따라 현재 학습 이력을 비교해요.</p>
 
         {catalogLoading && <Loading message="수강 이력을 확인하고 있어요." compact />}
-        {catalogError && <ErrorMessage message={catalogError} onRetry={retry} retrying={catalogLoading} compact />}
+        {catalogError && <ErrorMessage message={catalogError} onRetry={retryCatalog} compact />}
+        {!catalogLoading && !catalogError && registrationsError && relatedCourses.length > 0 && (
+          <ErrorMessage message={registrationsError} onRetry={retryLoad} compact />
+        )}
         {!catalogLoading && !catalogError && relatedCourses.length === 0 && <EmptyState title="연결된 교과목 정보가 없어요" message="전공탐색 과목이 등록되면 이곳에 표시됩니다." compact />}
 
         {!catalogLoading && !catalogError && relatedCourses.length > 0 && <div className="course-list">
           {relatedCourses.map(({ course, concepts }) => {
-            const status = getCourseStatus(course.id)
+            const status = registrations[course.dbId]
+            const statusLabel = status ? statusLabels[status]
+              : registrationsLoading ? '확인 중'
+                : registrationsError ? '확인 불가' : '미수강'
             return (
             <article className={`course-row${status ? ` ${status}` : ''}`} key={course.id}>
               <div>
@@ -133,7 +130,7 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
               </div>
               <div className="course-actions">
                 <span className={`course-status${status ? ` ${status}` : ''}`}>
-                  {status ? statusLabels[status] : '미수강'}
+                  {statusLabel}
                 </span>
                 <a href={`#job-concept/${encodeURIComponent(career.title)}/${encodeURIComponent(course.name)}/${encodeURIComponent(concepts)}`}>과목 노트</a>
               </div>

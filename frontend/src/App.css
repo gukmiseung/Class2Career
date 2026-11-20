@@ -4,7 +4,7 @@ html { scroll-behavior: smooth; }
   min-height: 100svh;
   overflow: hidden;
   color: #123d88;
-  background: linear-gradient(180deg, #fafcff 0%, #f8fbff 42%, #e6f4ff 73%, #cceaff 100%);
+  background: var(--app-background);
 }
 
 .home-page.dashboard-home-shell {
