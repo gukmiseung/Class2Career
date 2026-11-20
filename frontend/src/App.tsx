@@ -252,7 +252,7 @@ function App() {
         ) : hash === '#career' ? (
           <CareerPage />
         ) : hash.startsWith('#career-') ? (
-          <CareerDetailPage careerName={decodeURIComponent(hash.slice('#career-'.length))} />
+          <CareerDetailPage key={hash} careerName={decodeURIComponent(hash.slice('#career-'.length))} />
         ) : hash.startsWith('#roadmap-') ? (
           <RoadmapPage careerName={decodeURIComponent(hash.slice('#roadmap-'.length))} />
         ) : (

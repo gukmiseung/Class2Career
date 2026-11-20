@@ -6,62 +6,28 @@ import { useCourseRegistrations } from './contexts/CourseRegistrationsContext'
 import { useAuth } from './contexts/AuthContext'
 import LearningLoginModal from './LearningLoginModal'
 import { EmptyState, ErrorMessage, Loading } from './AsyncState'
-import { careerCourseConnections } from './careerCourses'
+import { useCareerCatalog } from './useCareerCatalog'
+import { hasCareerRoadmap } from './careerRoadmaps'
 import './CareerDetailPage.css'
 
-type CareerDetail = {
-  title: string
-  description: string
-  tags: string[]
-}
-
-const careerDetails: Record<string, CareerDetail> = {
-  '프론트엔드 개발자': {
-    title: '프론트엔드 개발자',
-    description: '웹 서비스의 사용자 화면을 구현하고, 사용자가 편리하게 이용할 수 있도록 경험을 개선하는 직무예요.',
-    tags: ['개발 분야', '웹 서비스'],
-  },
-  '백엔드 개발자': {
-    title: '백엔드 개발자',
-    description: '서비스의 데이터와 서버 기능을 안정적으로 설계하고 구현하는 직무예요.',
-    tags: ['개발 분야', '서버·API'],
-  },
-  'AI 엔지니어': {
-    title: 'AI 엔지니어',
-    description: '인공지능 모델을 개발하고 실제 서비스 환경에 적용해 지속적으로 개선하는 직무예요.',
-    tags: ['데이터·AI', '인공지능'],
-  },
-  '데이터 분석가': {
-    title: '데이터 분석가',
-    description: '데이터를 수집하고 분석하여 의사결정에 도움이 되는 의미 있는 인사이트를 찾는 직무예요.',
-    tags: ['데이터·AI', '데이터 분석'],
-  },
-  'UI/UX 디자이너': {
-    title: 'UI/UX 디자이너',
-    description: '사용자의 요구와 행동을 이해하고 편리하고 일관된 서비스 경험과 화면을 설계하는 직무예요.',
-    tags: ['디자인', '사용자 경험'],
-  },
-  '클라우드 엔지니어': {
-    title: '클라우드 엔지니어',
-    description: '클라우드 환경에서 안정적이고 확장 가능한 시스템과 서비스 운영 기반을 구축하는 직무예요.',
-    tags: ['인프라', '클라우드'],
-  },
-}
-
 export default function CareerDetailPage({ careerName }: { careerName: string }) {
-  const career = careerDetails[careerName]
+  const { careers, loading: careersLoading, error: careersError, retry: retryCareers } = useCareerCatalog()
+  const career = careers.find((item) => item.title === careerName)
   const [isInterested, setIsInterested] = useState(() => loadCareerInterests().includes(careerName))
   const { registrations, loading: registrationsLoading, error: registrationsError, retryLoad } = useCourseRegistrations()
   const { catalog, loading: catalogLoading, error: catalogError, retry: retryCatalog } = useCourseCatalog()
   const [showLoginModal, setShowLoginModal] = useState(false)
   const { loading, user } = useAuth()
 
-  const connections = careerCourseConnections[careerName] ?? []
-  const coursesByCode = new Map((catalog?.courses ?? []).map((course) => [course.code, course]))
-  const relatedCourses = connections.flatMap((connection) => {
-    const course = coursesByCode.get(connection.code)
-    return course ? [{ course, concepts: connection.concepts }] : []
-  })
+  if (careersLoading || careersError) {
+    return (
+      <main className="career-detail-page">
+        {careersError
+          ? <ErrorMessage message={careersError} onRetry={retryCareers} />
+          : <Loading message="직무 정보를 불러오고 있어요." />}
+      </main>
+    )
+  }
 
   if (!career) {
     return (
@@ -71,6 +37,12 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
       </main>
     )
   }
+
+  const coursesById = new Map((catalog?.courses ?? []).map((course) => [course.dbId, course]))
+  const relatedCourses = career.courses.flatMap((connection) => {
+    const course = coursesById.get(connection.course_id)
+    return course ? [{ course, concepts: connection.concepts }] : []
+  })
 
   return (
     <>
@@ -83,10 +55,13 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
         <h1>{career.title}</h1>
         <p>{career.description}</p>
         <div className="career-tags">
-          {career.tags.map((tag, index) => <span className={index === 0 ? 'primary' : ''} key={tag}>{tag}</span>)}
+          <span className="primary">{career.category}</span>
+          {career.keywords.map((keyword) => <span key={keyword}>{keyword}</span>)}
         </div>
         <div className="career-detail-actions">
-          <a className="roadmap-link" href={`#roadmap-${encodeURIComponent(career.title)}`}>로드맵 확인하기 →</a>
+          {hasCareerRoadmap(career.title) && (
+            <a className="roadmap-link" href={`#roadmap-${encodeURIComponent(career.title)}`}>로드맵 확인하기 →</a>
+          )}
           <button
             className="career-interest-button"
             type="button"

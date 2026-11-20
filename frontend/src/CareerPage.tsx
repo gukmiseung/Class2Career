@@ -1,32 +1,21 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import './CareerPage.css'
-import { EmptyState } from './AsyncState'
-import { careerCourseConnections } from './careerCourses'
-
-const categories = ['전체', '개발', '데이터·AI', '디자인', '인프라'] as const
-
-const careers = [
-  { category: '개발', title: '프론트엔드 개발자', description: '사용자에게 보이는 웹 화면과 인터랙션을 개발해요.' },
-  { category: '개발', title: '백엔드 개발자', description: '서비스의 데이터와 서버 기능을 설계하고 구현해요.' },
-  { category: '데이터·AI', title: 'AI 엔지니어', description: '인공지능 모델을 서비스에 적용하고 개선해요.' },
-  { category: '데이터·AI', title: '데이터 분석가', description: '데이터를 분석해 의미 있는 인사이트를 찾아요.' },
-  { category: '디자인', title: 'UI/UX 디자이너', description: '사용자 경험을 조사하고 서비스 화면을 설계해요.' },
-  { category: '인프라', title: '클라우드 엔지니어', description: '클라우드 기반 시스템과 운영 환경을 구축해요.' },
-]
+import { EmptyState, ErrorMessage, Loading } from './AsyncState'
+import { useCareerCatalog } from './useCareerCatalog'
 
 export default function CareerPage() {
-  const [category, setCategory] = useState<(typeof categories)[number]>('전체')
+  const { careers, loading, error, retry } = useCareerCatalog()
+  const [category, setCategory] = useState('전체')
   const [query, setQuery] = useState('')
+  const categories = ['전체', ...new Set(careers.map((career) => career.category))]
+  const keyword = query.trim().replace(/\s+/g, '').toLocaleLowerCase('ko')
 
-  const visibleCareers = useMemo(() => {
-    const keyword = query.trim().toLocaleLowerCase('ko')
-
-    return careers.filter((career) => {
-      const matchesCategory = category === '전체' || career.category === category
-      const matchesQuery = !keyword || `${career.title} ${career.category} ${career.description}`.toLocaleLowerCase('ko').includes(keyword)
-      return matchesCategory && matchesQuery
-    })
-  }, [category, query])
+  const visibleCareers = careers.filter((career) => {
+    const matchesCategory = category === '전체' || career.category === category
+    const searchFields = [career.title, career.category, career.description, ...career.keywords]
+    const matchesQuery = searchFields.some((field) => field.replace(/\s+/g, '').toLocaleLowerCase('ko').includes(keyword))
+    return matchesCategory && matchesQuery
+  })
 
   return (
     <main className="career-page">
@@ -62,10 +51,16 @@ export default function CareerPage() {
           ))}
         </div>
 
-        {visibleCareers.length > 0 ? (
+        {loading ? (
+          <Loading message="직무 정보를 불러오고 있어요." />
+        ) : error ? (
+          <ErrorMessage message={error} onRetry={retry} />
+        ) : careers.length === 0 ? (
+          <EmptyState title="등록된 직무가 없어요" message="직무 정보가 등록되면 이곳에 표시됩니다." />
+        ) : visibleCareers.length > 0 ? (
           <div className="career-grid">
             {visibleCareers.map((career) => (
-              <article className="career-card" key={career.title}>
+              <article className="career-card" key={career.slug}>
                 <span className="career-category">{career.category}</span>
                 <h3>
                   <a className="career-title-link" href={`#career-${encodeURIComponent(career.title)}`}>
@@ -73,7 +68,7 @@ export default function CareerPage() {
                   </a>
                 </h3>
                 <p>{career.description}</p>
-                <span className="career-course-count">관련 과목 {careerCourseConnections[career.title]?.length ?? 0}개</span>
+                <span className="career-course-count">관련 과목 {career.courses.length}개</span>
               </article>
             ))}
           </div>
