@@ -1,6 +1,6 @@
 .home-page.course-shell {
   min-height: 100vh;
-  background: linear-gradient(180deg, #fafcff 0%, #f7faff 38%, #eef7ff 72%, #e2f2ff 100%);
+  background: var(--app-background);
 }
 
 .course-page {

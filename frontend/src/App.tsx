@@ -7,6 +7,7 @@ import CareerDetailPage from './CareerDetailPage'
 import CareerConceptPage from './CareerConceptPage'
 import RoadmapPage from './RoadmapPage'
 import ConceptAnalysisPage from './ConceptAnalysisPage'
+import ConceptRecommendationPage from './ConceptRecommendationPage'
 import ConceptSelectionPage from './ConceptSelectionPage'
 import CourseAddPage from './CourseAddPage'
 import LoadingPage from './LoadingPage'
@@ -124,19 +125,31 @@ function App() {
       const [path, query] = hash.slice(conceptRoute.length).split('?', 2)
       const [courseId] = path.split('/', 1)
       const analysisPath = `${courseId}/analysis`
+      const recommendationPath = `${courseId}/recommendations`
       if (catalogLoading) return <LoadingPage message="과목 정보를 불러오고 있어요." />
       if (catalogError) return <ErrorMessage message={catalogError} onRetry={retryCatalog} retrying={catalogLoading} />
       if (!catalog || catalog.courses.length === 0) return <EmptyState message="등록된 교과목이 아직 없습니다." />
       const course = catalog?.courses.find(({ id }) => id === courseId)
       const concepts = getCourseConcepts(courseId, course)
 
-      if (!course || !concepts || (path !== courseId && path !== analysisPath)) {
+      if (!course || !concepts || (path !== courseId && path !== analysisPath && path !== recommendationPath)) {
         return <CourseAddPage />
       }
 
       const selectionHref = `${conceptRoute}${courseId}`
       const requestedIds = new Set(new URLSearchParams(query).getAll('concept'))
       const selectedConcepts = concepts.filter(({ id }) => requestedIds.has(id))
+
+      if (path === recommendationPath && selectedConcepts.length > 0) {
+        return (
+          <ConceptRecommendationPage
+            key={hash}
+            courseName={course.name}
+            concepts={selectedConcepts}
+            analysisHref={`${conceptRoute}${analysisPath}?${query}`}
+          />
+        )
+      }
 
       if (path === analysisPath && selectedConcepts.length > 0) {
         return (
@@ -145,6 +158,7 @@ function App() {
             courseName={course.name}
             concepts={selectedConcepts}
             selectionHref={`${selectionHref}?${query}`}
+            recommendationHref={`${conceptRoute}${recommendationPath}?${query}`}
           />
         )
       }

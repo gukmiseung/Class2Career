@@ -1,161 +1,61 @@
 .analysis-content {
-  width: min(1112px, calc(100% - clamp(32px, 11.3vw, 128px)));
+  width: min(1280px, calc(100% - 64px));
   margin: 0 auto;
-  padding: 102px 0 64px;
+  padding: 98px 0 64px;
   word-break: keep-all;
   overflow-wrap: anywhere;
 }
 
-.analysis-intro { margin-top: 44px; }
-
-.analysis-intro h1 {
-  margin: 0;
-  font-size: clamp(23px, 3.2vw, 25px);
-  line-height: 1.4;
-  letter-spacing: -.035em;
+.analysis-page {
+  height: auto;
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
-
+.analysis-intro { margin-top: 20px; }
+.analysis-intro h1 { margin: 0; font-size: clamp(26px, 2.4vw, 34px); line-height: 1.35; letter-spacing: -.045em; }
 .analysis-intro h1:focus { outline: none; }
-
-.analysis-intro p,
-.analysis-roadmap-summary p {
-  margin: 14px 0 0;
-  color: var(--concept-muted);
-  font-size: 13px;
-}
-
-.analysis-examples { margin-top: 38px; }
-.analysis-roles { margin-top: 42px; }
-.analysis-roles > p { margin: 10px 0 0; color: var(--concept-muted); font-size: 13px; }
-.analysis-content h2 { margin: 0; font-size: 19px; letter-spacing: -.025em; }
-
-.analysis-example-group { margin-top: 22px; }
-.analysis-example-group + .analysis-example-group { margin-top: 28px; }
-.analysis-example-group > h3 { margin: 0 0 12px; font-size: 17px; }
-
-.analysis-example-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(12px, 2.4vw, 28px);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.analysis-example {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  min-height: 166px;
-  padding: 19px 17px 15px;
-  border: 1px solid var(--concept-border);
-  border-radius: 13px;
-  background: #fff;
-}
-
-.analysis-example :is(h3, h4) { margin: 0; font-size: 17px; letter-spacing: -.02em; }
-.analysis-example p { margin: 10px 0 16px; color: var(--concept-muted); font-size: 13px; }
-
-.analysis-example span,
-.analysis-roles li {
-  border: 1px solid var(--concept-border);
-  border-radius: 999px;
-  background: #fff;
-  font-size: 12px;
-}
-
-.analysis-example span {
-  margin-top: auto;
-  padding: 4px 12px;
-}
-
-.analysis-example span,
-.analysis-roles li:first-child {
-  border-color: #7486f3;
-  color: #364ac8;
-  background: #e8edff;
-}
-
-.analysis-role-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 12px;
-  margin-top: 17px;
-}
-
-.analysis-role-list button {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 15px;
-  border: 1px solid var(--concept-border);
-  border-radius: 999px;
-  color: #354056;
-  background: #fff;
-  font: inherit;
-  font-size: 13px;
-  cursor: pointer;
-}
-.analysis-role-list button:hover { border-color: #7486f3; color: #364ac8; }
-.analysis-role-list button.active { border-color: #7486f3; color: #fff; background: #4d63de; }
-.analysis-role-list button span { font-weight: 700; }
-.analysis-role-description { margin-top: 15px; padding: 18px 20px; border-left: 4px solid #5c71e4; border-radius: 0 10px 10px 0; background: #f3f6ff; }
-.analysis-role-description strong { color: #263b9d; font-size: 15px; }
-.analysis-role-description p { margin: 7px 0 0; color: #536079; font-size: 14px; line-height: 1.65; }
-
-.analysis-roadmap {
-  margin-top: 30px;
-  padding: 17px 20px 20px;
-  border: 4px solid #5b94ff;
-  border-radius: 16px;
-  background: #eaf0fb;
-}
-
-.analysis-roadmap-summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  min-height: 74px;
-}
-
-.analysis-roadmap h2 { color: #233477; font-size: 17px; }
-.analysis-roadmap-role { display: inline-block; margin-bottom: 6px; color: #4661d9; font-size: 12px; font-weight: 800; }
-.analysis-roadmap-summary p { margin-top: 9px; }
-
-.analysis-roadmap-steps {
-  margin-top: 12px;
-  padding-top: 16px;
-  border-top: 1px solid #bbcafa;
-  color: #354056;
-  font-size: 14px;
-}
-
-.analysis-roadmap-steps h3 { margin: 0 0 6px; color: #233477; font-size: 15px; }
-.analysis-roadmap-steps ol { margin: 0; padding-inline-start: 20px; }
-.analysis-roadmap-steps li + li { margin-top: 6px; }
-.analysis-roadmap-steps li strong { display: inline-block; min-width: 82px; color: #233477; }
-.analysis-roadmap-steps li span { line-height: 1.55; }
-.analysis-roadmap-steps > div + div { margin-top: 16px; }
-
-@media (min-width: 681px) {
-  .analysis-page .concept-header-inner {
-    width: min(1152px, calc(100% - min(8vw, 100px)));
-    min-height: 58px;
-  }
-
-  .analysis-page .concept-header nav { font-size: 13px; }
-  .analysis-page .concept-brand { font-size: 24px; }
-  .analysis-roadmap-summary > div { align-self: flex-start; }
-}
-
+.analysis-intro p { margin: 8px 0 0; color: var(--concept-muted); font-size: 15px; }
+.analysis-concept-list { display: grid; gap: 22px; margin-top: 30px; }
+.analysis-concept-card { padding: 24px 28px 22px; border: 1px solid #dce5f1; border-radius: 16px; background: #fff; }
+.analysis-concept-card > span { color: #1460f3; font-size: 13px; font-weight: 800; }
+.analysis-concept-card h2 { margin: 7px 0 0; font-size: 27px; line-height: 1.35; letter-spacing: -.04em; }
+.analysis-concept-card p { margin: 8px 0 0; color: #5d6f8c; font-size: 16px; line-height: 1.45; }
+.analysis-examples { margin-top: 34px; }
+.analysis-examples > h2, .analysis-next h2, .analysis-details h2 { margin: 0; font-size: 23px; letter-spacing: -.035em; }
+.analysis-example-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; margin: 18px 0 0; padding: 0; list-style: none; }
+.analysis-example { display: flex; flex-direction: column; align-items: flex-start; min-height: 198px; padding: 24px; border: 1px solid #d9e1ed; border-radius: 16px; background: #fff; }
+.analysis-example-number { color: #1762ef; font-size: 14px; font-weight: 800; }
+.analysis-example h3 { margin: 15px 0 0; font-size: 20px; letter-spacing: -.03em; }
+.analysis-example p { margin: 14px 0 16px; color: #60708a; font-size: 14px; line-height: 1.45; }
+.analysis-example strong { margin-top: auto; color: #1762ef; font-size: 13px; }
+.analysis-next { display: flex; align-items: center; justify-content: flex-end; gap: 48px; margin-top: 44px; padding-right: 30px; }
+.analysis-next h2 { font-size: 19px; }
+.analysis-next p { margin: 3px 0 0; color: #71809a; font-size: 13px; }
+.analysis-next-link { min-height: 47px; display: inline-flex; align-items: center; padding: 0 24px; border-radius: 12px; color: #fff !important; background: #2864e8; font-size: 14px; font-weight: 800; text-decoration: none !important; }
+.analysis-next-link:hover { background: #164fc6; }
+.analysis-next-link span { margin-left: 8px; font-size: 18px; }
+.analysis-details { display: grid; grid-template-columns: .8fr 1.2fr; gap: 22px; margin-top: 36px; padding: 26px; border: 1px solid #d9e1ed; border-radius: 16px; background: #fff; scroll-margin-top: 80px; }
+.analysis-details:focus { outline: none; }
+.analysis-details h2 { font-size: 19px; }
+.analysis-details ul { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0; padding: 0; list-style: none; }
+.analysis-details ul li { padding: 7px 12px; border-radius: 999px; color: #174db6; background: #edf3ff; font-size: 13px; font-weight: 700; }
+.analysis-details p { margin: 12px 0 0; color: #53617a; }
+.analysis-details ol { margin: 12px 0 0; padding-left: 20px; color: #53617a; font-size: 14px; }
+.analysis-details ol li + li { margin-top: 7px; }
+@media (min-width: 1200px) { .analysis-content { width: min(1280px, calc(100% - 160px)); } }
 @media (max-width: 680px) {
-  .analysis-content { width: calc(100% - 32px); padding: 92px 0 48px; }
-  .analysis-intro { margin-top: 24px; }
-  .analysis-examples, .analysis-roles { margin-top: 30px; }
-  .analysis-example-group { margin-top: 15px; }
-  .analysis-example-grid { grid-template-columns: minmax(0, 1fr); }
-  .analysis-example { min-height: 0; padding: 16px; }
-  .analysis-roadmap { padding: 16px; }
-  .analysis-roadmap-summary { flex-direction: column; align-items: stretch; }
+  .analysis-content { width: calc(100% - 32px); padding: 88px 0 44px; }
+  .analysis-intro { margin-top: 18px; }
+  .analysis-intro h1 { font-size: 27px; }
+  .analysis-concept-list { margin-top: 24px; gap: 14px; }
+  .analysis-concept-card { padding: 20px; border-radius: 14px; }
+  .analysis-concept-card h2 { font-size: 23px; }
+  .analysis-concept-card p { font-size: 14px; }
+  .analysis-examples { margin-top: 28px; }
+  .analysis-example-grid { grid-template-columns: 1fr; gap: 12px; }
+  .analysis-example { min-height: 0; padding: 20px; }
+  .analysis-next { align-items: stretch; flex-direction: column; gap: 16px; margin-top: 30px; padding: 0; }
+  .analysis-next-link { width: 100%; justify-content: center; }
+  .analysis-details { grid-template-columns: 1fr; padding: 20px; }
 }
