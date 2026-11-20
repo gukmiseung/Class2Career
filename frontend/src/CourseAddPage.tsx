@@ -8,7 +8,7 @@ import {
 } from './courseRegistrations'
 import {
   courseCategories,
-  courses,
+  getCourses,
   courseYears,
   departments,
   type CourseCategory,
@@ -78,11 +78,23 @@ export default function CourseAddPage() {
   })
   const [page, setPage] = useState(1)
   const [registrations, setRegistrations] = useState(loadRegistrations)
+  const [courses, setCourses] = useState<Awaited<ReturnType<typeof getCourses>>>([])
+  const [coursesLoading, setCoursesLoading] = useState(true)
+  const [coursesError, setCoursesError] = useState('')
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
     titleRef.current?.focus({ preventScroll: true })
   }, [])
+
+  useEffect(() => {
+    let active = true
+    getCourses(filters.department)
+      .then((items) => { if (active) { setCourses(items); setCoursesError('') } })
+      .catch(() => { if (active) { setCourses([]); setCoursesError('과목 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.') } })
+      .finally(() => { if (active) setCoursesLoading(false) })
+    return () => { active = false }
+  }, [filters.department])
 
   useEffect(() => {
     function syncRegistrations(event: StorageEvent) {
@@ -275,12 +287,12 @@ export default function CourseAddPage() {
             <header className="course-results-heading">
               <div>
                 <h2 id="course-results-title">과목 검색 결과</h2>
-                <p>{filters.department}에서 개설하는 과목을 보여드려요.</p>
+                <p>2026학년도 {filters.department} 교육과정 과목</p>
               </div>
               <p className="course-result-count" aria-live="polite">총 {results.length}개 과목</p>
             </header>
 
-            {visibleCourses.length > 0 ? (
+            {coursesLoading ? <p className="course-empty">과목 정보를 불러오고 있어요.</p> : coursesError ? <p className="course-empty" role="alert">{coursesError}</p> : visibleCourses.length > 0 ? (
               <ul className="course-list">
                 {visibleCourses.map((course) => {
                   const status = registrations[course.id]
@@ -296,6 +308,7 @@ export default function CourseAddPage() {
                         </h3>
                         <p className="course-card-meta">
                           <span className="course-category">{course.category}</span>
+                          <span>{course.code}</span>
                           <span>{course.credits}학점</span>
                           <span aria-hidden="true">·</span>
                           <span>{course.year}학년</span>
