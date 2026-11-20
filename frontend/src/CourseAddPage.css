@@ -134,8 +134,8 @@
 
 .course-filters {
   min-width: 0;
-  height: 620px;
-  align-self: end;
+  align-self: stretch;
+  height: auto;
   max-height: calc(100vh - 150px);
   overflow-y: auto;
   padding: 22px 23px;
