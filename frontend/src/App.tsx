@@ -42,7 +42,7 @@ function App() {
   })
   const gatedDestination =
     !loading && !user && !recoveringPassword && isLearningRoute(locationHash) ? locationHash : null
-  const visibleHash = recoveringPassword ? '#reset-password' : gatedDestination ? publicHash : locationHash
+  const visibleHash = recoveringPassword ? '#reset-password' : locationHash
   const [authRoute] = visibleHash.split('?', 1)
   const hash = authRoute === '#login' || authRoute === '#signup' ? authRoute : visibleHash
   const returnTo = getAuthReturnTo(visibleHash)

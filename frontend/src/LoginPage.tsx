@@ -9,6 +9,7 @@ export default function LoginPage({ callbackMessage, returnTo }: { callbackMessa
   const [rememberEmail, setRememberEmail] = useState(Boolean(email))
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [showSignupPrompt, setShowSignupPrompt] = useState(false)
   const pending = useRef(false)
   const { loading, user } = useAuth()
 
@@ -21,10 +22,19 @@ export default function LoginPage({ callbackMessage, returnTo }: { callbackMessa
     pending.current = true
     setSubmitting(true)
     setError('')
+    setShowSignupPrompt(false)
 
     try {
       const { error } = await signIn(loginEmail, password)
       if (error) {
+        if (
+          error.code === 'invalid_credentials' ||
+          error.message.toLowerCase().includes('invalid login credentials') ||
+          (error.status === 400 && error.code !== 'email_not_confirmed')
+        ) {
+          setShowSignupPrompt(true)
+          return
+        }
         setError(`로그인 실패: ${error.message}`)
         return
       }
@@ -99,6 +109,40 @@ export default function LoginPage({ callbackMessage, returnTo }: { callbackMessa
           </>
         )}
       </form>
+
+      {showSignupPrompt && (
+        <div className="login-signup-backdrop" role="presentation" onMouseDown={() => setShowSignupPrompt(false)}>
+          <section
+            className="login-signup-modal"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="login-signup-title"
+            aria-describedby="login-signup-description"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <button
+              className="login-signup-close"
+              type="button"
+              aria-label="팝업 닫기"
+              onClick={() => setShowSignupPrompt(false)}
+            >
+              ×
+            </button>
+            <h2 id="login-signup-title">로그인 정보를 확인해 주세요.</h2>
+            <p id="login-signup-description">
+              가입한 이메일이라면 비밀번호를 찾고,<br />가입한 이메일이 없다면 회원가입을 시작하세요.
+            </p>
+            <div className="login-account-actions">
+              <a className="login-password-reset-start" href="#reset-password">
+                비밀번호 찾기
+              </a>
+              <a className="login-signup-start" href={authHref('#signup', returnTo)}>
+                회원가입
+              </a>
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   )
 }

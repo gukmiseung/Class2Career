@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { loadCareerInterests, toggleCareerInterest } from './careerInterests'
 import { courses as catalogCourses } from './courses'
 import { loadRegistrations, registrationKey, statusLabels, type CourseStatus } from './courseRegistrations'
+import { useAuth } from './contexts/AuthContext'
+import LearningLoginModal from './LearningLoginModal'
 import './CareerDetailPage.css'
 
 type Course = {
@@ -96,6 +98,8 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
   const career = careerDetails[careerName]
   const [isInterested, setIsInterested] = useState(() => loadCareerInterests().includes(careerName))
   const [registrations, setRegistrations] = useState(loadRegistrations)
+  const [showLoginModal, setShowLoginModal] = useState(false)
+  const { loading, user } = useAuth()
 
   useEffect(() => {
     const syncRegistrations = (event: StorageEvent) => {
@@ -126,6 +130,7 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
   }
 
   return (
+    <>
     <main className="career-detail-page">
       <nav className="career-breadcrumb" aria-label="현재 위치">
         <a href="#career">직무 탐색</a><span aria-hidden="true">/</span><span>{career.title}</span>
@@ -143,7 +148,13 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
             className="career-interest-button"
             type="button"
             aria-pressed={isInterested}
-            onClick={() => setIsInterested(toggleCareerInterest(career.title))}
+            onClick={() => {
+              if (!user) {
+                if (!loading) setShowLoginModal(true)
+                return
+              }
+              setIsInterested(toggleCareerInterest(career.title))
+            }}
           >
             {isInterested ? '관심 직무 해제' : '관심 직무 등록'}
           </button>
@@ -174,5 +185,12 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
         <p className="course-note">※ 과목 수강 이력은 학습 경험을 나타내며, 개별 개념의 숙련도를 의미하지는 않아요.</p>
       </section>
     </main>
+    {showLoginModal && (
+      <LearningLoginModal
+        destination={window.location.hash || `#career-${encodeURIComponent(career.title)}`}
+        onClose={() => setShowLoginModal(false)}
+      />
+    )}
+    </>
   )
 }
