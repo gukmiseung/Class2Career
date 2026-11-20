@@ -124,6 +124,7 @@ function App() {
         <LearningPage locked={!isLoggedIn} />
       </div>
     )
+  }
   if (isLoading && !recoveringPassword && !gatedDestination) {
     return <LoadingPage message="선택한 전공 개념을 분석하고 있어요..." />
   }
