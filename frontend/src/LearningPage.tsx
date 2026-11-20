@@ -17,7 +17,7 @@ function loadLearningProfile() {
   }
 }
 
-export default function LearningPage({ locked = false }: { locked?: boolean }) {
+export default function LearningPage() {
   const [registrations, setRegistrations] = useState(loadRegistrations)
   const [activeTab, setActiveTab] = useState<LearningTab | null>('completed')
   const [interestedCareers, setInterestedCareers] = useState(loadCareerInterests)
