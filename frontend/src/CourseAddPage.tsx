@@ -1,5 +1,4 @@
 import { Fragment, useEffect, useRef, useState, type FormEvent } from 'react'
-import { getCourseConcepts } from './courseConcepts'
 import {
   loadRegistrations,
   parseRegistrations,
@@ -303,11 +302,9 @@ export default function CourseAddPage() {
                     <li className="course-card" key={course.code || course.slug}>
                       <div>
                         <h3>
-                          {getCourseConcepts(course.id, course) ? (
-                            <a className="course-concept-link" href={`#explore/concepts/${course.id}`}>
-                              {course.name}
-                            </a>
-                          ) : course.name}
+                          <a className="course-concept-link" href={`#explore/concepts/${course.id}`}>
+                            {course.name}
+                          </a>
                         </h3>
                         <p className="course-card-meta">
                           {course.categories.map((category) => <span className="course-category" key={category}>{category}</span>)}
