@@ -20,6 +20,9 @@ export type Course = {
   year: CourseYear
   description: string
   major: string
+  majors: string[]
+  categories: string[]
+  years: CourseYear[]
 }
 
 export const courses: Course[] = []
@@ -57,8 +60,7 @@ export async function getCourseCatalog(): Promise<CourseCatalog> {
   const majors = new Set<string>()
   const categories = new Set<string>()
   const departments = new Set<string>()
-  const catalog: Course[] = []
-  const seen = new Set<string>()
+  const catalogByCode = new Map<string, Course>()
   for (const row of rows) {
     const source = row.c2c_courses
     const major = row.c2c_curricula?.c2c_majors?.name
@@ -67,22 +69,40 @@ export async function getCourseCatalog(): Promise<CourseCatalog> {
     departments.add(source.department)
     const category = row.requirement_label ?? row.course_category
     if (category) categories.add(category)
-    const key = `${source.slug}:${major}`
-    if (seen.has(key)) continue
-    seen.add(key)
-    catalog.push({
+    const year = row.recommended_year && row.recommended_year >= 1 && row.recommended_year <= 4
+      ? row.recommended_year as CourseYear
+      : null
+    const displayCategory = category ?? '미분류'
+    const key = source.course_code || source.slug
+    const existing = catalogByCode.get(key)
+    if (existing) {
+      if (!existing.majors.includes(major)) existing.majors.push(major)
+      if (!existing.categories.includes(displayCategory)) existing.categories.push(displayCategory)
+      if (year !== null && !existing.years.includes(year)) existing.years.push(year)
+      continue
+    }
+    catalogByCode.set(key, {
       id: source.slug,
       dbId: source.id,
       slug: source.slug,
       name: source.name,
       code: source.course_code,
       department: source.department,
-      category: category ?? '미분류',
+      category: displayCategory,
       credits: source.credits,
-      year: row.recommended_year && row.recommended_year >= 1 && row.recommended_year <= 4 ? row.recommended_year as CourseYear : 1,
+      year: year ?? 1,
       description: source.description ?? '',
       major,
+      majors: [major],
+      categories: [displayCategory],
+      years: year === null ? [] : [year],
     })
+  }
+  const catalog = [...catalogByCode.values()]
+  for (const course of catalog) {
+    course.majors.sort()
+    course.categories.sort()
+    course.years.sort((left, right) => left - right)
   }
   return { courses: catalog, majors: [...majors].sort(), categories: [...categories].sort(), departments: [...departments].sort() }
 }

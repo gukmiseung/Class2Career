@@ -109,9 +109,9 @@ export default function CourseAddPage() {
   }, [])
 
   const results = courses.filter((course) =>
-    (filters.major === '전체' || course.major === filters.major) &&
-    (filters.category === '전체' || course.category === filters.category) &&
-    (filters.year === null || course.year === filters.year) &&
+    (filters.major === '전체' || course.majors.includes(filters.major)) &&
+    (filters.category === '전체' || course.categories.includes(filters.category)) &&
+    (filters.year === null || course.years.includes(filters.year)) &&
     (course.name.toLowerCase().includes(query) || course.description.toLowerCase().includes(query)),
   )
   const pageCount = Math.ceil(results.length / pageSize)
@@ -320,7 +320,7 @@ export default function CourseAddPage() {
                 {visibleCourses.map((course) => {
                   const status = registrations[course.id]
                   return (
-                    <li className="course-card" key={`${course.id}:${course.major}:${course.year}`}>
+                    <li className="course-card" key={course.code}>
                       <div>
                         <h3>
                           {getCourseConcepts(course.id) ? (
@@ -330,11 +330,11 @@ export default function CourseAddPage() {
                           ) : course.name}
                         </h3>
                         <p className="course-card-meta">
-                          <span className="course-category">{course.category}</span>
+                          {course.categories.map((category) => <span className="course-category" key={category}>{category}</span>)}
                           <span>{course.code}</span>
                           <span>{course.credits}학점</span>
                           <span aria-hidden="true">·</span>
-                          <span>{course.year}학년</span>
+                          <span>{course.years.length > 0 ? `${course.years.join('·')}학년` : `${course.year}학년`}</span>
                         </p>
                         <p className="course-card-description">{course.description}</p>
                       </div>

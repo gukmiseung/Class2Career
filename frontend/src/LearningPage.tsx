@@ -231,9 +231,9 @@ export default function LearningPage() {
                 </button>
                 <div className="learning-item-details" hidden={!isExpanded}>
                   <p className="learning-course-meta">
-                  <span>{course.category}</span>
+                  <span>{course.categories.join(' · ')}</span>
                   <span>{course.credits}학점</span>
-                  <span>{course.year}학년</span>
+                  <span>{course.years.length > 0 ? `${course.years.join('·')}학년` : `${course.year}학년`}</span>
                   </p>
                   <p className="learning-course-description">{course.description}</p>
                   <div className="learning-item-actions">
