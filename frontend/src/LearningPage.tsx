@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
 import { careerInterestsKey, loadCareerInterests } from './careerInterests'
-import { loadRegistrations, parseRegistrations, registrationKey, statusLabels, type CourseStatus } from './courseRegistrations'
+import { statusLabels, type CourseStatus } from './courseRegistrations'
+import { useCourseRegistrations } from './contexts/CourseRegistrationsContext'
 import { useCourseCatalog } from './useCourseCatalog'
 import { EmptyState, ErrorMessage, Loading } from './AsyncState'
 import './LearningPage.css'
 
 type LearningTab = CourseStatus | 'career'
-type DeleteTarget = { type: 'course' | 'career'; id: string; name: string; noteKey: string }
+type DeleteTarget = { id: string; name: string; noteKey: string } & (
+  { type: 'course'; courseId: number } | { type: 'career' }
+)
 
 function loadLearningProfile() {
   try {
@@ -18,13 +21,17 @@ function loadLearningProfile() {
 }
 
 export default function LearningPage() {
-  const { catalog, loading: catalogLoading, error: catalogError, retry } = useCourseCatalog()
-  const [registrations, setRegistrations] = useState(loadRegistrations)
+  const { catalog, loading: catalogLoading, error: catalogError, retry: retryCatalog } = useCourseCatalog()
+  const {
+    registrations, loading: registrationsLoading, error: registrationsError,
+    savingCourseIds, retryLoad, saveCourseStatus,
+  } = useCourseRegistrations()
   const [activeTab, setActiveTab] = useState<LearningTab | null>('completed')
   const [interestedCareers, setInterestedCareers] = useState(loadCareerInterests)
   const [savedCourseId, setSavedCourseId] = useState<string | null>(null)
   const [expandedItems, setExpandedItems] = useState<Set<string>>(() => new Set())
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null)
+  const [deleteError, setDeleteError] = useState('')
   const [learningProfile] = useState(loadLearningProfile)
   const [notes, setNotes] = useState<Record<string, string>>(() => {
     try {
@@ -34,12 +41,15 @@ export default function LearningPage() {
     }
   })
   const registeredCourses = (catalog?.courses ?? []).flatMap((course) => {
-    const status = registrations[course.id]
+    const status = registrations[course.dbId]
     return status ? [{ ...course, status }] : []
   })
   const completedCount = registeredCourses.filter(({ status }) => status === 'completed').length
   const plannedCount = registeredCourses.filter(({ status }) => status === 'planned').length
   const visibleCourses = registeredCourses.filter(({ status }) => status === activeTab)
+  const courseDataLoading = catalogLoading || registrationsLoading
+  const courseDataError = catalogError ?? registrationsError
+  const deletingCourse = deleteTarget?.type === 'course' && savingCourseIds.has(deleteTarget.courseId)
 
   function updateNote(courseId: string, note: string) {
     setNotes((current) => ({ ...current, [courseId]: note }))
@@ -64,28 +74,37 @@ export default function LearningPage() {
     })
   }
 
-  function confirmDelete() {
-    if (!deleteTarget) return
+  function dismissDelete() {
+    if (deletingCourse) return
+    setDeleteError('')
+    setDeleteTarget(null)
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget || deletingCourse) return
+    setDeleteError('')
 
     if (deleteTarget.type === 'course') {
-      setRegistrations((current) => {
-        const next = { ...current }
-        delete next[deleteTarget.id]
-        window.localStorage.setItem(registrationKey, JSON.stringify(next))
-        return next
-      })
+      try {
+        if (!await saveCourseStatus(deleteTarget.courseId, null)) return
+      } catch {
+        setDeleteError('수강 기록을 삭제하지 못했어요. 다시 시도해 주세요.')
+        return
+      }
     } else {
       const next = interestedCareers.filter((name) => name !== deleteTarget.id)
       window.localStorage.setItem(careerInterestsKey, JSON.stringify(next))
       setInterestedCareers(next)
     }
 
-    setNotes((current) => {
-      const next = { ...current }
-      delete next[deleteTarget.noteKey]
-      window.localStorage.setItem('class2career.course-notes', JSON.stringify(next))
-      return next
-    })
+    const nextNotes = { ...notes }
+    delete nextNotes[deleteTarget.noteKey]
+    setNotes(nextNotes)
+    try {
+      window.localStorage.setItem('class2career.course-notes', JSON.stringify(nextNotes))
+    } catch {
+      // A local note storage error cannot undo the completed deletion.
+    }
     setExpandedItems((current) => {
       const next = new Set(current)
       next.delete(deleteTarget.noteKey)
@@ -96,17 +115,14 @@ export default function LearningPage() {
   }
 
   useEffect(() => {
-    function syncRegistrations(event: StorageEvent) {
-      if (event.key === registrationKey || event.key === null) {
-        setRegistrations(parseRegistrations(event.newValue))
-      }
+    function syncCareerInterests(event: StorageEvent) {
       if (event.key === careerInterestsKey || event.key === null) {
         setInterestedCareers(loadCareerInterests())
       }
     }
 
-    window.addEventListener('storage', syncRegistrations)
-    return () => window.removeEventListener('storage', syncRegistrations)
+    window.addEventListener('storage', syncCareerInterests)
+    return () => window.removeEventListener('storage', syncCareerInterests)
   }, [])
 
   return (
@@ -127,12 +143,12 @@ export default function LearningPage() {
       <section className="learning-summary" aria-label="학습 현황 요약">
         <article>
           <h2>수강 완료 과목</h2>
-          <strong>{completedCount}개</strong>
+          <strong>{courseDataLoading || courseDataError ? '—' : `${completedCount}개`}</strong>
           <p>등록한 과목 기준</p>
         </article>
         <article>
           <h2>수강 예정 과목</h2>
-          <strong>{plannedCount}개</strong>
+          <strong>{courseDataLoading || courseDataError ? '—' : `${plannedCount}개`}</strong>
           <p>앞으로 배울 과목</p>
         </article>
         <article>
@@ -169,9 +185,17 @@ export default function LearningPage() {
         {activeTab !== null && <p id="learning-courses-title">
           {activeTab === 'career'
             ? `관심 직무 · 총 ${interestedCareers.length}개`
-            : `${statusLabels[activeTab]} · 총 ${visibleCourses.length}개 과목`}
+            : courseDataLoading || courseDataError
+              ? statusLabels[activeTab]
+              : `${statusLabels[activeTab]} · 총 ${visibleCourses.length}개 과목`}
         </p>}
-        {activeTab !== 'career' && catalogLoading ? <Loading message="과목 정보를 불러오고 있어요." /> : activeTab !== 'career' && catalogError ? <ErrorMessage message={catalogError} onRetry={retry} retrying={catalogLoading} /> : activeTab !== 'career' && catalog?.courses.length === 0 ? <EmptyState title="등록된 과목 정보가 없어요" message="교과목 정보가 등록되면 학습 현황을 확인할 수 있어요." /> : activeTab === null ? null : activeTab === 'career' ? (
+        {activeTab !== 'career' && courseDataLoading ? (
+          <Loading message="수강 정보를 불러오고 있어요." />
+        ) : activeTab !== 'career' && courseDataError ? (
+          <ErrorMessage message={courseDataError} onRetry={catalogError ? retryCatalog : retryLoad} />
+        ) : activeTab !== 'career' && catalog?.courses.length === 0 ? (
+          <EmptyState title="등록된 과목 정보가 없어요" message="교과목 정보가 등록되면 학습 현황을 확인할 수 있어요." />
+        ) : activeTab === null ? null : activeTab === 'career' ? (
           interestedCareers.length > 0 ? (
             <ul className="learning-course-list">
               {interestedCareers.map((careerName) => {
@@ -239,7 +263,14 @@ export default function LearningPage() {
                   <p className="learning-course-description">{course.description}</p>
                   <div className="learning-item-actions">
                     <a className="learning-career-link" href={`#explore/concepts/${course.id}`}>과목 상세 보기</a>
-                    <button className="learning-delete-button" type="button" onClick={() => setDeleteTarget({ type: 'course', id: course.id, name: course.name, noteKey: course.id })}>과목 삭제</button>
+                    <button
+                      className="learning-delete-button"
+                      type="button"
+                      disabled={savingCourseIds.has(course.dbId)}
+                      onClick={() => setDeleteTarget({ type: 'course', courseId: course.dbId, id: course.id, name: course.name, noteKey: course.id })}
+                    >
+                      과목 삭제
+                    </button>
                   </div>
                   <div className="learning-course-note">
                   <label htmlFor={`course-note-${course.id}`}>간단 메모</label>
@@ -275,16 +306,19 @@ export default function LearningPage() {
         )}
       </section>
       {deleteTarget && (
-        <div className="learning-delete-backdrop" role="presentation" onMouseDown={() => setDeleteTarget(null)}>
+        <div className="learning-delete-backdrop" role="presentation" onMouseDown={dismissDelete}>
           <section className="learning-delete-modal" role="alertdialog" aria-modal="true" aria-labelledby="learning-delete-title" aria-describedby="learning-delete-description" onMouseDown={(event) => event.stopPropagation()}>
             <div className="learning-delete-icon" aria-hidden="true">!</div>
             <h2 id="learning-delete-title">정말 삭제할까요?</h2>
             <p id="learning-delete-description">
               <strong>{deleteTarget.name}</strong>{deleteTarget.type === 'course' ? ' 과목을 내 학습에서 삭제해요.' : ' 직무를 관심 직무에서 삭제해요.'}<br />작성한 메모도 함께 삭제됩니다.
             </p>
-            <div className="learning-delete-actions">
-              <button type="button" autoFocus onClick={() => setDeleteTarget(null)}>취소</button>
-              <button className="learning-delete-confirm" type="button" onClick={confirmDelete}>삭제</button>
+            {deleteError && <p role="alert">{deleteError}</p>}
+            <div className="learning-delete-actions" aria-busy={deletingCourse}>
+              <button type="button" autoFocus disabled={deletingCourse} onClick={dismissDelete}>취소</button>
+              <button className="learning-delete-confirm" type="button" disabled={deletingCourse} onClick={confirmDelete}>
+                {deletingCourse ? '삭제 중…' : '삭제'}
+              </button>
             </div>
           </section>
         </div>
