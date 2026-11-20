@@ -1,6 +1,7 @@
 import { useCourseRegistrations } from './contexts/CourseRegistrationsContext'
 import { useCourseCatalog } from './useCourseCatalog'
 import { hasCareerRoadmap, roadmaps, type RoadmapStep } from './careerRoadmaps'
+import AiRoadmapPreview from './roadmap/AiRoadmapPreview'
 import './RoadmapPage.css'
 
 export default function RoadmapPage({ careerName }: { careerName: string }) {
@@ -55,6 +56,10 @@ export default function RoadmapPage({ careerName }: { careerName: string }) {
           </li>
         ))}
       </ol>
+
+      {import.meta.env.VITE_ENABLE_AI_ROADMAP === 'true' && careerName === '백엔드 개발자' && (
+        <AiRoadmapPreview />
+      )}
     </main>
   )
 }

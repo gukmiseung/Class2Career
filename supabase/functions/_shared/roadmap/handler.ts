@@ -5,6 +5,7 @@ import {
   type ConceptCoverageInput,
 } from './compareConceptCoverage.ts'
 import { isRecord, validateGeneratedRoadmap, type CandidateCourse } from './response.ts'
+import { RoadmapProviderError } from './openai.ts'
 
 export type RoadmapData = {
   request: Omit<RoadmapRequest, 'skillGaps'>
@@ -14,6 +15,7 @@ export type RoadmapData = {
 
 export type RoadmapDependencies = {
   authenticate(token: string): Promise<{ userId: string } | null>
+  isAllowedUser(userId: string): boolean
   load(selection: { userId: string; accessToken: string; careerId: string }): Promise<RoadmapData | null>
   generate(request: RoadmapRequest, candidates: readonly CandidateCourse[]): Promise<unknown>
 }
@@ -40,6 +42,9 @@ export function createRoadmapHandler(dependencies: RoadmapDependencies) {
       const token = /^Bearer ([\w-]+\.[\w-]+\.[\w-]+)$/i.exec(authorization)?.[1]
       const user = token ? await dependencies.authenticate(token) : null
       if (!token || !user) return failure(401, 'UNAUTHORIZED', '로그인이 필요합니다.')
+      if (!dependencies.isAllowedUser(user.userId)) {
+        return failure(403, 'ROADMAP_ACCESS_DENIED', 'AI 로드맵 테스트 접근 권한이 없습니다.')
+      }
 
       const body = await request.json().catch(() => null)
       if (!isRecord(body) || Object.keys(body).length !== 1 ||
@@ -69,7 +74,8 @@ export function createRoadmapHandler(dependencies: RoadmapDependencies) {
       if (!roadmap) return failure(500, 'INVALID_ROADMAP_RESPONSE', '로드맵 응답을 검증하지 못했습니다.')
 
       return Response.json(roadmap, { headers: corsHeaders })
-    } catch {
+    } catch (error) {
+      if (error instanceof RoadmapProviderError) return failure(error.status, error.code, error.message)
       return failure(500, 'INTERNAL_ERROR', '로드맵 생성 중 오류가 발생했습니다.')
     }
   }

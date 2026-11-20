@@ -1,3 +1,8 @@
+export function createRoadmapAllowlist(config: string | undefined) {
+  const allowedIds = new Set((config ?? '').split(',').map((id) => id.trim()).filter(Boolean))
+  return (userId: string) => allowedIds.has(userId)
+}
+
 export function createAuthenticator(
   configuration: () => { url: string; publishableKey: string },
   request: typeof fetch = fetch,
