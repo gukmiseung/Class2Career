@@ -7,6 +7,7 @@ import CareerDetailPage from './CareerDetailPage'
 import CareerConceptPage from './CareerConceptPage'
 import RoadmapPage from './RoadmapPage'
 import ConceptAnalysisPage from './ConceptAnalysisPage'
+import ConceptRecommendationPage from './ConceptRecommendationPage'
 import ConceptSelectionPage from './ConceptSelectionPage'
 import CourseAddPage from './CourseAddPage'
 import LoadingPage from './LoadingPage'
@@ -21,9 +22,8 @@ import { useAuth } from './contexts/AuthContext'
 import { authCallback, supabase } from './lib/supabase'
 import { getAuthReturnTo, isLearningRoute } from './authNavigation'
 import LearningLoginModal from './LearningLoginModal'
+import { ErrorMessage, EmptyState } from './AsyncState'
 import './App.css'
-
-const loadingDuration = 700
 
 function isPublicRoute(hash: string) {
   const [route] = hash.split('?', 1)
@@ -32,9 +32,8 @@ function isPublicRoute(hash: string) {
 }
 
 function App() {
-  const { catalog, loading: catalogLoading, error: catalogError } = useCourseCatalog()
+  const { catalog, loading: catalogLoading, error: catalogError, retry: retryCatalog } = useCourseCatalog()
   const [locationHash, setHash] = useState(window.location.hash)
-  const [isLoading, setIsLoading] = useState(false)
   const [callbackMessage, setCallbackMessage] = useState('')
   const [handlingCallback, setHandlingCallback] = useState(Boolean(authCallback))
   const [conceptState, setConceptState] = useState<{ courseId: number | null; concepts: CourseConcept[]; loading: boolean; error: string | null }>({ courseId: null, concepts: [], loading: false, error: null })
@@ -66,28 +65,18 @@ function App() {
   }, [conceptCourseId])
 
   useEffect(() => {
-    let loadingTimer: number | undefined
-
     const updateHash = (event: HashChangeEvent) => {
       if (event.newURL !== window.location.href) return
-      if (loadingTimer !== undefined) window.clearTimeout(loadingTimer)
 
       const nextHash = window.location.hash
       setHash(nextHash)
       if (isPublicRoute(nextHash)) setPublicHash(nextHash)
       setCallbackMessage('')
 
-      if (nextHash.includes('/analysis')) {
-        setIsLoading(true)
-        loadingTimer = window.setTimeout(() => setIsLoading(false), loadingDuration)
-      } else {
-        setIsLoading(false)
-      }
     }
 
     window.addEventListener('hashchange', updateHash)
     return () => {
-      if (loadingTimer !== undefined) window.clearTimeout(loadingTimer)
       window.removeEventListener('hashchange', updateHash)
     }
   }, [])
@@ -124,14 +113,9 @@ function App() {
     return <LoadingPage message="로그인 상태를 확인하고 있어요..." />
   }
 
-  if (isLoading && !recoveringPassword && !gatedDestination) {
-    return <LoadingPage message="선택한 전공 개념을 분석하고 있어요..." />
-  }
-
   function dismissLearningModal() {
     window.history.replaceState(window.history.state, '', publicHash || '#dashboard')
     setHash(publicHash || '#dashboard')
-    setIsLoading(false)
   }
 
   function renderPage() {
@@ -158,8 +142,10 @@ function App() {
       const [path, query] = hash.slice(conceptRoute.length).split('?', 2)
       const [courseId] = path.split('/', 1)
       const analysisPath = `${courseId}/analysis`
+      const recommendationPath = `${courseId}/recommendations`
       if (catalogLoading) return <LoadingPage message="과목 정보를 불러오고 있어요." />
-      if (catalogError) return <p role="alert">{catalogError}</p>
+      if (catalogError) return <ErrorMessage message={catalogError} onRetry={retryCatalog} retrying={catalogLoading} />
+      if (!catalog || catalog.courses.length === 0) return <EmptyState message="등록된 교과목이 아직 없습니다." />
       const course = catalog?.courses.find(({ id }) => id === courseId)
       if (!course) return <CourseAddPage />
       const concepts = conceptState.courseId === course.dbId ? conceptState.concepts : []
@@ -181,13 +167,24 @@ function App() {
         )
       }
 
-      if (path !== courseId && path !== analysisPath) {
+      if (path !== courseId && path !== analysisPath && path !== recommendationPath) {
         return <CourseAddPage />
       }
 
       const selectionHref = `${conceptRoute}${courseId}`
       const requestedIds = new Set(new URLSearchParams(query).getAll('concept'))
       const selectedConcepts = concepts.filter(({ id }) => requestedIds.has(id))
+
+      if (path === recommendationPath && selectedConcepts.length > 0) {
+        return (
+          <ConceptRecommendationPage
+            key={hash}
+            courseName={course.name}
+            concepts={selectedConcepts}
+            analysisHref={`${conceptRoute}${analysisPath}?${query}`}
+          />
+        )
+      }
 
       if (path === analysisPath && selectedConcepts.length > 0) {
         return (
@@ -196,6 +193,7 @@ function App() {
             courseName={course.name}
             concepts={selectedConcepts}
             selectionHref={`${selectionHref}?${query}`}
+            recommendationHref={`${conceptRoute}${recommendationPath}?${query}`}
           />
         )
       }

@@ -35,7 +35,7 @@ export default function SiteHeader() {
         return
       }
       setShowLogoutModal(false)
-      window.location.hash = '#dashboard'
+      window.location.hash = '#login'
     } catch {
       setLogoutError('로그아웃 중 오류가 발생했습니다.')
     } finally {

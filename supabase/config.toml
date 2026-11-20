@@ -1,0 +1,5 @@
+project_id = "class2career"
+
+[functions.generate-roadmap]
+# The handler validates the bearer token with Supabase Auth and owns the 401 response.
+verify_jwt = false

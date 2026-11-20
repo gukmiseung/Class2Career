@@ -5,7 +5,7 @@
   --concept-accent: #465be4;
   min-height: 100vh;
   color: var(--concept-ink);
-  background: #f6f7f9;
+  background: var(--app-background);
   line-height: 1.5;
 }
 
