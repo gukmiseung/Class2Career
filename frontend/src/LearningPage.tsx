@@ -3,6 +3,7 @@ import { careerInterestsKey, loadCareerInterests } from './careerInterests'
 import { statusLabels, type CourseStatus } from './courseRegistrations'
 import { useCourseRegistrations } from './contexts/CourseRegistrationsContext'
 import { useCourseCatalog } from './useCourseCatalog'
+import { useProfile } from './useProfile'
 import { EmptyState, ErrorMessage, Loading } from './AsyncState'
 import './LearningPage.css'
 
@@ -10,15 +11,6 @@ type LearningTab = CourseStatus | 'career'
 type DeleteTarget = { id: string; name: string; noteKey: string } & (
   { type: 'course'; courseId: number } | { type: 'career' }
 )
-
-function loadLearningProfile() {
-  try {
-    const profile = JSON.parse(window.localStorage.getItem('class2career.profile') ?? '{}') as { name?: string; avatar?: string }
-    return { name: profile.name?.trim() ?? '', avatar: profile.avatar ?? '' }
-  } catch {
-    return { name: '', avatar: '' }
-  }
-}
 
 export default function LearningPage() {
   const { catalog, loading: catalogLoading, error: catalogError, retry: retryCatalog } = useCourseCatalog()
@@ -32,7 +24,8 @@ export default function LearningPage() {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(() => new Set())
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null)
   const [deleteError, setDeleteError] = useState('')
-  const [learningProfile] = useState(loadLearningProfile)
+  const { profile: learningProfile } = useProfile()
+  const learnerName = learningProfile?.name.trim() ?? ''
   const [notes, setNotes] = useState<Record<string, string>>(() => {
     try {
       return JSON.parse(window.localStorage.getItem('class2career.course-notes') ?? '{}')
@@ -129,12 +122,12 @@ export default function LearningPage() {
     <main className="learning-page">
       <header className="learning-profile-header">
         <div className="learning-profile-avatar" aria-label="내 프로필 사진">
-          {learningProfile.avatar
+          {learningProfile?.avatar
             ? <img src={learningProfile.avatar} alt="" />
-            : <span aria-hidden="true">{learningProfile.name.slice(0, 1) || '나'}</span>}
+            : <span aria-hidden="true">{learnerName.slice(0, 1) || '나'}</span>}
         </div>
         <div>
-          <p>{learningProfile.name ? `${learningProfile.name}님의 학습 공간` : 'MY LEARNING'}</p>
+          <p>{learnerName ? `${learnerName}님의 학습 공간` : 'MY LEARNING'}</p>
           <h1>나의 학습 현황</h1>
           <span>수강 과목과 관심 직무를 한곳에서 관리해 보세요.</span>
         </div>
