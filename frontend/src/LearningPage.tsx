@@ -233,7 +233,7 @@ export default function LearningPage() {
                   <p className="learning-course-meta">
                   <span>{course.categories.join(' · ')}</span>
                   <span>{course.credits}학점</span>
-                  <span>{course.years.length > 0 ? `${course.years.join('·')}학년` : `${course.year}학년`}</span>
+                  <span>{course.years.length > 0 ? `${course.years.join('·')}학년` : '학년 미지정'}</span>
                   </p>
                   <p className="learning-course-description">{course.description}</p>
                   <div className="learning-item-actions">

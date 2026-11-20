@@ -114,7 +114,7 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
     const normalizedName = courseName.replaceAll(' ', '')
     const matchingCourses = (catalog?.courses ?? []).filter(({ name }) => {
       const catalogName = name.replaceAll(' ', '')
-      return catalogName === normalizedName || catalogName.includes(normalizedName) || normalizedName.includes(catalogName)
+      return catalogName === normalizedName
     })
     if (matchingCourses.some(({ id }) => registrations[id] === 'completed')) return 'completed'
     if (matchingCourses.some(({ id }) => registrations[id] === 'planned')) return 'planned'

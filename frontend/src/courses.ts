@@ -20,12 +20,13 @@ export type Course = {
   year: CourseYear
   description: string
   major: string
+  curricula: { major: string; category: string; year: CourseYear | null }[]
   majors: string[]
   categories: string[]
   years: CourseYear[]
 }
 
-export const courses: Course[] = []
+
 
 type CurriculumCourseRow = {
   recommended_year: number | null
@@ -51,9 +52,10 @@ export async function getCourseCatalog(): Promise<CourseCatalog> {
     const { data, error } = await supabase
       .from('c2c_curriculum_courses')
       .select('recommended_year, requirement_label, course_category, c2c_courses!inner(id, slug, name, course_code, department, credits, description), c2c_curricula!inner(curriculum_year, c2c_majors(name))')
+      .order('curriculum_id').order('course_id')
       .range(start, start + 999)
     if (error) throw error
-    rows.push(...(data ?? [] as never) as unknown as CurriculumCourseRow[])
+    rows.push(...(data ?? []) as unknown as CurriculumCourseRow[])
     if (!data || data.length < 1000) break
   }
 
@@ -76,6 +78,7 @@ export async function getCourseCatalog(): Promise<CourseCatalog> {
     const key = source.course_code || source.slug
     const existing = catalogByCode.get(key)
     if (existing) {
+      existing.curricula.push({ major, category: displayCategory, year })
       if (!existing.majors.includes(major)) existing.majors.push(major)
       if (!existing.categories.includes(displayCategory)) existing.categories.push(displayCategory)
       if (year !== null && !existing.years.includes(year)) existing.years.push(year)
@@ -93,6 +96,7 @@ export async function getCourseCatalog(): Promise<CourseCatalog> {
       year: year ?? 1,
       description: source.description ?? '',
       major,
+      curricula: [{ major, category: displayCategory, year }],
       majors: [major],
       categories: [displayCategory],
       years: year === null ? [] : [year],

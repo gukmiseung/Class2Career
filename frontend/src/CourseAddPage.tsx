@@ -12,6 +12,7 @@ import {
   type CourseCategory,
   type CourseYear,
 } from './courses'
+import { filterCourses } from './filterCourses'
 import './CourseAddPage.css'
 
 const pageSize = 4
@@ -108,12 +109,7 @@ export default function CourseAddPage() {
     return () => window.removeEventListener('storage', syncRegistrations)
   }, [])
 
-  const results = courses.filter((course) =>
-    (filters.major === '전체' || course.majors.includes(filters.major)) &&
-    (filters.category === '전체' || course.categories.includes(filters.category)) &&
-    (filters.year === null || course.years.includes(filters.year)) &&
-    (course.name.toLowerCase().includes(query) || course.description.toLowerCase().includes(query)),
-  )
+  const results = filterCourses(courses, filters, query)
   const pageCount = Math.ceil(results.length / pageSize)
   const visibleCourses = results.slice((page - 1) * pageSize, page * pageSize)
 
@@ -140,13 +136,6 @@ export default function CourseAddPage() {
     setSearchInput('')
     setQuery('')
     setPage(1)
-    setRegistrations({})
-
-    try {
-      window.localStorage.removeItem(registrationKey)
-    } catch {
-      return
-    }
   }
 
   function toggleFilter(section: FilterSection) {
@@ -320,10 +309,10 @@ export default function CourseAddPage() {
                 {visibleCourses.map((course) => {
                   const status = registrations[course.id]
                   return (
-                    <li className="course-card" key={course.code}>
+                    <li className="course-card" key={course.code || course.slug}>
                       <div>
                         <h3>
-                          {getCourseConcepts(course.id) ? (
+                          {getCourseConcepts(course.id, course) ? (
                             <a className="course-concept-link" href={`#explore/concepts/${course.id}`}>
                               {course.name}
                             </a>
@@ -334,7 +323,7 @@ export default function CourseAddPage() {
                           <span>{course.code}</span>
                           <span>{course.credits}학점</span>
                           <span aria-hidden="true">·</span>
-                          <span>{course.years.length > 0 ? `${course.years.join('·')}학년` : `${course.year}학년`}</span>
+                          <span>{course.years.length > 0 ? `${course.years.join('·')}학년` : '학년 미지정'}</span>
                         </p>
                         <p className="course-card-description">{course.description}</p>
                       </div>
