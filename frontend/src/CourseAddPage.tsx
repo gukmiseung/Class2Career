@@ -11,13 +11,12 @@ import {
   courseYears,
   type CourseCategory,
   type CourseYear,
-  type Department,
 } from './courses'
+import { filterCourses } from './filterCourses'
 import './CourseAddPage.css'
 
 const pageSize = 4
 type Filters = {
-  department: Department | '전체'
   major: string | '전체'
   category: CourseCategory | '전체'
   year: CourseYear | null
@@ -25,14 +24,14 @@ type Filters = {
 
 type FilterSection = 'department' | 'category' | 'year'
 
-const defaultFilters: Filters = { department: '전체', major: '전체', category: '전체', year: null }
+const defaultFilters: Filters = { major: '전체', category: '전체', year: null }
 
 function CoursePagination({ page, pageCount, onPageChange }: {
   page: number
   pageCount: number
   onPageChange: (page: number) => void
 }) {
-  if (pageCount <= 1) return null
+  if (pageCount === 0) return null
 
   const windowStart = Math.min(Math.max(page - 1, 1), pageCount - 2)
   const visiblePages = Array.from({ length: pageCount }, (_, index) => index + 1)
@@ -67,7 +66,6 @@ function CoursePagination({ page, pageCount, onPageChange }: {
 export default function CourseAddPage() {
   const titleRef = useRef<HTMLHeadingElement>(null)
   const filterPanelRef = useRef<HTMLElement>(null)
-  const resultsPanelRef = useRef<HTMLElement>(null)
   const scrollbarTimer = useRef<number | undefined>(undefined)
   const [searchInput, setSearchInput] = useState('')
   const [query, setQuery] = useState('')
@@ -82,7 +80,6 @@ export default function CourseAddPage() {
   const [courses, setCourses] = useState<Awaited<ReturnType<typeof getCourseCatalog>>['courses']>([])
   const [majorOptions, setMajorOptions] = useState<string[]>([])
   const [categoryOptions, setCategoryOptions] = useState<string[]>([])
-  const [departmentOptions, setDepartmentOptions] = useState<string[]>([])
   const [coursesLoading, setCoursesLoading] = useState(true)
   const [coursesError, setCoursesError] = useState('')
 
@@ -92,32 +89,9 @@ export default function CourseAddPage() {
   }, [])
 
   useEffect(() => {
-    const filterPanel = filterPanelRef.current
-    const resultsPanel = resultsPanelRef.current
-    if (!filterPanel || !resultsPanel) return
-
-    const syncPanelHeight = () => {
-      if (window.matchMedia('(max-width: 680px)').matches) {
-        filterPanel.style.height = ''
-        return
-      }
-      filterPanel.style.height = `${resultsPanel.getBoundingClientRect().height}px`
-    }
-    const observer = new ResizeObserver(syncPanelHeight)
-    observer.observe(resultsPanel)
-    window.addEventListener('resize', syncPanelHeight)
-    syncPanelHeight()
-    return () => {
-      observer.disconnect()
-      window.removeEventListener('resize', syncPanelHeight)
-      filterPanel.style.height = ''
-    }
-  }, [])
-
-  useEffect(() => {
     let active = true
     getCourseCatalog()
-      .then((catalog) => { if (active) { setCourses(catalog.courses); setMajorOptions(catalog.majors); setCategoryOptions(catalog.categories); setDepartmentOptions(catalog.departments); setCoursesError('') } })
+      .then((catalog) => { if (active) { setCourses(catalog.courses); setMajorOptions(catalog.majors); setCategoryOptions(catalog.categories); setCoursesError('') } })
       .catch(() => { if (active) { setCourses([]); setCoursesError('과목 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.') } })
       .finally(() => { if (active) setCoursesLoading(false) })
     return () => { active = false }
@@ -135,13 +109,7 @@ export default function CourseAddPage() {
     return () => window.removeEventListener('storage', syncRegistrations)
   }, [])
 
-  const results = courses.filter((course) =>
-    (filters.department === '전체' || course.department === filters.department) &&
-    (filters.major === '전체' || course.major === filters.major) &&
-    (filters.category === '전체' || course.category === filters.category) &&
-    (filters.year === null || course.year === filters.year) &&
-    (course.name.toLowerCase().includes(query) || course.description.toLowerCase().includes(query)),
-  )
+  const results = filterCourses(courses, filters, query)
   const pageCount = Math.ceil(results.length / pageSize)
   const visibleCourses = results.slice((page - 1) * pageSize, page * pageSize)
 
@@ -150,19 +118,24 @@ export default function CourseAddPage() {
     setPage(1)
   }
 
+  function selectMajor(major: string) {
+    changeFilters({ ...filters, major })
+  }
+
+  function selectCategory(category: string) {
+    changeFilters({ ...filters, category })
+  }
+
+  function selectYear(year: CourseYear) {
+    changeFilters({ ...filters, year: filters.year === year ? null : year })
+  }
+
   function resetCoursePage() {
     setFilters(defaultFilters)
     setExpandedFilters({ department: true, category: true, year: true })
     setSearchInput('')
     setQuery('')
     setPage(1)
-    setRegistrations({})
-
-    try {
-      window.localStorage.removeItem(registrationKey)
-    } catch {
-      return
-    }
   }
 
   function toggleFilter(section: FilterSection) {
@@ -252,18 +225,14 @@ export default function CourseAddPage() {
                 </button>
               </legend>
               <div className="course-filter-options" id="department-filter-options" hidden={!expandedFilters.department}>
-                {['전체', ...departmentOptions, ...majorOptions].map((department) => (
+                {['전체', ...majorOptions].map((major) => (
                   <button
                     type="button"
-                    key={department}
-                    aria-pressed={department === '전체' ? filters.department === '전체' && filters.major === '전체' : departmentOptions.includes(department) ? filters.department === department : filters.major === department}
-                    onClick={() => changeFilters(department === '전체'
-                      ? { ...filters, department: '전체', major: '전체' }
-                      : departmentOptions.includes(department)
-                        ? { ...filters, department, major: '전체' }
-                        : { ...filters, department: '전체', major: department })}
+                    key={major}
+                    aria-pressed={filters.major === major}
+                    onClick={() => selectMajor(major)}
                   >
-                    {department}
+                    {major === '전체' ? '전체 (컴퓨터학부)' : major}
                   </button>
                 ))}
               </div>
@@ -289,7 +258,7 @@ export default function CourseAddPage() {
                     type="button"
                     key={category}
                     aria-pressed={filters.category === category}
-                    onClick={() => changeFilters({ ...filters, category })}
+                    onClick={() => selectCategory(category)}
                   >
                     {category}
                   </button>
@@ -317,7 +286,7 @@ export default function CourseAddPage() {
                     type="button"
                     key={year}
                     aria-pressed={filters.year === year}
-                    onClick={() => changeFilters({ ...filters, year: filters.year === year ? null : year })}
+                    onClick={() => selectYear(year)}
                   >
                     {year}학년
                   </button>
@@ -326,7 +295,7 @@ export default function CourseAddPage() {
             </fieldset>
           </aside>
 
-          <section ref={resultsPanelRef} className="course-results" aria-labelledby="course-results-title">
+          <section className="course-results" aria-labelledby="course-results-title">
             <header className="course-results-heading">
               <div>
                 <h2 id="course-results-title">과목 검색 결과</h2>
@@ -340,21 +309,21 @@ export default function CourseAddPage() {
                 {visibleCourses.map((course) => {
                   const status = registrations[course.id]
                   return (
-                    <li className="course-card" key={course.id}>
+                    <li className="course-card" key={course.code || course.slug}>
                       <div>
                         <h3>
-                          {getCourseConcepts(course.id) ? (
+                          {getCourseConcepts(course.id, course) ? (
                             <a className="course-concept-link" href={`#explore/concepts/${course.id}`}>
                               {course.name}
                             </a>
                           ) : course.name}
                         </h3>
                         <p className="course-card-meta">
-                          <span className="course-category">{course.category}</span>
+                          {course.categories.map((category) => <span className="course-category" key={category}>{category}</span>)}
                           <span>{course.code}</span>
                           <span>{course.credits}학점</span>
                           <span aria-hidden="true">·</span>
-                          <span>{course.year}학년</span>
+                          <span>{course.years.length > 0 ? `${course.years.join('·')}학년` : '학년 미지정'}</span>
                         </p>
                         <p className="course-card-description">{course.description}</p>
                       </div>

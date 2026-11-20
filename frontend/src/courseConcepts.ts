@@ -1,4 +1,4 @@
-import { courses } from './courses'
+import type { Course } from './courses'
 
 export type CourseConcept = {
   id: string
@@ -31,10 +31,9 @@ const dataStructuresConcepts = [
 
 const dataStructuresCourseIds = new Set(['cs-data-structures', 'sw-data-structures'])
 
-export function getCourseConcepts(courseId: string) {
-  if (dataStructuresCourseIds.has(courseId)) return dataStructuresConcepts
+export function getCourseConcepts(courseId: string, course?: Course) {
+  if (dataStructuresCourseIds.has(courseId) || course?.name === '자료구조') return dataStructuresConcepts
 
-  const course = courses.find(({ id }) => id === courseId)
   if (!course) return undefined
 
   return [

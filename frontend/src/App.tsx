@@ -15,7 +15,7 @@ import PasswordResetPage from './PasswordResetPage'
 import ProfilePage from './ProfilePage'
 import SiteHeader from './SiteHeader'
 import { getCourseConcepts } from './courseConcepts'
-import { courses } from './courses'
+import { useCourseCatalog } from './useCourseCatalog'
 import { useAuth } from './contexts/AuthContext'
 import { authCallback, supabase } from './lib/supabase'
 import { getAuthReturnTo, isLearningRoute } from './authNavigation'
@@ -31,6 +31,7 @@ function isPublicRoute(hash: string) {
 }
 
 function App() {
+  const { catalog, loading: catalogLoading, error: catalogError } = useCourseCatalog()
   const [locationHash, setHash] = useState(window.location.hash)
   const [isLoading, setIsLoading] = useState(false)
   const [callbackMessage, setCallbackMessage] = useState('')
@@ -140,8 +141,10 @@ function App() {
       const [path, query] = hash.slice(conceptRoute.length).split('?', 2)
       const [courseId] = path.split('/', 1)
       const analysisPath = `${courseId}/analysis`
-      const course = courses.find(({ id }) => id === courseId)
-      const concepts = getCourseConcepts(courseId)
+      if (catalogLoading) return <LoadingPage message="과목 정보를 불러오고 있어요." />
+      if (catalogError) return <p role="alert">{catalogError}</p>
+      const course = catalog?.courses.find(({ id }) => id === courseId)
+      const concepts = getCourseConcepts(courseId, course)
 
       if (!course || !concepts || (path !== courseId && path !== analysisPath)) {
         return <CourseAddPage />
