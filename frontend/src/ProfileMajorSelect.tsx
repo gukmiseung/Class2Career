@@ -13,7 +13,7 @@ export default function ProfileMajorSelect({ value, onChange, disabled }: {
   const [attempt, setAttempt] = useState(0)
   const majors = list?.majors ?? []
   const loading = list === null
-  const hasLegacyValue = value !== '' && !majors.some((major) => major.name === value)
+  const selectedMajor = majors.some((major) => major.name === value) ? value : ''
 
   useEffect(() => {
     const controller = new AbortController()
@@ -36,9 +36,8 @@ export default function ProfileMajorSelect({ value, onChange, disabled }: {
     <div className="profile-major-field">
       <label>
         <span>전공</span>
-        <select value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled || majors.length === 0}>
-          <option value="" disabled>전공을 선택하세요</option>
-          {hasLegacyValue && <option value={value} disabled>{value}{list && !list.error ? ' (기존 선택)' : ''}</option>}
+        <select value={selectedMajor} onChange={(event) => onChange(event.target.value)} disabled={disabled || majors.length === 0}>
+          <option value="" disabled>전공을 선택하세요.</option>
           {majors.map((major) => <option key={major.id} value={major.name}>{major.name}</option>)}
         </select>
       </label>
