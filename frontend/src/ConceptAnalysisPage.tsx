@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import ConceptHeader from './ConceptHeader'
-import { conceptAnalyses } from './conceptAnalysis'
+import { getConceptAnalysis } from './conceptAnalysis'
 import type { CourseConcept } from './courseConcepts'
 import './ConceptAnalysisPage.css'
 
@@ -11,10 +11,18 @@ type ConceptAnalysisPageProps = {
   recommendationHref: string
 }
 
+const conceptExplanations: Record<string, string> = {
+  lists: '배열은 데이터를 연속된 공간에 저장해 빠르게 조회하고, 연결 리스트는 각 데이터를 연결해 삽입과 삭제를 유연하게 처리해요. 상품 목록이나 최근 사용 기록처럼 순서가 중요한 서비스에서 활용돼요.',
+  'stacks-queues': '스택은 가장 나중에 들어온 데이터를 먼저 처리하고, 큐는 먼저 들어온 데이터부터 처리해요. 실행 취소나 알림 대기열처럼 작업 순서가 중요한 기능에 활용돼요.',
+  'trees-graphs': '트리와 그래프는 데이터 사이의 관계를 표현하는 자료구조예요. 트리는 계층적인 관계를, 그래프는 여러 대상이 서로 연결된 관계를 나타내요. 친구 관계나 길 찾기처럼 연결 구조를 다루는 서비스에서 활용돼요.',
+  'sorting-search': '정렬은 데이터를 기준에 맞게 순서대로 배치하고, 탐색은 필요한 데이터를 효율적으로 찾는 방법이에요. 상품 정렬이나 로그 검색처럼 많은 정보에서 원하는 결과를 빠르게 보여줄 때 활용돼요.',
+}
+
 export default function ConceptAnalysisPage({ courseName, concepts, selectionHref, recommendationHref }: ConceptAnalysisPageProps) {
   const titleRef = useRef<HTMLHeadingElement>(null)
-  const analyses = concepts.map((concept) => ({ concept, analysis: conceptAnalyses[concept.id] }))
-  const examples = analyses.flatMap(({ analysis }) => analysis?.examples ?? [])
+  const analyses = concepts.map((concept) => ({ concept, analysis: getConceptAnalysis(concept) }))
+  // Gemini 연결 시 이 배열만 API 응답으로 교체하면 카드 UI는 그대로 재사용할 수 있습니다.
+  const examples = analyses[0].analysis.examples
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
@@ -33,7 +41,7 @@ export default function ConceptAnalysisPage({ courseName, concepts, selectionHre
 
         <header className="analysis-intro">
           <h1 ref={titleRef} tabIndex={-1}>선택한 개념은 실무에서 어떻게 쓰일까요?</h1>
-          <p>선택한 개념의 설명과 등록된 실무 활용 사례를 확인해 보세요.</p>
+          <p>개념을 간단히 살펴보고 실제 서비스에서의 활용 사례를 확인해 보세요.</p>
         </header>
 
         <section className="analysis-concept-list" aria-label="선택한 개념 설명">
@@ -41,21 +49,21 @@ export default function ConceptAnalysisPage({ courseName, concepts, selectionHre
             <article className="analysis-concept-card" key={concept.id}>
               <span>선택한 개념 · {courseName}</span>
               <h2>{concept.name}란?</h2>
-              <p>{concept.description || '아직 등록된 개념 설명이 없습니다.'}</p>
+              <p>{conceptExplanations[concept.id] ?? `${concept.name}은 ${concept.description}을 다루는 개념이에요. 실제 서비스의 문제를 구조적으로 이해하고 해결하는 데 활용돼요.`}</p>
             </article>
           ))}
         </section>
 
         <section className="analysis-examples" aria-labelledby="analysis-examples-title">
           <h2 id="analysis-examples-title">실무 활용 사례</h2>
-          {examples.length > 0 ? <ol className="analysis-example-grid">
+          <ol className="analysis-example-grid">
             {examples.map(({ title, description, topic }, index) => (
               <li className="analysis-example" key={title}>
                 <span className="analysis-example-number">{String(index + 1).padStart(2, '0')}</span>
                 <h3>{title}</h3><p>{description}</p><strong># {topic}</strong>
               </li>
             ))}
-          </ol> : <p>이 개념의 실무 활용 사례는 아직 등록되지 않았습니다.</p>}
+          </ol>
         </section>
 
         <section className="analysis-next" aria-label="관련 직무와 다음 학습 추천">
