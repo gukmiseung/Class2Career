@@ -3,12 +3,13 @@ import { getCourseConcepts } from './courseConcepts'
 import type { CourseStatus } from './courseRegistrations'
 import { useCourseRegistrations } from './contexts/CourseRegistrationsContext'
 import {
-  getCourseCatalog,
   courseYears,
   type CourseCategory,
   type CourseYear,
 } from './courses'
 import { filterCourses } from './filterCourses'
+import { EmptyState, ErrorMessage, Loading } from './AsyncState'
+import { useCourseCatalog } from './useCourseCatalog'
 import './CourseAddPage.css'
 
 const pageSize = 4
@@ -67,9 +68,9 @@ export default function CourseAddPage() {
   const [query, setQuery] = useState('')
   const [filters, setFilters] = useState(defaultFilters)
   const [expandedFilters, setExpandedFilters] = useState<Record<FilterSection, boolean>>({
-    department: true,
-    category: true,
-    year: true,
+    department: false,
+    category: false,
+    year: false,
   })
   const [page, setPage] = useState(1)
   const {
@@ -77,24 +78,14 @@ export default function CourseAddPage() {
     error: registrationsError, savingCourseIds, retryLoad, saveCourseStatus,
   } = useCourseRegistrations()
   const [saveError, setSaveError] = useState('')
-  const [courses, setCourses] = useState<Awaited<ReturnType<typeof getCourseCatalog>>['courses']>([])
-  const [majorOptions, setMajorOptions] = useState<string[]>([])
-  const [categoryOptions, setCategoryOptions] = useState<string[]>([])
-  const [coursesLoading, setCoursesLoading] = useState(true)
-  const [coursesError, setCoursesError] = useState('')
+  const { catalog, loading: coursesLoading, error: coursesError, retry: retryCatalog } = useCourseCatalog()
+  const courses = catalog?.courses ?? []
+  const majorOptions = catalog?.majors ?? []
+  const categoryOptions = catalog?.categories ?? []
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
     titleRef.current?.focus({ preventScroll: true })
-  }, [])
-
-  useEffect(() => {
-    let active = true
-    getCourseCatalog()
-      .then((catalog) => { if (active) { setCourses(catalog.courses); setMajorOptions(catalog.majors); setCategoryOptions(catalog.categories); setCoursesError('') } })
-      .catch(() => { if (active) { setCourses([]); setCoursesError('과목 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.') } })
-      .finally(() => { if (active) setCoursesLoading(false) })
-    return () => { active = false }
   }, [])
 
   const results = filterCourses(courses, filters, query)
@@ -120,7 +111,7 @@ export default function CourseAddPage() {
 
   function resetCoursePage() {
     setFilters(defaultFilters)
-    setExpandedFilters({ department: true, category: true, year: true })
+    setExpandedFilters({ department: false, category: false, year: false })
     setSearchInput('')
     setQuery('')
     setPage(1)
@@ -284,15 +275,12 @@ export default function CourseAddPage() {
               <p className="course-result-count" aria-live="polite">총 {results.length}개 과목</p>
             </header>
 
-            {!coursesLoading && registrationsLoading && <p className="course-empty" role="status">수강 상태를 불러오고 있어요.</p>}
-            {registrationsError && (
-              <div className="course-empty">
-                <p role="alert">{registrationsError}</p>
-                <button className="course-primary-button" type="button" onClick={retryLoad}>다시 시도</button>
-              </div>
-            )}
-            {saveError && <p className="course-empty" role="alert">{saveError}</p>}
-            {coursesLoading ? <p className="course-empty">과목 정보를 불러오고 있어요.</p> : coursesError ? <p className="course-empty" role="alert">{coursesError}</p> : visibleCourses.length > 0 ? (
+            {catalog && registrationsLoading && <Loading message="수강 상태를 불러오고 있어요." compact />}
+            {catalog && registrationsError && <ErrorMessage message={registrationsError} onRetry={retryLoad} />}
+            {saveError && <ErrorMessage message={saveError} />}
+            {coursesLoading ? <Loading message="과목 정보를 불러오고 있어요." /> : coursesError ? (
+              <ErrorMessage message={coursesError} onRetry={retryCatalog} />
+            ) : visibleCourses.length > 0 ? (
               <ul className="course-list">
                 {visibleCourses.map((course) => {
                   const status = registrations[course.dbId]
@@ -339,7 +327,7 @@ export default function CourseAddPage() {
                 })}
               </ul>
             ) : (
-              <p className="course-empty">검색 결과가 없어요. 검색어나 필터를 바꿔 보세요.</p>
+              <EmptyState title={courses.length === 0 ? '등록된 과목이 없어요' : '검색 결과가 없어요'} message={courses.length === 0 ? '교과목 정보가 등록되면 이곳에 표시됩니다.' : '검색어나 필터를 바꿔 보세요.'} />
             )}
 
             <CoursePagination page={page} pageCount={pageCount} onPageChange={setPage} />

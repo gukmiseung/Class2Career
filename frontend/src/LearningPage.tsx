@@ -3,6 +3,7 @@ import { careerInterestsKey, loadCareerInterests } from './careerInterests'
 import { statusLabels, type CourseStatus } from './courseRegistrations'
 import { useCourseRegistrations } from './contexts/CourseRegistrationsContext'
 import { useCourseCatalog } from './useCourseCatalog'
+import { EmptyState, ErrorMessage, Loading } from './AsyncState'
 import './LearningPage.css'
 
 type LearningTab = CourseStatus | 'career'
@@ -20,7 +21,7 @@ function loadLearningProfile() {
 }
 
 export default function LearningPage() {
-  const { catalog, loading: catalogLoading, error: catalogError } = useCourseCatalog()
+  const { catalog, loading: catalogLoading, error: catalogError, retry: retryCatalog } = useCourseCatalog()
   const {
     registrations, loading: registrationsLoading, error: registrationsError,
     savingCourseIds, retryLoad, saveCourseStatus,
@@ -189,13 +190,12 @@ export default function LearningPage() {
               : `${statusLabels[activeTab]} · 총 ${visibleCourses.length}개 과목`}
         </p>}
         {activeTab !== 'career' && courseDataLoading ? (
-          <div className="learning-empty" role="status"><p>수강 정보를 불러오고 있어요.</p></div>
+          <Loading message="수강 정보를 불러오고 있어요." />
         ) : activeTab !== 'career' && courseDataError ? (
-          <div className="learning-empty">
-            <p role="alert">{courseDataError}</p>
-            {!catalogError && <button type="button" onClick={retryLoad}>다시 시도</button>}
-          </div>
-        ) : activeTab !== 'career' && catalog?.courses.length === 0 ? <div className="learning-empty"><h2>등록된 과목 정보가 없어요</h2></div> : activeTab === null ? null : activeTab === 'career' ? (
+          <ErrorMessage message={courseDataError} onRetry={catalogError ? retryCatalog : retryLoad} />
+        ) : activeTab !== 'career' && catalog?.courses.length === 0 ? (
+          <EmptyState title="등록된 과목 정보가 없어요" message="교과목 정보가 등록되면 학습 현황을 확인할 수 있어요." />
+        ) : activeTab === null ? null : activeTab === 'career' ? (
           interestedCareers.length > 0 ? (
             <ul className="learning-course-list">
               {interestedCareers.map((careerName) => {
