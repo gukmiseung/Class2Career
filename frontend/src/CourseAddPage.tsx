@@ -7,10 +7,8 @@ import {
   type CourseStatus,
 } from './courseRegistrations'
 import {
-  courseCategories,
-  courses,
+  getCourseCatalog,
   courseYears,
-  departments,
   type CourseCategory,
   type CourseYear,
   type Department,
@@ -18,16 +16,16 @@ import {
 import './CourseAddPage.css'
 
 const pageSize = 4
-const categoryOptions = ['전체', ...courseCategories] as const
 type Filters = {
-  department: Department
+  department: Department | '전체'
+  major: string | '전체'
   category: CourseCategory | '전체'
   year: CourseYear | null
 }
 
 type FilterSection = 'department' | 'category' | 'year'
 
-const defaultFilters: Filters = { department: '컴퓨터학부', category: '전체', year: null }
+const defaultFilters: Filters = { department: '전체', major: '전체', category: '전체', year: null }
 
 function CoursePagination({ page, pageCount, onPageChange }: {
   page: number
@@ -68,6 +66,9 @@ function CoursePagination({ page, pageCount, onPageChange }: {
 
 export default function CourseAddPage() {
   const titleRef = useRef<HTMLHeadingElement>(null)
+  const filterPanelRef = useRef<HTMLElement>(null)
+  const resultsPanelRef = useRef<HTMLElement>(null)
+  const scrollbarTimer = useRef<number | undefined>(undefined)
   const [searchInput, setSearchInput] = useState('')
   const [query, setQuery] = useState('')
   const [filters, setFilters] = useState(defaultFilters)
@@ -78,10 +79,48 @@ export default function CourseAddPage() {
   })
   const [page, setPage] = useState(1)
   const [registrations, setRegistrations] = useState(loadRegistrations)
+  const [courses, setCourses] = useState<Awaited<ReturnType<typeof getCourseCatalog>>['courses']>([])
+  const [majorOptions, setMajorOptions] = useState<string[]>([])
+  const [categoryOptions, setCategoryOptions] = useState<string[]>([])
+  const [departmentOptions, setDepartmentOptions] = useState<string[]>([])
+  const [coursesLoading, setCoursesLoading] = useState(true)
+  const [coursesError, setCoursesError] = useState('')
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
     titleRef.current?.focus({ preventScroll: true })
+  }, [])
+
+  useEffect(() => {
+    const filterPanel = filterPanelRef.current
+    const resultsPanel = resultsPanelRef.current
+    if (!filterPanel || !resultsPanel) return
+
+    const syncPanelHeight = () => {
+      if (window.matchMedia('(max-width: 680px)').matches) {
+        filterPanel.style.height = ''
+        return
+      }
+      filterPanel.style.height = `${resultsPanel.getBoundingClientRect().height}px`
+    }
+    const observer = new ResizeObserver(syncPanelHeight)
+    observer.observe(resultsPanel)
+    window.addEventListener('resize', syncPanelHeight)
+    syncPanelHeight()
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', syncPanelHeight)
+      filterPanel.style.height = ''
+    }
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    getCourseCatalog()
+      .then((catalog) => { if (active) { setCourses(catalog.courses); setMajorOptions(catalog.majors); setCategoryOptions(catalog.categories); setDepartmentOptions(catalog.departments); setCoursesError('') } })
+      .catch(() => { if (active) { setCourses([]); setCoursesError('과목 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.') } })
+      .finally(() => { if (active) setCoursesLoading(false) })
+    return () => { active = false }
   }, [])
 
   useEffect(() => {
@@ -97,7 +136,8 @@ export default function CourseAddPage() {
   }, [])
 
   const results = courses.filter((course) =>
-    course.department === filters.department &&
+    (filters.department === '전체' || course.department === filters.department) &&
+    (filters.major === '전체' || course.major === filters.major) &&
     (filters.category === '전체' || course.category === filters.category) &&
     (filters.year === null || course.year === filters.year) &&
     (course.name.toLowerCase().includes(query) || course.description.toLowerCase().includes(query)),
@@ -180,7 +220,18 @@ export default function CourseAddPage() {
         </form>
 
         <div className="course-layout">
-          <aside className="course-filters" aria-labelledby="course-filters-title">
+          <aside
+            ref={filterPanelRef}
+            className="course-filters"
+            aria-labelledby="course-filters-title"
+            onScroll={() => {
+              const panel = filterPanelRef.current
+              if (!panel) return
+              panel.classList.add('is-scrolling')
+              if (scrollbarTimer.current !== undefined) window.clearTimeout(scrollbarTimer.current)
+              scrollbarTimer.current = window.setTimeout(() => panel.classList.remove('is-scrolling'), 700)
+            }}
+          >
             <div className="course-filters-heading">
               <h2 id="course-filters-title">필터</h2>
               <button type="button" onClick={resetCoursePage}>초기화</button>
@@ -188,7 +239,7 @@ export default function CourseAddPage() {
 
             <fieldset>
               <legend>
-                <span>학과</span>
+                <span>학과 · 전공</span>
                 <button
                   className="course-filter-toggle"
                   type="button"
@@ -201,12 +252,16 @@ export default function CourseAddPage() {
                 </button>
               </legend>
               <div className="course-filter-options" id="department-filter-options" hidden={!expandedFilters.department}>
-                {departments.map((department) => (
+                {['전체', ...departmentOptions, ...majorOptions].map((department) => (
                   <button
                     type="button"
                     key={department}
-                    aria-pressed={filters.department === department}
-                    onClick={() => changeFilters({ ...filters, department })}
+                    aria-pressed={department === '전체' ? filters.department === '전체' && filters.major === '전체' : departmentOptions.includes(department) ? filters.department === department : filters.major === department}
+                    onClick={() => changeFilters(department === '전체'
+                      ? { ...filters, department: '전체', major: '전체' }
+                      : departmentOptions.includes(department)
+                        ? { ...filters, department, major: '전체' }
+                        : { ...filters, department: '전체', major: department })}
                   >
                     {department}
                   </button>
@@ -229,7 +284,7 @@ export default function CourseAddPage() {
                 </button>
               </legend>
               <div className="course-filter-options" id="category-filter-options" hidden={!expandedFilters.category}>
-                {categoryOptions.map((category) => (
+                {['전체', ...categoryOptions].map((category) => (
                   <button
                     type="button"
                     key={category}
@@ -271,16 +326,16 @@ export default function CourseAddPage() {
             </fieldset>
           </aside>
 
-          <section className="course-results" aria-labelledby="course-results-title">
+          <section ref={resultsPanelRef} className="course-results" aria-labelledby="course-results-title">
             <header className="course-results-heading">
               <div>
                 <h2 id="course-results-title">과목 검색 결과</h2>
-                <p>{filters.department}에서 개설하는 과목을 보여드려요.</p>
+                <p>등록된 전공 교육과정 과목</p>
               </div>
               <p className="course-result-count" aria-live="polite">총 {results.length}개 과목</p>
             </header>
 
-            {visibleCourses.length > 0 ? (
+            {coursesLoading ? <p className="course-empty">과목 정보를 불러오고 있어요.</p> : coursesError ? <p className="course-empty" role="alert">{coursesError}</p> : visibleCourses.length > 0 ? (
               <ul className="course-list">
                 {visibleCourses.map((course) => {
                   const status = registrations[course.id]
@@ -296,6 +351,7 @@ export default function CourseAddPage() {
                         </h3>
                         <p className="course-card-meta">
                           <span className="course-category">{course.category}</span>
+                          <span>{course.code}</span>
                           <span>{course.credits}학점</span>
                           <span aria-hidden="true">·</span>
                           <span>{course.year}학년</span>
