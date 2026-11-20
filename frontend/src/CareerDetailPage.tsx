@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { loadCareerInterests, toggleCareerInterest } from './careerInterests'
 import { useCourseCatalog } from './useCourseCatalog'
-import { loadRegistrations, registrationKey, statusLabels, type CourseStatus } from './courseRegistrations'
+import { statusLabels, type CourseStatus } from './courseRegistrations'
+import { useCourseRegistrations } from './contexts/CourseRegistrationsContext'
 import { useAuth } from './contexts/AuthContext'
 import LearningLoginModal from './LearningLoginModal'
 import './CareerDetailPage.css'
@@ -97,18 +98,10 @@ const careerDetails: Record<string, CareerDetail> = {
 export default function CareerDetailPage({ careerName }: { careerName: string }) {
   const career = careerDetails[careerName]
   const [isInterested, setIsInterested] = useState(() => loadCareerInterests().includes(careerName))
-  const [registrations, setRegistrations] = useState(loadRegistrations)
+  const { registrations } = useCourseRegistrations()
   const { catalog, loading: catalogLoading, error: catalogError } = useCourseCatalog()
   const [showLoginModal, setShowLoginModal] = useState(false)
   const { loading, user } = useAuth()
-
-  useEffect(() => {
-    const syncRegistrations = (event: StorageEvent) => {
-      if (event.key === registrationKey || event.key === null) setRegistrations(loadRegistrations())
-    }
-    window.addEventListener('storage', syncRegistrations)
-    return () => window.removeEventListener('storage', syncRegistrations)
-  }, [])
 
   const getCourseStatus = (courseName: string): CourseStatus | undefined => {
     const normalizedName = courseName.replaceAll(' ', '')
@@ -116,8 +109,8 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
       const catalogName = name.replaceAll(' ', '')
       return catalogName === normalizedName
     })
-    if (matchingCourses.some(({ id }) => registrations[id] === 'completed')) return 'completed'
-    if (matchingCourses.some(({ id }) => registrations[id] === 'planned')) return 'planned'
+    if (matchingCourses.some(({ dbId }) => registrations[dbId] === 'completed')) return 'completed'
+    if (matchingCourses.some(({ dbId }) => registrations[dbId] === 'planned')) return 'planned'
     return undefined
   }
 

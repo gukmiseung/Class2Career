@@ -1,11 +1,7 @@
 import { Fragment, useEffect, useRef, useState, type FormEvent } from 'react'
 import { getCourseConcepts } from './courseConcepts'
-import {
-  loadRegistrations,
-  parseRegistrations,
-  registrationKey,
-  type CourseStatus,
-} from './courseRegistrations'
+import type { CourseStatus } from './courseRegistrations'
+import { useCourseRegistrations } from './contexts/CourseRegistrationsContext'
 import {
   getCourseCatalog,
   courseYears,
@@ -76,7 +72,11 @@ export default function CourseAddPage() {
     year: true,
   })
   const [page, setPage] = useState(1)
-  const [registrations, setRegistrations] = useState(loadRegistrations)
+  const {
+    registrations, loading: registrationsLoading, ready: registrationsReady,
+    error: registrationsError, savingCourseIds, retryLoad, saveCourseStatus,
+  } = useCourseRegistrations()
+  const [saveError, setSaveError] = useState('')
   const [courses, setCourses] = useState<Awaited<ReturnType<typeof getCourseCatalog>>['courses']>([])
   const [majorOptions, setMajorOptions] = useState<string[]>([])
   const [categoryOptions, setCategoryOptions] = useState<string[]>([])
@@ -95,18 +95,6 @@ export default function CourseAddPage() {
       .catch(() => { if (active) { setCourses([]); setCoursesError('과목 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.') } })
       .finally(() => { if (active) setCoursesLoading(false) })
     return () => { active = false }
-  }, [])
-
-  useEffect(() => {
-    function syncRegistrations(event: StorageEvent) {
-      if (event.key !== registrationKey && event.key !== null) return
-
-      const current = parseRegistrations(event.newValue)
-      setRegistrations(current)
-    }
-
-    window.addEventListener('storage', syncRegistrations)
-    return () => window.removeEventListener('storage', syncRegistrations)
   }, [])
 
   const results = filterCourses(courses, filters, query)
@@ -148,20 +136,12 @@ export default function CourseAddPage() {
     setPage(1)
   }
 
-  function registerCourse(id: string, status: CourseStatus) {
+  async function registerCourse(courseId: number, status: CourseStatus) {
+    setSaveError('')
     try {
-      const storage = window.localStorage
-      const current = parseRegistrations(storage.getItem(registrationKey))
-      if (current[id] === status) {
-        delete current[id]
-      } else {
-        current[id] = status
-      }
-      storage.setItem(registrationKey, JSON.stringify(current))
-
-      setRegistrations(current)
+      await saveCourseStatus(courseId, registrations[courseId] === status ? null : status)
     } catch {
-      return
+      setSaveError('수강 상태를 변경하지 못했어요. 다시 시도해 주세요.')
     }
   }
 
@@ -304,10 +284,19 @@ export default function CourseAddPage() {
               <p className="course-result-count" aria-live="polite">총 {results.length}개 과목</p>
             </header>
 
+            {!coursesLoading && registrationsLoading && <p className="course-empty" role="status">수강 상태를 불러오고 있어요.</p>}
+            {registrationsError && (
+              <div className="course-empty">
+                <p role="alert">{registrationsError}</p>
+                <button className="course-primary-button" type="button" onClick={retryLoad}>다시 시도</button>
+              </div>
+            )}
+            {saveError && <p className="course-empty" role="alert">{saveError}</p>}
             {coursesLoading ? <p className="course-empty">과목 정보를 불러오고 있어요.</p> : coursesError ? <p className="course-empty" role="alert">{coursesError}</p> : visibleCourses.length > 0 ? (
               <ul className="course-list">
                 {visibleCourses.map((course) => {
-                  const status = registrations[course.id]
+                  const status = registrations[course.dbId]
+                  const saving = savingCourseIds.has(course.dbId)
                   return (
                     <li className="course-card" key={course.code || course.slug}>
                       <div>
@@ -327,18 +316,20 @@ export default function CourseAddPage() {
                         </p>
                         <p className="course-card-description">{course.description}</p>
                       </div>
-                      <div className="course-register-actions">
+                      <div className="course-register-actions" aria-busy={saving}>
                         <button
                           type="button"
                           aria-pressed={status === 'completed'}
-                          onClick={() => registerCourse(course.id, 'completed')}
+                          disabled={!registrationsReady || saving}
+                          onClick={() => registerCourse(course.dbId, 'completed')}
                         >
                           수강 완료
                         </button>
                         <button
                           type="button"
                           aria-pressed={status === 'planned'}
-                          onClick={() => registerCourse(course.id, 'planned')}
+                          disabled={!registrationsReady || saving}
+                          onClick={() => registerCourse(course.dbId, 'planned')}
                         >
                           수강 예정
                         </button>
