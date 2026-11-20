@@ -30,7 +30,25 @@ export async function signIn(
 
 // 로그아웃
 export async function signOut() {
-  return await supabase.auth.signOut()
+  const result = await supabase.auth.signOut()
+  if (!result.error) clearPersonalData()
+  return result
+}
+
+const personalDataKeys = [
+  'class2career.profile',
+  'class2career.course-registrations',
+  'class2career.career-interests',
+  'class2career.course-notes',
+  'class2career.saved-email',
+]
+
+export function clearPersonalData() {
+  try {
+    personalDataKeys.forEach((key) => window.localStorage.removeItem(key))
+  } catch {
+    // 로그아웃은 성공했으므로 저장소 접근 실패가 화면 이동을 막지 않게 합니다.
+  }
 }
 
 // 비밀번호 재설정 이메일 발송

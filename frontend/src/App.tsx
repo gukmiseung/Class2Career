@@ -20,9 +20,8 @@ import { useAuth } from './contexts/AuthContext'
 import { authCallback, supabase } from './lib/supabase'
 import { getAuthReturnTo, isLearningRoute } from './authNavigation'
 import LearningLoginModal from './LearningLoginModal'
+import { ErrorMessage, EmptyState } from './AsyncState'
 import './App.css'
-
-const loadingDuration = 700
 
 function isPublicRoute(hash: string) {
   const [route] = hash.split('?', 1)
@@ -31,9 +30,8 @@ function isPublicRoute(hash: string) {
 }
 
 function App() {
-  const { catalog, loading: catalogLoading, error: catalogError } = useCourseCatalog()
+  const { catalog, loading: catalogLoading, error: catalogError, retry: retryCatalog } = useCourseCatalog()
   const [locationHash, setHash] = useState(window.location.hash)
-  const [isLoading, setIsLoading] = useState(false)
   const [callbackMessage, setCallbackMessage] = useState('')
   const [handlingCallback, setHandlingCallback] = useState(Boolean(authCallback))
   const { user, loading, recoveringPassword } = useAuth()
@@ -49,28 +47,18 @@ function App() {
   const returnTo = getAuthReturnTo(visibleHash)
 
   useEffect(() => {
-    let loadingTimer: number | undefined
-
     const updateHash = (event: HashChangeEvent) => {
       if (event.newURL !== window.location.href) return
-      if (loadingTimer !== undefined) window.clearTimeout(loadingTimer)
 
       const nextHash = window.location.hash
       setHash(nextHash)
       if (isPublicRoute(nextHash)) setPublicHash(nextHash)
       setCallbackMessage('')
 
-      if (nextHash.includes('/analysis')) {
-        setIsLoading(true)
-        loadingTimer = window.setTimeout(() => setIsLoading(false), loadingDuration)
-      } else {
-        setIsLoading(false)
-      }
     }
 
     window.addEventListener('hashchange', updateHash)
     return () => {
-      if (loadingTimer !== undefined) window.clearTimeout(loadingTimer)
       window.removeEventListener('hashchange', updateHash)
     }
   }, [])
@@ -107,14 +95,9 @@ function App() {
     return <LoadingPage message="로그인 상태를 확인하고 있어요..." />
   }
 
-  if (isLoading && !recoveringPassword && !gatedDestination) {
-    return <LoadingPage message="선택한 전공 개념을 분석하고 있어요..." />
-  }
-
   function dismissLearningModal() {
     window.history.replaceState(window.history.state, '', publicHash || '#dashboard')
     setHash(publicHash || '#dashboard')
-    setIsLoading(false)
   }
 
   function renderPage() {
@@ -142,7 +125,8 @@ function App() {
       const [courseId] = path.split('/', 1)
       const analysisPath = `${courseId}/analysis`
       if (catalogLoading) return <LoadingPage message="과목 정보를 불러오고 있어요." />
-      if (catalogError) return <p role="alert">{catalogError}</p>
+      if (catalogError) return <ErrorMessage message={catalogError} onRetry={retryCatalog} retrying={catalogLoading} />
+      if (!catalog || catalog.courses.length === 0) return <EmptyState message="등록된 교과목이 아직 없습니다." />
       const course = catalog?.courses.find(({ id }) => id === courseId)
       const concepts = getCourseConcepts(courseId, course)
 

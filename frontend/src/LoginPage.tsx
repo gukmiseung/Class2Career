@@ -11,6 +11,7 @@ export default function LoginPage({ callbackMessage, returnTo }: { callbackMessa
   const [error, setError] = useState('')
   const [showSignupPrompt, setShowSignupPrompt] = useState(false)
   const pending = useRef(false)
+  const passwordInputRef = useRef<HTMLInputElement>(null)
   const { loading, user } = useAuth()
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -27,6 +28,10 @@ export default function LoginPage({ callbackMessage, returnTo }: { callbackMessa
     try {
       const { error } = await signIn(loginEmail, password)
       if (error) {
+        if (error.code === 'email_not_confirmed') {
+          setError('이메일 인증이 완료되지 않았어요. 가입한 이메일의 인증 링크를 확인해 주세요.')
+          return
+        }
         if (
           error.code === 'invalid_credentials' ||
           error.message.toLowerCase().includes('invalid login credentials') ||
@@ -66,6 +71,7 @@ export default function LoginPage({ callbackMessage, returnTo }: { callbackMessa
             <div>
               <label htmlFor="login-email">이메일</label>
               <input
+                ref={passwordInputRef}
                 id="login-email"
                 name="email"
                 type="email"
@@ -128,16 +134,28 @@ export default function LoginPage({ callbackMessage, returnTo }: { callbackMessa
             >
               ×
             </button>
-            <h2 id="login-signup-title">로그인 정보를 확인해 주세요.</h2>
+            <h2 id="login-signup-title">로그인 정보를 확인해 주세요</h2>
             <p id="login-signup-description">
-              가입한 이메일이라면 비밀번호를 찾고,<br />가입한 이메일이 없다면 회원가입을 시작하세요.
+              <span>입력한 이메일 또는 비밀번호가 올바르지 않아요.</span>
+              <span>상황에 맞는 방법을 선택해 주세요.</span>
             </p>
+            <button
+              className="login-retry-password"
+              type="button"
+              autoFocus
+              onClick={() => {
+                setShowSignupPrompt(false)
+                window.setTimeout(() => passwordInputRef.current?.focus(), 0)
+              }}
+            >
+              비밀번호 다시 입력
+            </button>
             <div className="login-account-actions">
               <a className="login-password-reset-start" href="#reset-password">
-                비밀번호 찾기
+                비밀번호 재설정
               </a>
               <a className="login-signup-start" href={authHref('#signup', returnTo)}>
-                회원가입
+                계정이 없다면 회원가입
               </a>
             </div>
           </section>

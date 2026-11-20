@@ -1,15 +1,17 @@
 import { useMemo, useState } from 'react'
 import './CareerPage.css'
+import { EmptyState } from './AsyncState'
+import { careerCourseConnections } from './careerCourses'
 
 const categories = ['전체', '개발', '데이터·AI', '디자인', '인프라'] as const
 
 const careers = [
-  { category: '개발', title: '프론트엔드 개발자', description: '사용자에게 보이는 웹 화면과 인터랙션을 개발해요.', courses: 6 },
-  { category: '개발', title: '백엔드 개발자', description: '서비스의 데이터와 서버 기능을 설계하고 구현해요.', courses: 7 },
-  { category: '데이터·AI', title: 'AI 엔지니어', description: '인공지능 모델을 서비스에 적용하고 개선해요.', courses: 5 },
-  { category: '데이터·AI', title: '데이터 분석가', description: '데이터를 분석해 의미 있는 인사이트를 찾아요.', courses: 4 },
-  { category: '디자인', title: 'UI/UX 디자이너', description: '사용자 경험을 조사하고 서비스 화면을 설계해요.', courses: 5 },
-  { category: '인프라', title: '클라우드 엔지니어', description: '클라우드 기반 시스템과 운영 환경을 구축해요.', courses: 4 },
+  { category: '개발', title: '프론트엔드 개발자', description: '사용자에게 보이는 웹 화면과 인터랙션을 개발해요.' },
+  { category: '개발', title: '백엔드 개발자', description: '서비스의 데이터와 서버 기능을 설계하고 구현해요.' },
+  { category: '데이터·AI', title: 'AI 엔지니어', description: '인공지능 모델을 서비스에 적용하고 개선해요.' },
+  { category: '데이터·AI', title: '데이터 분석가', description: '데이터를 분석해 의미 있는 인사이트를 찾아요.' },
+  { category: '디자인', title: 'UI/UX 디자이너', description: '사용자 경험을 조사하고 서비스 화면을 설계해요.' },
+  { category: '인프라', title: '클라우드 엔지니어', description: '클라우드 기반 시스템과 운영 환경을 구축해요.' },
 ]
 
 export default function CareerPage() {
@@ -71,12 +73,12 @@ export default function CareerPage() {
                   </a>
                 </h3>
                 <p>{career.description}</p>
-                <span className="career-course-count">관련 과목 {career.courses}개</span>
+                <span className="career-course-count">관련 과목 {careerCourseConnections[career.title]?.length ?? 0}개</span>
               </article>
             ))}
           </div>
         ) : (
-          <p className="career-empty">검색 조건에 맞는 직무가 없습니다.</p>
+          <EmptyState title="검색 결과가 없어요" message="검색어나 분야를 바꿔 보세요." />
         )}
       </section>
     </main>

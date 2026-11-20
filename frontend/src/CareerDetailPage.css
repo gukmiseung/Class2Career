@@ -83,6 +83,7 @@
 
 .course-row h3 { margin: 0; font-size: 18px; }
 .course-row p { margin: 14px 0 0; color: #65738b; font-size: 14px; }
+.course-row .career-course-meta { margin-top: 7px; color: #8a96a9; font-size: 12px; }
 .course-actions {
   min-width: 282px;
   display: flex;
