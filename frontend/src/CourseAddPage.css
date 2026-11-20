@@ -134,11 +134,21 @@
 
 .course-filters {
   min-width: 0;
+  height: 620px;
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
   padding: 22px 23px;
   border: 1px solid var(--course-border);
   border-radius: 16px;
   background: #fff;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+
+.course-filters::-webkit-scrollbar { width: 0; height: 0; }
+.course-filters.is-scrolling { scrollbar-width: thin; scrollbar-color: #9aa8bd transparent; }
+.course-filters.is-scrolling::-webkit-scrollbar { width: 6px; }
+.course-filters.is-scrolling::-webkit-scrollbar-thumb { border-radius: 999px; background: #9aa8bd; }
 
 .course-filters-heading,
 .course-results-heading {

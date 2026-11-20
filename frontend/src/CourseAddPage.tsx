@@ -23,7 +23,7 @@ type Filters = {
   year: CourseYear | null
 }
 
-type FilterSection = 'department' | 'major' | 'category' | 'year'
+type FilterSection = 'department' | 'category' | 'year'
 
 const defaultFilters: Filters = { department: '전체', major: '전체', category: '전체', year: null }
 
@@ -66,12 +66,13 @@ function CoursePagination({ page, pageCount, onPageChange }: {
 
 export default function CourseAddPage() {
   const titleRef = useRef<HTMLHeadingElement>(null)
+  const filterPanelRef = useRef<HTMLElement>(null)
+  const scrollbarTimer = useRef<number | undefined>(undefined)
   const [searchInput, setSearchInput] = useState('')
   const [query, setQuery] = useState('')
   const [filters, setFilters] = useState(defaultFilters)
   const [expandedFilters, setExpandedFilters] = useState<Record<FilterSection, boolean>>({
     department: true,
-    major: true,
     category: true,
     year: true,
   })
@@ -127,7 +128,7 @@ export default function CourseAddPage() {
 
   function resetCoursePage() {
     setFilters(defaultFilters)
-    setExpandedFilters({ department: true, major: true, category: true, year: true })
+    setExpandedFilters({ department: true, category: true, year: true })
     setSearchInput('')
     setQuery('')
     setPage(1)
@@ -195,7 +196,18 @@ export default function CourseAddPage() {
         </form>
 
         <div className="course-layout">
-          <aside className="course-filters" aria-labelledby="course-filters-title">
+          <aside
+            ref={filterPanelRef}
+            className="course-filters"
+            aria-labelledby="course-filters-title"
+            onScroll={() => {
+              const panel = filterPanelRef.current
+              if (!panel) return
+              panel.classList.add('is-scrolling')
+              if (scrollbarTimer.current !== undefined) window.clearTimeout(scrollbarTimer.current)
+              scrollbarTimer.current = window.setTimeout(() => panel.classList.remove('is-scrolling'), 700)
+            }}
+          >
             <div className="course-filters-heading">
               <h2 id="course-filters-title">필터</h2>
               <button type="button" onClick={resetCoursePage}>초기화</button>
@@ -203,7 +215,7 @@ export default function CourseAddPage() {
 
             <fieldset>
               <legend>
-                <span>학과</span>
+                <span>학과 · 전공</span>
                 <button
                   className="course-filter-toggle"
                   type="button"
@@ -216,22 +228,21 @@ export default function CourseAddPage() {
                 </button>
               </legend>
               <div className="course-filter-options" id="department-filter-options" hidden={!expandedFilters.department}>
-                {['전체', ...departmentOptions].map((department) => (
+                {['전체', ...departmentOptions, ...majorOptions].map((department) => (
                   <button
                     type="button"
                     key={department}
-                    aria-pressed={filters.department === department}
-                    onClick={() => changeFilters({ ...filters, department })}
+                    aria-pressed={department === '전체' ? filters.department === '전체' && filters.major === '전체' : departmentOptions.includes(department) ? filters.department === department : filters.major === department}
+                    onClick={() => changeFilters(department === '전체'
+                      ? { ...filters, department: '전체', major: '전체' }
+                      : departmentOptions.includes(department)
+                        ? { ...filters, department, major: '전체' }
+                        : { ...filters, department: '전체', major: department })}
                   >
                     {department}
                   </button>
                 ))}
               </div>
-            </fieldset>
-
-            <fieldset>
-              <legend><span>전공</span><button className="course-filter-toggle" type="button" aria-label={`전공 필터 ${expandedFilters.major ? '접기' : '펼치기'}`} aria-expanded={expandedFilters.major} aria-controls="major-filter-options" onClick={() => toggleFilter('major')}><span aria-hidden="true" /></button></legend>
-              <div className="course-filter-options" id="major-filter-options" hidden={!expandedFilters.major}>{['전체', ...majorOptions].map((major) => <button key={major} type="button" aria-pressed={filters.major === major} onClick={() => changeFilters({ ...filters, major })}>{major}</button>)}</div>
             </fieldset>
 
             <fieldset>
