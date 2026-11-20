@@ -10,6 +10,7 @@ export type CourseYear = typeof courseYears[number]
 
 export type Course = {
   id: string
+  dbId: number
   slug: string
   name: string
   code: string
@@ -71,6 +72,7 @@ export async function getCourseCatalog(): Promise<CourseCatalog> {
     seen.add(key)
     catalog.push({
       id: source.slug,
+      dbId: source.id,
       slug: source.slug,
       name: source.name,
       code: source.course_code,

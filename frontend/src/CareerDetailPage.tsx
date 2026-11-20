@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { loadCareerInterests, toggleCareerInterest } from './careerInterests'
-import { courses as catalogCourses } from './courses'
+import { useCourseCatalog } from './useCourseCatalog'
 import { loadRegistrations, registrationKey, statusLabels, type CourseStatus } from './courseRegistrations'
 import { useAuth } from './contexts/AuthContext'
 import LearningLoginModal from './LearningLoginModal'
@@ -98,6 +98,7 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
   const career = careerDetails[careerName]
   const [isInterested, setIsInterested] = useState(() => loadCareerInterests().includes(careerName))
   const [registrations, setRegistrations] = useState(loadRegistrations)
+  const { catalog, loading: catalogLoading, error: catalogError } = useCourseCatalog()
   const [showLoginModal, setShowLoginModal] = useState(false)
   const { loading, user } = useAuth()
 
@@ -111,7 +112,7 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
 
   const getCourseStatus = (courseName: string): CourseStatus | undefined => {
     const normalizedName = courseName.replaceAll(' ', '')
-    const matchingCourses = catalogCourses.filter(({ name }) => {
+    const matchingCourses = (catalog?.courses ?? []).filter(({ name }) => {
       const catalogName = name.replaceAll(' ', '')
       return catalogName === normalizedName || catalogName.includes(normalizedName) || normalizedName.includes(catalogName)
     })
@@ -165,9 +166,13 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
         <h2 id="course-heading">이 직무와 연결되는 전공 과목</h2>
         <p>과목을 수강했는지에 따라 현재 학습 이력을 비교해요.</p>
 
+        {catalogLoading && <p role="status">과목 정보를 불러오고 있어요.</p>}
+        {catalogError && <p role="alert">{catalogError}</p>}
+        {!catalogLoading && !catalogError && catalog?.courses.length === 0 && <p>등록된 교과목 정보가 없어요.</p>}
+
         <div className="course-list">
           {career.courses.map((course) => {
-            const status = getCourseStatus(course.name)
+            const status = catalogLoading || catalogError ? undefined : getCourseStatus(course.name)
             return (
             <article className={`course-row${status ? ` ${status}` : ''}`} key={course.name}>
               <div>
@@ -175,7 +180,9 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
                 <p>{course.concepts}</p>
               </div>
               <div className="course-actions">
-                <span className={`course-status${status ? ` ${status}` : ''}`}>{status ? statusLabels[status] : '미수강'}</span>
+                <span className={`course-status${status ? ` ${status}` : ''}`}>
+                  {catalogLoading ? '확인 중' : catalogError ? '확인 불가' : status ? statusLabels[status] : '미수강'}
+                </span>
                 <a href={`#job-concept/${encodeURIComponent(career.title)}/${encodeURIComponent(course.name)}/${encodeURIComponent(course.concepts)}`}>과목 노트</a>
               </div>
             </article>
