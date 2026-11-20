@@ -70,7 +70,7 @@ export default function SignupPage({ returnTo }: { returnTo: string }) {
           <input id="signup-name" name="name" type="text" autoComplete="name" placeholder="이름을 입력하세요" required />
 
           <label htmlFor="signup-email">이메일</label>
-          <input id="signup-email" name="email" type="email" autoComplete="email" placeholder="학교 이메일을 입력하세요" required />
+          <input id="signup-email" name="email" type="email" autoComplete="email" placeholder="이메일을 입력하세요" required />
 
           <label htmlFor="signup-password">비밀번호</label>
           <input id="signup-password" name="password" type="password" autoComplete="new-password" placeholder="8자 이상 비밀번호를 입력하세요" minLength={8} required />

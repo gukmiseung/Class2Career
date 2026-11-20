@@ -127,3 +127,83 @@
   color: #485bdd;
   font-weight: 700;
 }
+
+.login-signup-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(21, 26, 45, .48);
+  backdrop-filter: blur(3px);
+}
+
+.login-signup-modal {
+  position: relative;
+  box-sizing: border-box;
+  width: min(100%, 430px);
+  padding: 42px 36px 34px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(21, 26, 45, .2);
+  text-align: center;
+}
+
+.login-signup-modal h2 {
+  margin: 0;
+  color: #151a2d;
+  font-size: 25px;
+}
+
+.login-signup-modal p {
+  margin: 14px 0 28px;
+  color: #62708a;
+}
+
+.login-signup-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 36px;
+  min-height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #62708a;
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.login-account-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.login-signup-start,
+.login-password-reset-start {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  border: 1px solid #485bdd;
+  border-radius: 9px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.login-signup-start {
+  background: #485bdd;
+  color: #fff;
+}
+
+.login-password-reset-start {
+  background: #fff;
+  color: #485bdd;
+}
+
+@media (max-width: 430px) {
+  .login-account-actions { grid-template-columns: 1fr; }
+}
