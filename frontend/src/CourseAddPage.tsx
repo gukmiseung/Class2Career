@@ -31,7 +31,7 @@ function CoursePagination({ page, pageCount, onPageChange }: {
   pageCount: number
   onPageChange: (page: number) => void
 }) {
-  if (pageCount <= 1) return null
+  if (pageCount === 0) return null
 
   const windowStart = Math.min(Math.max(page - 1, 1), pageCount - 2)
   const visiblePages = Array.from({ length: pageCount }, (_, index) => index + 1)
