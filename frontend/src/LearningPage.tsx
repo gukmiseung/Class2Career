@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { careerInterestsKey, loadCareerInterests } from './careerInterests'
 import { loadRegistrations, parseRegistrations, registrationKey, statusLabels, type CourseStatus } from './courseRegistrations'
 import { useCourseCatalog } from './useCourseCatalog'
+import { EmptyState, ErrorMessage, Loading } from './AsyncState'
 import './LearningPage.css'
 
 type LearningTab = CourseStatus | 'career'
@@ -17,7 +18,7 @@ function loadLearningProfile() {
 }
 
 export default function LearningPage() {
-  const { catalog, loading: catalogLoading, error: catalogError } = useCourseCatalog()
+  const { catalog, loading: catalogLoading, error: catalogError, retry } = useCourseCatalog()
   const [registrations, setRegistrations] = useState(loadRegistrations)
   const [activeTab, setActiveTab] = useState<LearningTab | null>('completed')
   const [interestedCareers, setInterestedCareers] = useState(loadCareerInterests)
@@ -170,7 +171,7 @@ export default function LearningPage() {
             ? `관심 직무 · 총 ${interestedCareers.length}개`
             : `${statusLabels[activeTab]} · 총 ${visibleCourses.length}개 과목`}
         </p>}
-        {activeTab !== 'career' && catalogLoading ? <div className="learning-empty" role="status"><p>과목 정보를 불러오고 있어요.</p></div> : activeTab !== 'career' && catalogError ? <div className="learning-empty" role="alert"><p>{catalogError}</p></div> : activeTab !== 'career' && catalog?.courses.length === 0 ? <div className="learning-empty"><h2>등록된 과목 정보가 없어요</h2></div> : activeTab === null ? null : activeTab === 'career' ? (
+        {activeTab !== 'career' && catalogLoading ? <Loading message="과목 정보를 불러오고 있어요." /> : activeTab !== 'career' && catalogError ? <ErrorMessage message={catalogError} onRetry={retry} retrying={catalogLoading} /> : activeTab !== 'career' && catalog?.courses.length === 0 ? <EmptyState title="등록된 과목 정보가 없어요" message="교과목 정보가 등록되면 학습 현황을 확인할 수 있어요." /> : activeTab === null ? null : activeTab === 'career' ? (
           interestedCareers.length > 0 ? (
             <ul className="learning-course-list">
               {interestedCareers.map((careerName) => {
