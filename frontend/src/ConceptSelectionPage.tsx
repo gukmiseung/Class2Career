@@ -50,6 +50,10 @@ export default function ConceptSelectionPage({ courseName, concepts, initialSele
           <legend>세부 개념 선택</legend>
           <p id="concept-hint">관심 있는 개념을 여러 개 선택할 수 있어요.</p>
 
+          {concepts.length === 0 ? (
+            <p role="status">아직 등록된 개념이 없습니다.</p>
+          ) : (
+
           <div className="concept-grid">
             {concepts.map(({ id, name, description }) => (
               <label className="concept-card" key={id}>
@@ -69,9 +73,10 @@ export default function ConceptSelectionPage({ courseName, concepts, initialSele
               </label>
             ))}
           </div>
+          )}
         </fieldset>
 
-        <div className="concept-actions">
+        {concepts.length > 0 && <div className="concept-actions">
           <p role="status">선택한 개념 {selectedIds.length}개</p>
           <button
             type="button"
@@ -80,7 +85,7 @@ export default function ConceptSelectionPage({ courseName, concepts, initialSele
           >
             선택한 개념 분석하기
           </button>
-        </div>
+        </div>}
       </main>
     </div>
   )
