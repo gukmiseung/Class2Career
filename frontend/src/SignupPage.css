@@ -49,3 +49,7 @@
   .signup-layout { grid-template-columns: 1fr; }
   .signup-description { margin-bottom: 28px; }
 }
+
+.home-page:has(> .signup-page) {
+  background: linear-gradient(180deg, #f8fafc 0%, #e9f4ff 100%);
+}
