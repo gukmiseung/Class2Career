@@ -15,6 +15,7 @@ import PasswordResetPage from './PasswordResetPage'
 import ProfilePage from './ProfilePage'
 import SiteHeader from './SiteHeader'
 import { getCourseConcepts } from './courseConcepts'
+import type { CourseConcept } from './courseConcepts'
 import { useCourseCatalog } from './useCourseCatalog'
 import { useAuth } from './contexts/AuthContext'
 import { authCallback, supabase } from './lib/supabase'
@@ -36,6 +37,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [callbackMessage, setCallbackMessage] = useState('')
   const [handlingCallback, setHandlingCallback] = useState(Boolean(authCallback))
+  const [conceptState, setConceptState] = useState<{ courseId: number | null; concepts: CourseConcept[]; loading: boolean; error: string | null }>({ courseId: null, concepts: [], loading: false, error: null })
   const { user, loading, recoveringPassword } = useAuth()
   const [publicHash, setPublicHash] = useState(() => {
     const initialHash = window.location.hash
@@ -47,6 +49,21 @@ function App() {
   const [authRoute] = visibleHash.split('?', 1)
   const hash = authRoute === '#login' || authRoute === '#signup' ? authRoute : visibleHash
   const returnTo = getAuthReturnTo(visibleHash)
+
+  const conceptCourseId = hash.startsWith('#explore/concepts/')
+    ? catalog?.courses.find(({ id }) => id === hash.slice('#explore/concepts/'.length).split(/[/?]/, 1)[0])?.dbId ?? null
+    : null
+
+  useEffect(() => {
+    if (conceptCourseId === null) return
+
+    let active = true
+    getCourseConcepts(conceptCourseId)
+      .then((concepts) => { if (active) setConceptState({ courseId: conceptCourseId, concepts, loading: false, error: null }) })
+      .catch(() => { if (active) setConceptState({ courseId: conceptCourseId, concepts: [], loading: false, error: '과목 개념을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.' }) })
+
+    return () => { active = false }
+  }, [conceptCourseId])
 
   useEffect(() => {
     let loadingTimer: number | undefined
@@ -144,9 +161,27 @@ function App() {
       if (catalogLoading) return <LoadingPage message="과목 정보를 불러오고 있어요." />
       if (catalogError) return <p role="alert">{catalogError}</p>
       const course = catalog?.courses.find(({ id }) => id === courseId)
-      const concepts = getCourseConcepts(courseId, course)
+      if (!course) return <CourseAddPage />
+      const concepts = conceptState.courseId === course.dbId ? conceptState.concepts : []
+      const conceptsLoading = conceptState.courseId !== course.dbId || conceptState.loading
 
-      if (!course || !concepts || (path !== courseId && path !== analysisPath)) {
+      if (conceptsLoading) {
+        return <LoadingPage message="과목 개념을 불러오고 있어요." />
+      }
+      if (conceptState.error) return <p role="alert">{conceptState.error}</p>
+      if (concepts.length === 0) {
+        return (
+          <ConceptSelectionPage
+            key={hash}
+            courseName={course.name}
+            concepts={[]}
+            initialSelectedIds={[]}
+            onAnalyze={() => {}}
+          />
+        )
+      }
+
+      if (path !== courseId && path !== analysisPath) {
         return <CourseAddPage />
       }
 
