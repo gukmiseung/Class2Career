@@ -11,13 +11,11 @@ import {
   courseYears,
   type CourseCategory,
   type CourseYear,
-  type Department,
 } from './courses'
 import './CourseAddPage.css'
 
 const pageSize = 4
 type Filters = {
-  department: Department | '전체'
   major: string | '전체'
   category: CourseCategory | '전체'
   year: CourseYear | null
@@ -25,7 +23,7 @@ type Filters = {
 
 type FilterSection = 'department' | 'category' | 'year'
 
-const defaultFilters: Filters = { department: '전체', major: '전체', category: '전체', year: null }
+const defaultFilters: Filters = { major: '전체', category: '전체', year: null }
 
 function CoursePagination({ page, pageCount, onPageChange }: {
   page: number
@@ -81,7 +79,6 @@ export default function CourseAddPage() {
   const [courses, setCourses] = useState<Awaited<ReturnType<typeof getCourseCatalog>>['courses']>([])
   const [majorOptions, setMajorOptions] = useState<string[]>([])
   const [categoryOptions, setCategoryOptions] = useState<string[]>([])
-  const [departmentOptions, setDepartmentOptions] = useState<string[]>([])
   const [coursesLoading, setCoursesLoading] = useState(true)
   const [coursesError, setCoursesError] = useState('')
 
@@ -93,7 +90,7 @@ export default function CourseAddPage() {
   useEffect(() => {
     let active = true
     getCourseCatalog()
-      .then((catalog) => { if (active) { setCourses(catalog.courses); setMajorOptions(catalog.majors); setCategoryOptions(catalog.categories); setDepartmentOptions(catalog.departments); setCoursesError('') } })
+      .then((catalog) => { if (active) { setCourses(catalog.courses); setMajorOptions(catalog.majors); setCategoryOptions(catalog.categories); setCoursesError('') } })
       .catch(() => { if (active) { setCourses([]); setCoursesError('과목 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.') } })
       .finally(() => { if (active) setCoursesLoading(false) })
     return () => { active = false }
@@ -112,7 +109,6 @@ export default function CourseAddPage() {
   }, [])
 
   const results = courses.filter((course) =>
-    (filters.department === '전체' || course.department === filters.department) &&
     (filters.major === '전체' || course.major === filters.major) &&
     (filters.category === '전체' || course.category === filters.category) &&
     (filters.year === null || course.year === filters.year) &&
@@ -124,6 +120,18 @@ export default function CourseAddPage() {
   function changeFilters(nextFilters: Filters) {
     setFilters(nextFilters)
     setPage(1)
+  }
+
+  function selectMajor(major: string) {
+    changeFilters({ ...defaultFilters, major })
+  }
+
+  function selectCategory(category: string) {
+    changeFilters({ ...defaultFilters, category })
+  }
+
+  function selectYear(year: CourseYear) {
+    changeFilters({ ...defaultFilters, year: filters.year === year ? null : year })
   }
 
   function resetCoursePage() {
@@ -228,18 +236,14 @@ export default function CourseAddPage() {
                 </button>
               </legend>
               <div className="course-filter-options" id="department-filter-options" hidden={!expandedFilters.department}>
-                {['전체', ...departmentOptions, ...majorOptions].map((department) => (
+                {['전체', ...majorOptions].map((major) => (
                   <button
                     type="button"
-                    key={department}
-                    aria-pressed={department === '전체' ? filters.department === '전체' && filters.major === '전체' : departmentOptions.includes(department) ? filters.department === department : filters.major === department}
-                    onClick={() => changeFilters(department === '전체'
-                      ? { ...filters, department: '전체', major: '전체' }
-                      : departmentOptions.includes(department)
-                        ? { ...filters, department, major: '전체' }
-                        : { ...filters, department: '전체', major: department })}
+                    key={major}
+                    aria-pressed={filters.major === major && filters.category === '전체' && filters.year === null}
+                    onClick={() => selectMajor(major)}
                   >
-                    {department}
+                    {major === '전체' ? '전체 (컴퓨터학부)' : major}
                   </button>
                 ))}
               </div>
@@ -264,8 +268,8 @@ export default function CourseAddPage() {
                   <button
                     type="button"
                     key={category}
-                    aria-pressed={filters.category === category}
-                    onClick={() => changeFilters({ ...filters, category })}
+                    aria-pressed={filters.category === category && filters.major === '전체' && filters.year === null}
+                    onClick={() => selectCategory(category)}
                   >
                     {category}
                   </button>
@@ -292,8 +296,8 @@ export default function CourseAddPage() {
                   <button
                     type="button"
                     key={year}
-                    aria-pressed={filters.year === year}
-                    onClick={() => changeFilters({ ...filters, year: filters.year === year ? null : year })}
+                    aria-pressed={filters.year === year && filters.major === '전체' && filters.category === '전체'}
+                    onClick={() => selectYear(year)}
                   >
                     {year}학년
                   </button>
