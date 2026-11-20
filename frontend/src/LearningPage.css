@@ -74,6 +74,7 @@
 .learning-note-footer small { color: #96a4b8; font-size: 12px; }
 .learning-note-footer > div { display: flex; align-items: center; gap: 10px; }
 .learning-note-footer span { color: #16815f; font-size: 13px; font-weight: 700; }
+.learning-note-footer span[role='alert'] { color: #aa3939; }
 .learning-note-footer button { min-height: 36px; padding: 0 15px; border: 0; border-radius: 9px; color: #fff; background: #2865ec; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .learning-note-footer button:hover { background: #1f56d1; }
 .learning-note-footer button:focus-visible { outline: 3px solid rgba(40, 101, 236, .2); outline-offset: 2px; }

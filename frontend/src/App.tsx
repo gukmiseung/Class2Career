@@ -132,7 +132,7 @@ function App() {
       return (
         <div className="home-page dashboard-shell learning-shell">
           <SiteHeader />
-          <LearningPage />
+          <LearningPage key={user?.id} userId={user?.id ?? null} />
         </div>
       )
     }

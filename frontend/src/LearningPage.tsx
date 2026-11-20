@@ -5,6 +5,7 @@ import { useCourseRegistrations } from './contexts/CourseRegistrationsContext'
 import { useCourseCatalog } from './useCourseCatalog'
 import { useProfile } from './useProfile'
 import { EmptyState, ErrorMessage, Loading } from './AsyncState'
+import { courseNotesStorageKey, legacyLearningNotesKey, loadLearningNotes, storeLearningNote } from './learningNotes'
 import './LearningPage.css'
 
 type LearningTab = CourseStatus | 'career'
@@ -12,7 +13,7 @@ type DeleteTarget = { id: string; name: string; noteKey: string } & (
   { type: 'course'; courseId: number } | { type: 'career' }
 )
 
-export default function LearningPage() {
+export default function LearningPage({ userId }: { userId: string | null }) {
   const { catalog, loading: catalogLoading, error: catalogError, retry: retryCatalog } = useCourseCatalog()
   const {
     registrations, loading: registrationsLoading, error: registrationsError,
@@ -20,18 +21,19 @@ export default function LearningPage() {
   } = useCourseRegistrations()
   const [activeTab, setActiveTab] = useState<LearningTab | null>('completed')
   const [interestedCareers, setInterestedCareers] = useState(loadCareerInterests)
-  const [savedCourseId, setSavedCourseId] = useState<string | null>(null)
+  const [noteFeedback, setNoteFeedback] = useState<{ key: string; saved: boolean } | null>(null)
   const [expandedItems, setExpandedItems] = useState<Set<string>>(() => new Set())
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null)
   const [deleteError, setDeleteError] = useState('')
   const { profile: learningProfile } = useProfile()
   const learnerName = learningProfile?.name.trim() ?? ''
+  const courseNotesKey = userId ? courseNotesStorageKey(userId) : null
   const [notes, setNotes] = useState<Record<string, string>>(() => {
-    try {
-      return JSON.parse(window.localStorage.getItem('class2career.course-notes') ?? '{}')
-    } catch {
-      return {}
-    }
+    if (!courseNotesKey) return {}
+
+    const careerNotes = Object.entries(loadLearningNotes(legacyLearningNotesKey))
+      .filter(([key]) => key.startsWith('career:'))
+    return { ...Object.fromEntries(careerNotes), ...loadLearningNotes(courseNotesKey) }
   })
   const registeredCourses = (catalog?.courses ?? []).flatMap((course) => {
     const status = registrations[course.dbId]
@@ -44,18 +46,27 @@ export default function LearningPage() {
   const courseDataError = catalogError ?? registrationsError
   const deletingCourse = deleteTarget?.type === 'course' && savingCourseIds.has(deleteTarget.courseId)
 
-  function updateNote(courseId: string, note: string) {
-    setNotes((current) => ({ ...current, [courseId]: note }))
-    setSavedCourseId(null)
+  function updateNote(noteKey: string, note: string) {
+    setNotes((current) => ({ ...current, [noteKey]: note }))
+    setNoteFeedback(null)
   }
 
-  function saveNote(courseId: string) {
+  function saveNote(noteKey: string, storageKey: string | null) {
+    if (!userId || !storageKey) return
+
     try {
-      window.localStorage.setItem('class2career.course-notes', JSON.stringify(notes))
-      setSavedCourseId(courseId)
+      storeLearningNote(storageKey, noteKey, notes[noteKey] ?? '')
+      setNoteFeedback({ key: noteKey, saved: true })
     } catch {
-      return
+      setNoteFeedback({ key: noteKey, saved: false })
     }
+  }
+
+  function renderNoteFeedback(noteKey: string) {
+    if (noteFeedback?.key !== noteKey) return null
+    return noteFeedback.saved
+      ? <span role="status">저장됨</span>
+      : <span role="alert">메모를 저장하지 못했어요. 다시 시도해 주세요.</span>
   }
 
   function toggleItem(itemId: string) {
@@ -90,11 +101,15 @@ export default function LearningPage() {
       setInterestedCareers(next)
     }
 
-    const nextNotes = { ...notes }
-    delete nextNotes[deleteTarget.noteKey]
-    setNotes(nextNotes)
+    setNotes((current) => {
+      const nextNotes = { ...current }
+      delete nextNotes[deleteTarget.noteKey]
+      return nextNotes
+    })
+    setNoteFeedback((current) => current?.key === deleteTarget.noteKey ? null : current)
+    const storageKey = deleteTarget.type === 'course' ? courseNotesKey : legacyLearningNotesKey
     try {
-      window.localStorage.setItem('class2career.course-notes', JSON.stringify(nextNotes))
+      if (storageKey) storeLearningNote(storageKey, deleteTarget.noteKey, '')
     } catch {
       // A local note storage error cannot undo the completed deletion.
     }
@@ -220,8 +235,8 @@ export default function LearningPage() {
                       <div className="learning-note-footer">
                         <small>{(notes[noteKey] ?? '').length}/300</small>
                         <div>
-                          {savedCourseId === noteKey && <span role="status">저장됨</span>}
-                          <button type="button" onClick={() => saveNote(noteKey)}>메모 저장</button>
+                          {renderNoteFeedback(noteKey)}
+                          <button type="button" onClick={() => saveNote(noteKey, legacyLearningNotesKey)}>메모 저장</button>
                         </div>
                       </div>
                       </div>
@@ -280,8 +295,8 @@ export default function LearningPage() {
                   <div className="learning-note-footer">
                     <small>{(notes[course.id] ?? '').length}/300</small>
                     <div>
-                      {savedCourseId === course.id && <span role="status">저장됨</span>}
-                      <button type="button" onClick={() => saveNote(course.id)}>메모 저장</button>
+                      {renderNoteFeedback(course.id)}
+                      <button type="button" onClick={() => saveNote(course.id, courseNotesKey)}>메모 저장</button>
                     </div>
                   </div>
                   </div>

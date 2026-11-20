@@ -1,5 +1,6 @@
 
 import { supabase } from './lib/supabase'
+import { legacyLearningNotesKey } from './learningNotes'
 
 // 회원가입
 export async function signUp(
@@ -39,7 +40,7 @@ const personalDataKeys = [
   'class2career.profile',
   'class2career.course-registrations',
   'class2career.career-interests',
-  'class2career.course-notes',
+  legacyLearningNotesKey,
   'class2career.saved-email',
 ]
 
