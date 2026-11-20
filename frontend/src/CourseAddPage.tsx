@@ -67,6 +67,7 @@ function CoursePagination({ page, pageCount, onPageChange }: {
 export default function CourseAddPage() {
   const titleRef = useRef<HTMLHeadingElement>(null)
   const filterPanelRef = useRef<HTMLElement>(null)
+  const resultsPanelRef = useRef<HTMLElement>(null)
   const scrollbarTimer = useRef<number | undefined>(undefined)
   const [searchInput, setSearchInput] = useState('')
   const [query, setQuery] = useState('')
@@ -88,6 +89,29 @@ export default function CourseAddPage() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
     titleRef.current?.focus({ preventScroll: true })
+  }, [])
+
+  useEffect(() => {
+    const filterPanel = filterPanelRef.current
+    const resultsPanel = resultsPanelRef.current
+    if (!filterPanel || !resultsPanel) return
+
+    const syncPanelHeight = () => {
+      if (window.matchMedia('(max-width: 680px)').matches) {
+        filterPanel.style.height = ''
+        return
+      }
+      filterPanel.style.height = `${resultsPanel.getBoundingClientRect().height}px`
+    }
+    const observer = new ResizeObserver(syncPanelHeight)
+    observer.observe(resultsPanel)
+    window.addEventListener('resize', syncPanelHeight)
+    syncPanelHeight()
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', syncPanelHeight)
+      filterPanel.style.height = ''
+    }
   }, [])
 
   useEffect(() => {
@@ -302,7 +326,7 @@ export default function CourseAddPage() {
             </fieldset>
           </aside>
 
-          <section className="course-results" aria-labelledby="course-results-title">
+          <section ref={resultsPanelRef} className="course-results" aria-labelledby="course-results-title">
             <header className="course-results-heading">
               <div>
                 <h2 id="course-results-title">과목 검색 결과</h2>
