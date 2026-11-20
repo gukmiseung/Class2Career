@@ -1,7 +1,11 @@
 :root {
   font-family: Pretendard, "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   color: #153f86;
-  background: #f8f9fb;
+  background: #f7faff;
+  --app-background:
+    radial-gradient(circle at 8% 4%, rgba(119, 174, 255, .20), transparent 30%),
+    radial-gradient(circle at 92% 18%, rgba(141, 127, 255, .12), transparent 27%),
+    linear-gradient(180deg, #fbfdff 0%, #f4f8ff 46%, #eaf4ff 100%);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -15,3 +19,4 @@ html, body, #root {
   min-height: 100%;
   margin: 0;
 }
+body { background: var(--app-background); background-attachment: fixed; }
