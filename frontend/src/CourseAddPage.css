@@ -128,7 +128,7 @@
 .course-layout {
   display: grid;
   grid-template-columns: 272px minmax(0, 1fr);
-  grid-template-rows: 900px;
+  grid-template-rows: 740px;
   align-items: stretch;
   gap: 25px;
 }
@@ -147,7 +147,7 @@
 }
 
 .course-results {
-  height: 900px;
+  height: 740px;
   min-height: 0;
   box-sizing: border-box;
   display: flex;
@@ -272,6 +272,8 @@
 
 .course-list {
   display: grid;
+  flex: 1;
+  grid-template-rows: repeat(4, minmax(132px, 1fr));
   gap: 16px;
   margin: 0;
   padding: 0;
@@ -366,6 +368,7 @@
   .course-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; gap: 22px; }
   .course-filters { height: 420px; }
   .course-results { height: auto; }
+  .course-list { grid-template-rows: none; }
   .course-filters { padding: 17px; }
   .course-filter-options { display: flex; flex-flow: row wrap; gap: 8px; }
   .course-search { gap: 10px; min-height: 66px; margin: 22px 0; padding: 10px 12px; }

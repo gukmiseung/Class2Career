@@ -123,15 +123,15 @@ export default function CourseAddPage() {
   }
 
   function selectMajor(major: string) {
-    changeFilters({ ...defaultFilters, major })
+    changeFilters({ ...filters, major })
   }
 
   function selectCategory(category: string) {
-    changeFilters({ ...defaultFilters, category })
+    changeFilters({ ...filters, category })
   }
 
   function selectYear(year: CourseYear) {
-    changeFilters({ ...defaultFilters, year: filters.year === year ? null : year })
+    changeFilters({ ...filters, year: filters.year === year ? null : year })
   }
 
   function resetCoursePage() {
@@ -240,7 +240,7 @@ export default function CourseAddPage() {
                   <button
                     type="button"
                     key={major}
-                    aria-pressed={filters.major === major && filters.category === '전체' && filters.year === null}
+                    aria-pressed={filters.major === major}
                     onClick={() => selectMajor(major)}
                   >
                     {major === '전체' ? '전체 (컴퓨터학부)' : major}
@@ -268,7 +268,7 @@ export default function CourseAddPage() {
                   <button
                     type="button"
                     key={category}
-                    aria-pressed={filters.category === category && filters.major === '전체' && filters.year === null}
+                    aria-pressed={filters.category === category}
                     onClick={() => selectCategory(category)}
                   >
                     {category}
@@ -296,7 +296,7 @@ export default function CourseAddPage() {
                   <button
                     type="button"
                     key={year}
-                    aria-pressed={filters.year === year && filters.major === '전체' && filters.category === '전체'}
+                    aria-pressed={filters.year === year}
                     onClick={() => selectYear(year)}
                   >
                     {year}학년
