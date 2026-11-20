@@ -1,6 +1,7 @@
 import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { signOut } from './auth'
 import { ErrorMessage, Loading } from './AsyncState'
+import ProfileMajorSelect from './ProfileMajorSelect'
 import { saveProfile, type Profile } from './profiles'
 import { useProfile } from './useProfile'
 import './ProfilePage.css'
@@ -149,7 +150,7 @@ function ProfileForm({ userId, email, initialProfile }: { userId: string; email:
           <div className="profile-field-grid">
             <label><span>이름</span><input value={profile.name} onChange={(e) => update('name', e.target.value)} placeholder="이름을 입력하세요" required disabled={saving} /></label>
             <label><span>이메일</span><input type="email" value={email} readOnly aria-readonly="true" /></label>
-            <label><span>학과</span><select value={profile.department} onChange={(e) => update('department', e.target.value)} disabled={saving}><option>컴퓨터학부</option><option>소프트웨어학과</option><option>인공지능학과</option><option>기타</option></select></label>
+            <ProfileMajorSelect value={profile.department} onChange={(department) => update('department', department)} disabled={saving} />
             <label><span>학년</span><select value={profile.grade} onChange={(e) => update('grade', e.target.value)} disabled={saving}><option>1학년</option><option>2학년</option><option>3학년</option><option>4학년</option><option>졸업생</option></select></label>
           </div>
         </section>
