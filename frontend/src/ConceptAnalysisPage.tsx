@@ -48,8 +48,8 @@ export default function ConceptAnalysisPage({ courseName, concepts, selectionHre
           {analyses.map(({ concept }) => (
             <article className="analysis-concept-card" key={concept.id}>
               <span>선택한 개념 · {courseName}</span>
-              <h2>{concept.name}란?</h2>
-              <p>{conceptExplanations[concept.id] ?? `${concept.name}은 ${concept.description}을 다루는 개념이에요. 실제 서비스의 문제를 구조적으로 이해하고 해결하는 데 활용돼요.`}</p>
+              <h2>{concept.name}</h2>
+              <p>{conceptExplanations[concept.id] ?? concept.description}</p>
             </article>
           ))}
         </section>
