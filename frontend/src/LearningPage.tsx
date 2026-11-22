@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { careerInterestsKey, loadCareerInterests } from './careerInterests'
+import { useState } from 'react'
 import { courseStatuses, statusLabels, type CourseStatus } from './courseRegistrations'
 import { useCourseRegistrations } from './contexts/CourseRegistrationsContext'
 import { useCourseCatalog } from './useCourseCatalog'
@@ -16,10 +15,11 @@ export default function LearningPage() {
   const { catalog, loading: catalogLoading, error: catalogError, retry: retryCatalog } = useCourseCatalog()
   const {
     registrations, loading: registrationsLoading, error: registrationsError,
-    savingCourseIds, retryLoad, saveCourseStatus,
+    savingCourseIds, retryLoad, saveCourseStatus, careerInterest,
   } = useCourseRegistrations()
   const [activeTab, setActiveTab] = useState<LearningTab | null>('completed')
-  const [interestedCareers, setInterestedCareers] = useState(loadCareerInterests)
+  const interestedCareers = careerInterest.name ? [careerInterest.name] : []
+  const careerCount = careerInterest.loading || careerInterest.error ? null : interestedCareers.length
   const [savedCourseId, setSavedCourseId] = useState<string | null>(null)
   const [expandedItems, setExpandedItems] = useState<Set<string>>(() => new Set())
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null)
@@ -42,7 +42,8 @@ export default function LearningPage() {
   const visibleCourses = registeredCourses.filter(({ status }) => status === activeTab)
   const courseDataLoading = catalogLoading || registrationsLoading
   const courseDataError = catalogError ?? registrationsError
-  const deletingCourse = deleteTarget?.type === 'course' && savingCourseIds.has(deleteTarget.courseId)
+  const deleting = deleteTarget?.type === 'career' ? careerInterest.saving
+    : deleteTarget?.type === 'course' && savingCourseIds.has(deleteTarget.courseId)
 
   function updateNote(courseId: string, note: string) {
     setNotes((current) => ({ ...current, [courseId]: note }))
@@ -68,13 +69,13 @@ export default function LearningPage() {
   }
 
   function dismissDelete() {
-    if (deletingCourse) return
+    if (deleting) return
     setDeleteError('')
     setDeleteTarget(null)
   }
 
   async function confirmDelete() {
-    if (!deleteTarget || deletingCourse) return
+    if (!deleteTarget || deleting) return
     setDeleteError('')
 
     if (deleteTarget.type === 'course') {
@@ -85,9 +86,12 @@ export default function LearningPage() {
         return
       }
     } else {
-      const next = interestedCareers.filter((name) => name !== deleteTarget.id)
-      window.localStorage.setItem(careerInterestsKey, JSON.stringify(next))
-      setInterestedCareers(next)
+      try {
+        if (!await careerInterest.remove(deleteTarget.id)) return
+      } catch (error) {
+        setDeleteError(error instanceof Error ? error.message : '관심 직무를 삭제하지 못했어요.')
+        return
+      }
     }
 
     const nextNotes = { ...notes }
@@ -106,17 +110,6 @@ export default function LearningPage() {
     })
     setDeleteTarget(null)
   }
-
-  useEffect(() => {
-    function syncCareerInterests(event: StorageEvent) {
-      if (event.key === careerInterestsKey || event.key === null) {
-        setInterestedCareers(loadCareerInterests())
-      }
-    }
-
-    window.addEventListener('storage', syncCareerInterests)
-    return () => window.removeEventListener('storage', syncCareerInterests)
-  }, [])
 
   return (
     <main className="learning-page">
@@ -143,7 +136,7 @@ export default function LearningPage() {
         ))}
         <article>
           <h2>관심 직무</h2>
-          <strong>{interestedCareers.length}개</strong>
+          <strong>{careerCount === null ? '—' : `${careerCount}개`}</strong>
           <p>저장한 직무</p>
         </article>
       </section>
@@ -165,7 +158,7 @@ export default function LearningPage() {
         </div>
         {activeTab !== null && <p id="learning-courses-title">
           {activeTab === 'career'
-            ? `관심 직무 · 총 ${interestedCareers.length}개`
+            ? careerCount === null ? '관심 직무' : `관심 직무 · 총 ${careerCount}개`
             : courseDataLoading || courseDataError
               ? statusLabels[activeTab]
               : `${statusLabels[activeTab]} · 총 ${visibleCourses.length}개 과목`}
@@ -177,7 +170,9 @@ export default function LearningPage() {
         ) : activeTab !== 'career' && catalog?.courses.length === 0 ? (
           <EmptyState title="등록된 과목 정보가 없어요" message="교과목 정보가 등록되면 학습 현황을 확인할 수 있어요." />
         ) : activeTab === null ? null : activeTab === 'career' ? (
-          interestedCareers.length > 0 ? (
+          careerInterest.loading ? <Loading message="관심 직무를 불러오고 있어요." />
+          : careerInterest.error ? <ErrorMessage message={careerInterest.error} onRetry={careerInterest.retry} />
+          : interestedCareers.length > 0 ? (
             <ul className="learning-course-list">
               {interestedCareers.map((careerName) => {
                 const noteKey = `career:${careerName}`
@@ -295,10 +290,10 @@ export default function LearningPage() {
               <strong>{deleteTarget.name}</strong>{deleteTarget.type === 'course' ? ' 과목을 내 학습에서 삭제해요.' : ' 직무를 관심 직무에서 삭제해요.'}<br />작성한 메모도 함께 삭제됩니다.
             </p>
             {deleteError && <p role="alert">{deleteError}</p>}
-            <div className="learning-delete-actions" aria-busy={deletingCourse}>
-              <button type="button" autoFocus disabled={deletingCourse} onClick={dismissDelete}>취소</button>
-              <button className="learning-delete-confirm" type="button" disabled={deletingCourse} onClick={confirmDelete}>
-                {deletingCourse ? '삭제 중…' : '삭제'}
+            <div className="learning-delete-actions" aria-busy={deleting}>
+              <button type="button" autoFocus disabled={deleting} onClick={dismissDelete}>취소</button>
+              <button className="learning-delete-confirm" type="button" disabled={deleting} onClick={confirmDelete}>
+                {deleting ? '삭제 중…' : '삭제'}
               </button>
             </div>
           </section>

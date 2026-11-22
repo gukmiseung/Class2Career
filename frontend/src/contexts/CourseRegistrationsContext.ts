@@ -9,6 +9,15 @@ type CourseRegistrationsContextValue = {
   savingCourseIds: ReadonlySet<number>
   retryLoad: () => void
   saveCourseStatus: (courseId: number, status: CourseStatus | null) => Promise<boolean>
+  careerInterest: {
+    name: string | null
+    loading: boolean
+    error: string | null
+    saving: boolean
+    retry: () => void
+    save: (careerSlug: string) => Promise<boolean>
+    remove: (careerName: string) => Promise<boolean>
+  }
 }
 
 export const CourseRegistrationsContext = createContext<CourseRegistrationsContextValue | null>(null)

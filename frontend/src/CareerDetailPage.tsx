@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { loadCareerInterests, toggleCareerInterest } from './careerInterests'
 import { useCourseCatalog } from './useCourseCatalog'
 import { statusLabels } from './courseRegistrations'
 import { useCourseRegistrations } from './contexts/CourseRegistrationsContext'
@@ -12,8 +11,9 @@ import './CareerDetailPage.css'
 export default function CareerDetailPage({ careerName }: { careerName: string }) {
   const { careers, loading: careersLoading, error: careersError, retry: retryCareers } = useCareerCatalog()
   const career = careers.find((item) => item.title === careerName)
-  const [isInterested, setIsInterested] = useState(() => loadCareerInterests().includes(careerName))
-  const { registrations, loading: registrationsLoading, error: registrationsError, retryLoad } = useCourseRegistrations()
+  const [interestActionError, setInterestActionError] = useState('')
+  const { registrations, loading: registrationsLoading, error: registrationsError, retryLoad, careerInterest } = useCourseRegistrations()
+  const isInterested = careerInterest.name === careerName
   const { catalog, loading: catalogLoading, error: catalogError, retry: retryCatalog } = useCourseCatalog()
   const [showLoginModal, setShowLoginModal] = useState(false)
   const { loading, user } = useAuth()
@@ -63,17 +63,26 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
             className="career-interest-button"
             type="button"
             aria-pressed={isInterested}
-            onClick={() => {
+            disabled={careerInterest.loading || careerInterest.saving || Boolean(careerInterest.error)}
+            onClick={async () => {
               if (!user) {
                 if (!loading) setShowLoginModal(true)
                 return
               }
-              setIsInterested(toggleCareerInterest(career.title))
+              setInterestActionError('')
+              try {
+                if (isInterested) await careerInterest.remove(career.title)
+                else await careerInterest.save(career.slug)
+              } catch (error) {
+                setInterestActionError(error instanceof Error ? error.message : '관심 직무를 변경하지 못했어요.')
+              }
             }}
           >
-            {isInterested ? '관심 직무 해제' : '관심 직무 등록'}
+            {careerInterest.saving ? '처리 중…' : isInterested ? '관심 직무 해제' : careerInterest.name ? '관심 직무 변경' : '관심 직무 등록'}
           </button>
         </div>
+        {careerInterest.error && <ErrorMessage message={careerInterest.error} onRetry={careerInterest.retry} compact />}
+        {interestActionError && <p role="alert">{interestActionError}</p>}
       </section>
 
       <section className="connected-courses" aria-labelledby="course-heading">
