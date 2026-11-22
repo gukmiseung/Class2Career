@@ -16,7 +16,9 @@ export type RoadmapData = {
 export type RoadmapDependencies = {
   authenticate(token: string): Promise<{ userId: string } | null>
   isAllowedUser(userId: string): boolean
-  load(selection: { userId: string; accessToken: string; careerId: string }): Promise<RoadmapData | null>
+  load(selection: { userId: string; accessToken: string; careerId?: string }): Promise<
+    RoadmapData | { status: 'career_selection_required' } | null
+  >
   generate(request: RoadmapRequest, candidates: readonly CandidateCourse[]): Promise<unknown>
 }
 
@@ -47,13 +49,15 @@ export function createRoadmapHandler(dependencies: RoadmapDependencies) {
       }
 
       const body = await request.json().catch(() => null)
-      if (!isRecord(body) || Object.keys(body).length !== 1 ||
-        typeof body.careerId !== 'string' || !/^[\w-]{1,80}$/.test(body.careerId)) {
+      if (!isRecord(body) || Object.keys(body).some((key) => key !== 'careerId') ||
+        ('careerId' in body && (typeof body.careerId !== 'string' || !/^[\w-]{1,80}$/.test(body.careerId)))) {
         return failure(400, 'INVALID_REQUEST', '유효한 careerId를 보내 주세요.')
       }
 
-      const data = await dependencies.load({ ...user, accessToken: token, careerId: body.careerId })
+      const careerId = typeof body.careerId === 'string' ? body.careerId : undefined
+      const data = await dependencies.load({ ...user, accessToken: token, careerId })
       if (!data) return failure(400, 'UNKNOWN_CAREER', '지원하는 직무를 선택해 주세요.')
+      if ('status' in data) return failure(400, 'CAREER_SELECTION_REQUIRED', '로드맵을 생성할 직무를 선택해 주세요.')
 
       const coverage = compareConceptCoverage(data.coverage)
       if (coverage.requirementsStatus === 'pending') {

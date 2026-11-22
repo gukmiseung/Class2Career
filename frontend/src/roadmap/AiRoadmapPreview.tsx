@@ -88,7 +88,7 @@ export default function AiRoadmapPreview() {
   return (
     <section className="roadmap-intro" aria-labelledby="ai-roadmap-preview-title">
       <h2 id="ai-roadmap-preview-title">AI 로드맵 개발 테스트</h2>
-      <p>예시(Mock) 학습 데이터를 사용하며 실제 수강 이력은 반영하지 않습니다.</p>
+      <p>개발 DB에 저장된 수강 이력과 해당 직무의 관련 과목을 바탕으로 생성합니다.</p>
       {loading ? (
         <p role="status">로그인 상태를 확인하고 있어요.</p>
       ) : user && !recoveringPassword ? (
