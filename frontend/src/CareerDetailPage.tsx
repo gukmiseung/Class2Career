@@ -7,7 +7,6 @@ import { useAuth } from './contexts/AuthContext'
 import LearningLoginModal from './LearningLoginModal'
 import { EmptyState, ErrorMessage, Loading } from './AsyncState'
 import { useCareerCatalog } from './useCareerCatalog'
-import { hasCareerRoadmap } from './careerRoadmaps'
 import './CareerDetailPage.css'
 
 export default function CareerDetailPage({ careerName }: { careerName: string }) {
@@ -59,9 +58,7 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
           {career.keywords.map((keyword) => <span key={keyword}>{keyword}</span>)}
         </div>
         <div className="career-detail-actions">
-          {hasCareerRoadmap(career.title) && (
-            <a className="roadmap-link" href={`#roadmap-${encodeURIComponent(career.title)}`}>로드맵 확인하기 →</a>
-          )}
+          <a className="roadmap-link" href={`#roadmap-${encodeURIComponent(career.title)}`}>로드맵 확인하기 →</a>
           <button
             className="career-interest-button"
             type="button"
