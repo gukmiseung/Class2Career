@@ -4,6 +4,7 @@ import { useCourseRegistrations } from './contexts/CourseRegistrationsContext'
 import { useCourseCatalog } from './useCourseCatalog'
 import { useProfile } from './useProfile'
 import { EmptyState, ErrorMessage, Loading } from './AsyncState'
+import { changeLearningCourseStatus } from './learningCourseStatus'
 import './LearningPage.css'
 
 type LearningTab = CourseStatus | 'career'
@@ -24,6 +25,7 @@ export default function LearningPage() {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(() => new Set())
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null)
   const [deleteError, setDeleteError] = useState('')
+  const [statusErrors, setStatusErrors] = useState<Partial<Record<number, string | null>>>({})
   const { profile: learningProfile } = useProfile()
   const learnerName = learningProfile?.name.trim() ?? ''
   const [notes, setNotes] = useState<Record<string, string>>(() => {
@@ -44,6 +46,13 @@ export default function LearningPage() {
   const courseDataError = catalogError ?? registrationsError
   const deleting = deleteTarget?.type === 'career' ? careerInterest.saving
     : deleteTarget?.type === 'course' && savingCourseIds.has(deleteTarget.courseId)
+
+  async function changeCourseStatus(courseId: number, currentStatus: CourseStatus, selection: string) {
+    if (savingCourseIds.has(courseId) || selection === currentStatus) return
+    setStatusErrors((errors) => ({ ...errors, [courseId]: null }))
+    const error = await changeLearningCourseStatus(courseId, currentStatus, selection, saveCourseStatus)
+    if (error) setStatusErrors((errors) => ({ ...errors, [courseId]: error }))
+  }
 
   function updateNote(courseId: string, note: string) {
     setNotes((current) => ({ ...current, [courseId]: note }))
@@ -247,6 +256,18 @@ export default function LearningPage() {
                     >
                       과목 삭제
                     </button>
+                  </div>
+                  <div className="learning-course-note">
+                    <label htmlFor={`course-status-${course.id}`}>수강 상태</label>
+                    <select
+                      id={`course-status-${course.id}`}
+                      value={course.status}
+                      disabled={savingCourseIds.has(course.dbId)}
+                      onChange={(event) => void changeCourseStatus(course.dbId, course.status, event.currentTarget.value)}
+                    >
+                      {courseStatuses.map((status) => <option key={status} value={status}>{statusLabels[status]}</option>)}
+                    </select>
+                    {statusErrors[course.dbId] && <p role="alert">{statusErrors[course.dbId]}</p>}
                   </div>
                   <div className="learning-course-note">
                   <label htmlFor={`course-note-${course.id}`}>간단 메모</label>
