@@ -121,6 +121,25 @@ test('passes the catalog-derived gaps and allowed recommendations into the exist
   assert.equal(steps[0].recommendedCourses[0].course.name, '데이터베이스')
 })
 
+test('a saved transition from in_progress to completed covers concepts and removes the course from recommendations', async () => {
+  async function generateWithStatus(status: 'in_progress' | 'completed') {
+    const { load } = fixture({ c2c_user_courses: [{ status, c2c_courses: structures }] })
+    const received = { gaps: [] as string[], candidates: [] as string[] }
+    const response = await invoke(load, async (input, candidates) => {
+      received.gaps = input.skillGaps.map(({ name }) => name)
+      received.candidates = candidates.map(({ candidateRef }) => candidateRef)
+      return {
+        steps: [{ title: '연습', learningGoals: ['개념 정리'], recommendedCourses: [], practiceProjects: [] }],
+      }
+    }, { careerId: backend.slug })
+    assert.equal(response.status, 200)
+    return received
+  }
+
+  assert.deepEqual(await generateWithStatus('in_progress'), { gaps: ['스택', 'SQL'], candidates: ['c1', 'c42'] })
+  assert.deepEqual(await generateWithStatus('completed'), { gaps: ['SQL'], candidates: ['c42'] })
+})
+
 test('stops before generation when a career is missing, concepts are unready or reads fail', async () => {
   for (const [data, body, status, code] of [
     [{ c2c_user_career_interests: [] }, {}, 400, 'CAREER_SELECTION_REQUIRED'],

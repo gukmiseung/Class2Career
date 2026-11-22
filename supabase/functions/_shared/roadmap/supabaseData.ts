@@ -4,7 +4,7 @@ import { isRecord } from './response.ts'
 
 type Row = Record<string, unknown>
 type Course = { id: number; name: string; department: string; concepts: { id: string; name: string }[] }
-type Registration = { course: Course; status: 'completed' | 'planned' }
+type Registration = { course: Course; status: 'completed' | 'in_progress' | 'planned' }
 type Career = { slug: string; title: string; description: string }
 
 const courseColumns = 'c2c_courses(id,name,department,c2c_course_concepts(id,name,sort_order))'
@@ -34,7 +34,9 @@ function course(value: unknown): Course {
 }
 
 function registration(row: Row): Registration {
-  if (row.status !== 'completed' && row.status !== 'planned') throw new Error('Invalid registration status')
+  if (row.status !== 'completed' && row.status !== 'in_progress' && row.status !== 'planned') {
+    throw new Error('Invalid registration status')
+  }
   return { course: course(row.c2c_courses), status: row.status }
 }
 
