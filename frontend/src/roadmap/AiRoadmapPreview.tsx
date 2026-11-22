@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react'
 import { FunctionsHttpError } from '@supabase/supabase-js'
 import { useAuth } from '../contexts/AuthContext'
+import { getPersonalizedRoadmapAccess } from '../authNavigation'
+import LearningLoginModal from '../LearningLoginModal'
 import { supabase } from '../lib/supabase'
 import type { RoadmapResponse } from './contracts'
 
@@ -83,18 +85,27 @@ function RoadmapGenerator() {
 }
 
 export default function AiRoadmapPreview() {
-  const { user, loading, recoveringPassword } = useAuth()
+  const access = getPersonalizedRoadmapAccess(useAuth())
+  const [loginDestination, setLoginDestination] = useState<string | null>(null)
 
   return (
     <section className="roadmap-intro" aria-labelledby="ai-roadmap-preview-title">
       <h2 id="ai-roadmap-preview-title">AI 로드맵 개발 테스트</h2>
       <p>개발 DB에 저장된 수강 이력과 해당 직무의 관련 과목을 바탕으로 생성합니다.</p>
-      {loading ? (
+      {access.status === 'checking' ? (
         <p role="status">로그인 상태를 확인하고 있어요.</p>
-      ) : user && !recoveringPassword ? (
-        <RoadmapGenerator key={user.id} />
+      ) : access.status === 'ready' ? (
+        <RoadmapGenerator key={access.userId} />
       ) : (
-        <p>개발자 테스트 계정으로 로그인하면 사용할 수 있습니다.</p>
+        <>
+          <p>개발자 테스트 계정으로 로그인하면 사용할 수 있습니다.</p>
+          <button type="button" onClick={() => setLoginDestination(window.location.hash)}>
+            로그인 안내 보기
+          </button>
+          {loginDestination !== null && (
+            <LearningLoginModal destination={loginDestination} onClose={() => setLoginDestination(null)} />
+          )}
+        </>
       )}
     </section>
   )
