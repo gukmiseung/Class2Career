@@ -63,6 +63,11 @@ test('counts input tokens and generates a Korean roadmap with the configured sch
     assert.equal(body.model, 'test-model')
     assert.match(body.instructions, /한국어/)
     assert.equal(body.text.format.strict, true)
+    const steps = body.text.format.schema.properties.steps
+    assert.equal(steps.maxItems, 3)
+    assert.equal(steps.items.properties.learningGoals.maxItems, 2)
+    assert.equal(steps.items.properties.recommendedCourses.maxItems, 2)
+    assert.equal(steps.items.properties.practiceProjects.maxItems, 1)
     assert.deepEqual(
       body.text.format.schema.properties.steps.items.properties.recommendedCourses.items.properties.candidateRef.enum,
       ['c1'],
@@ -104,6 +109,15 @@ const providerCases = [
     output: [{ type: 'message', role: 'assistant', content: [{ type: 'refusal', refusal: 'private detail' }] }],
   }), 422, 'ROADMAP_AI_REFUSED'],
   ['incomplete output', () => Response.json({ status: 'incomplete' }), 502, 'ROADMAP_AI_INCOMPLETE'],
+  ['output token exhaustion', () => Response.json({
+    status: 'incomplete',
+    incomplete_details: { reason: 'max_output_tokens' },
+    output: [{ type: 'message', role: 'assistant', content: [{ type: 'output_text', text: '{' }] }],
+  }), 502, 'ROADMAP_AI_OUTPUT_LIMIT'],
+  ['incomplete output due to content filtering', () => Response.json({
+    status: 'incomplete',
+    incomplete_details: { reason: 'content_filter' },
+  }), 422, 'ROADMAP_AI_REFUSED'],
   ['provider 429', () => new Response('private detail', { status: 429 }), 503, 'ROADMAP_AI_RATE_LIMITED'],
   ['provider 503', () => new Response('private detail', { status: 503 }), 502, 'ROADMAP_AI_UNAVAILABLE'],
 ] as const
