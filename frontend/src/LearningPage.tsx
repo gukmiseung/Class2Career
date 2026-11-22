@@ -47,10 +47,16 @@ export default function LearningPage() {
   const deleting = deleteTarget?.type === 'career' ? careerInterest.saving
     : deleteTarget?.type === 'course' && savingCourseIds.has(deleteTarget.courseId)
 
-  async function changeCourseStatus(courseId: number, currentStatus: CourseStatus, selection: string) {
+  async function changeCourseStatus(itemId: string, courseId: number, currentStatus: CourseStatus, selection: string) {
     if (savingCourseIds.has(courseId) || selection === currentStatus) return
     setStatusErrors((errors) => ({ ...errors, [courseId]: null }))
-    const error = await changeLearningCourseStatus(courseId, currentStatus, selection, saveCourseStatus)
+    const error = await changeLearningCourseStatus(courseId, currentStatus, selection, saveCourseStatus, () => {
+      setExpandedItems((current) => {
+        const next = new Set(current)
+        next.delete(itemId)
+        return next
+      })
+    })
     if (error) setStatusErrors((errors) => ({ ...errors, [courseId]: error }))
   }
 
@@ -263,7 +269,7 @@ export default function LearningPage() {
                       id={`course-status-${course.id}`}
                       value={course.status}
                       disabled={savingCourseIds.has(course.dbId)}
-                      onChange={(event) => void changeCourseStatus(course.dbId, course.status, event.currentTarget.value)}
+                      onChange={(event) => void changeCourseStatus(course.id, course.dbId, course.status, event.currentTarget.value)}
                     >
                       {courseStatuses.map((status) => <option key={status} value={status}>{statusLabels[status]}</option>)}
                     </select>
