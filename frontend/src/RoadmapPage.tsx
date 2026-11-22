@@ -77,7 +77,7 @@ export default function RoadmapPage({ careerName }: { careerName: string }) {
       </ol> : <div className="roadmap-intro"><p>이 직무의 권장 학습 단계는 준비 중이에요.</p></div>}
 
       <section className="roadmap-intro" aria-labelledby="roadmap-recommended-courses">
-        <h2 id="roadmap-recommended-courses">경북대학교 추천 과목</h2>
+        <h2 id="roadmap-recommended-courses">경북대학교 컴퓨터학부 추천 교과목</h2>
         {coursesLoading && <Loading message="추천 과목을 불러오고 있어요." compact />}
         {coursesError && <ErrorMessage message={coursesError} onRetry={retryCourses} compact />}
         {!coursesLoading && !coursesError && (recommendedCourses.length > 0 ? (

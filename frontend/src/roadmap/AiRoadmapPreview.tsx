@@ -90,7 +90,7 @@ export default function AiRoadmapPreview({ careerSlug }: { careerSlug: string })
 
   return (
     <section className="roadmap-intro" aria-labelledby="ai-roadmap-preview-title">
-      <h2 id="ai-roadmap-preview-title">AI 로드맵 개발 테스트</h2>
+      <h2 id="ai-roadmap-preview-title">AI 맞춤형 학습 로드맵</h2>
       <p>개발 DB에 저장된 수강 이력과 해당 직무의 관련 과목을 바탕으로 생성합니다.</p>
       {access.status === 'checking' ? (
         <p role="status">로그인 상태를 확인하고 있어요.</p>
@@ -98,12 +98,16 @@ export default function AiRoadmapPreview({ careerSlug }: { careerSlug: string })
         <RoadmapGenerator key={`${access.userId}:${careerSlug}`} careerSlug={careerSlug} />
       ) : (
         <>
-          <p>개발자 테스트 계정으로 로그인하면 사용할 수 있습니다.</p>
+          <p>로그인 후 수강 이력을 분석해 나에게 필요한 학습 로드맵을 생성할 수 있습니다.</p>
           <button type="button" onClick={() => setLoginDestination(window.location.hash)}>
             로그인 안내 보기
           </button>
           {loginDestination !== null && (
-            <LearningLoginModal destination={loginDestination} onClose={() => setLoginDestination(null)} />
+            <LearningLoginModal
+              destination={loginDestination}
+              onClose={() => setLoginDestination(null)}
+              description="로그인하면 수강 이력을 분석해 부족한 역량과 추가 추천 과목을 확인할 수 있어요."
+            />
           )}
         </>
       )}

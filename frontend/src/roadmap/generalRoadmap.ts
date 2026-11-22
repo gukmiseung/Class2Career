@@ -34,7 +34,7 @@ export function buildGeneralRoadmap(
       return [{
         course,
         relatedConcepts,
-        reason: relatedConcepts ? `이 직무와 연결된 학습 개념: ${relatedConcepts}` : null,
+        reason: relatedConcepts ? `관련 학습 개념: ${relatedConcepts}` : null,
       }]
     })
 

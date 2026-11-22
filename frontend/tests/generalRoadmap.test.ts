@@ -27,8 +27,8 @@ test('joins the selected career to public courses by database ID and uses link e
   deepEqual(result?.career, { slug: career.slug, title: career.title, description: career.description })
   deepEqual(result?.skillKeywords, ['API', 'SQL'])
   deepEqual(result?.recommendedCourses.map(({ course, relatedConcepts, reason }) => [course.dbId, relatedConcepts, reason]), [
-    [1, '자료 구조', '이 직무와 연결된 학습 개념: 자료 구조'],
-    [2, '트랜잭션과 정규화', '이 직무와 연결된 학습 개념: 트랜잭션과 정규화'],
+    [1, '자료 구조', '관련 학습 개념: 자료 구조'],
+    [2, '트랜잭션과 정규화', '관련 학습 개념: 트랜잭션과 정규화'],
   ])
   equal(career.courses[0].course_id, 2)
 })
