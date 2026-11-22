@@ -95,7 +95,7 @@ export default function RoadmapPage({ careerName }: { careerName: string }) {
       </section>
 
       {import.meta.env.VITE_ENABLE_AI_ROADMAP === 'true' && careerName === '백엔드 개발자' && (
-        <AiRoadmapPreview />
+        <AiRoadmapPreview careerSlug={career.slug} />
       )}
     </main>
   )

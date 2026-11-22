@@ -94,24 +94,16 @@ export function createSupabaseRoadmapLoader(
       return rows(await response.json())
     }
 
-    // Interest names match the unique catalog title. An explicit career always wins.
-    const loadInterests = () => select('c2c_user_career_interests', {
-      select: 'career_name', user_id: `eq.${userId}`, order: 'updated_at.desc,career_name.asc',
-    })
-    const loadCareers = (filter: Record<string, string> = {}) => select('c2c_careers', {
-      select: 'slug,title,description', ...filter,
-    })
-    let selected: Row | undefined
-    if (careerId) {
-      const [careers] = await Promise.all([loadCareers({ slug: `eq.${careerId}` }), loadInterests()])
-      selected = careers[0]
-      if (!selected) return null
-    } else {
-      const [careers, interests] = await Promise.all([loadCareers(), loadInterests()])
-      const byTitle = new Map(careers.map((career) => [text(career.title), career]))
-      selected = interests.map(({ career_name }) => byTitle.get(text(career_name))).find(Boolean)
-      if (!selected) return { status: 'career_selection_required' }
+    let slug = careerId
+    if (!slug) {
+      const interests = await select('c2c_user_career_interests', {
+        select: 'career_slug', user_id: `eq.${userId}`, limit: '2',
+      })
+      if (interests.length !== 1) return { status: 'career_selection_required' }
+      slug = text(interests[0].career_slug)
     }
+    const [selected] = await select('c2c_careers', { select: 'slug,title,description', slug: `eq.${slug}` })
+    if (!selected) return null
 
     const career = { slug: text(selected.slug), title: text(selected.title), description: text(selected.description) }
     const [relations, registrations] = await Promise.all([

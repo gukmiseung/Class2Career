@@ -16,7 +16,7 @@ const other = { id: 90, name: '다른 과목', department: '컴퓨터학부', c2
 function fixture(overrides: Record<string, unknown> = {}) {
   const requests: URL[] = []
   const responses: Record<string, unknown> = {
-    c2c_user_career_interests: [{ career_name: backend.title }],
+    c2c_user_career_interests: [{ career_slug: backend.slug }],
     c2c_careers: [backend, dataAnalyst],
     c2c_career_courses: [{ c2c_courses: structures }, { c2c_courses: database }],
     c2c_user_courses: [],
@@ -49,7 +49,7 @@ function fixture(overrides: Record<string, unknown> = {}) {
 
 test('uses verified identity and keeps completed, planned and unrelated concept IDs distinct', async () => {
   const { load, requests } = fixture({
-    c2c_user_career_interests: [{ career_name: dataAnalyst.title }],
+    c2c_user_career_interests: [{ career_slug: dataAnalyst.slug }, { career_slug: backend.slug }],
     c2c_user_courses: [
       { status: 'completed', c2c_courses: structures },
       { status: 'planned', c2c_courses: database },
@@ -67,11 +67,12 @@ test('uses verified identity and keeps completed, planned and unrelated concept 
   assert.deepEqual(result.candidates.map(({ candidateRef }) => candidateRef), ['c42'])
   assert.ok(requests.some((url) => url.searchParams.get('career_slug') === 'eq.backend-developer'))
   assert.ok(requests.some((url) => url.searchParams.get('select')?.includes('c2c_course_concepts(')))
+  assert.ok(!requests.some((url) => url.pathname.endsWith('/c2c_user_career_interests')))
 })
 
-test('handles empty history and picks the first saved interest still in the catalog', async () => {
+test('handles empty history and uses the only saved interest', async () => {
   const { load, requests } = fixture({
-    c2c_user_career_interests: [{ career_name: '삭제된 직무' }, { career_name: dataAnalyst.title }, { career_name: backend.title }],
+    c2c_user_career_interests: [{ career_slug: dataAnalyst.slug }],
   })
   const result = await load({ userId, accessToken })
   assert.ok(result && !('status' in result))
@@ -80,7 +81,17 @@ test('handles empty history and picks the first saved interest still in the cata
   assert.deepEqual(result.request.plannedCourses, [])
   assert.equal(compareConceptCoverage(result.coverage).uncovered.length, 2)
   assert.equal(result.candidates.length, 2)
-  assert.ok(requests.some((url) => url.searchParams.get('order') === 'updated_at.desc,career_name.asc'))
+  assert.ok(requests.some((url) => url.searchParams.get('select') === 'career_slug' && url.searchParams.get('limit') === '2'))
+})
+
+test('requires an explicit selection when multiple careers are saved without starting generation', async () => {
+  const { load, requests } = fixture({
+    c2c_user_career_interests: [{ career_slug: dataAnalyst.slug }, { career_slug: backend.slug }],
+  })
+  const response = await invoke(load, async () => assert.fail('Generation must not start'), {})
+  assert.equal(response.status, 400)
+  assert.equal((await response.json()).code, 'CAREER_SELECTION_REQUIRED')
+  assert.deepEqual(requests.map(({ pathname }) => pathname), ['/rest/v1/c2c_user_career_interests'])
 })
 
 test('requires a selected career only when there is no saved match or explicit selection', async () => {

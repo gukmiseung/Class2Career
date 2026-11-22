@@ -18,7 +18,7 @@ export default function LearningPage() {
     savingCourseIds, retryLoad, saveCourseStatus, careerInterest,
   } = useCourseRegistrations()
   const [activeTab, setActiveTab] = useState<LearningTab | null>('completed')
-  const interestedCareers = careerInterest.name ? [careerInterest.name] : []
+  const interestedCareers = careerInterest.items
   const careerCount = careerInterest.loading || careerInterest.error ? null : interestedCareers.length
   const [savedCourseId, setSavedCourseId] = useState<string | null>(null)
   const [expandedItems, setExpandedItems] = useState<Set<string>>(() => new Set())
@@ -174,11 +174,11 @@ export default function LearningPage() {
           : careerInterest.error ? <ErrorMessage message={careerInterest.error} onRetry={careerInterest.retry} />
           : interestedCareers.length > 0 ? (
             <ul className="learning-course-list">
-              {interestedCareers.map((careerName) => {
+              {interestedCareers.map(({ slug, name: careerName }) => {
                 const noteKey = `career:${careerName}`
                 const isExpanded = expandedItems.has(noteKey)
                 return (
-                  <li key={careerName}>
+                  <li key={slug}>
                     <button className="learning-item-toggle" type="button" aria-expanded={isExpanded} onClick={() => toggleItem(noteKey)}>
                       <span>{careerName}</span><span aria-hidden="true">{isExpanded ? '−' : '+'}</span>
                     </button>
@@ -186,7 +186,7 @@ export default function LearningPage() {
                       <p className="learning-course-description">관심 직무로 저장한 직무예요. 상세 페이지에서 관련 과목과 로드맵을 확인할 수 있어요.</p>
                       <div className="learning-item-actions">
                         <a className="learning-career-link" href={`#career-${encodeURIComponent(careerName)}`}>직무 상세 보기</a>
-                        <button className="learning-delete-button" type="button" onClick={() => setDeleteTarget({ type: 'career', id: careerName, name: careerName, noteKey })}>관심 직무 삭제</button>
+                        <button className="learning-delete-button" type="button" onClick={() => setDeleteTarget({ type: 'career', id: slug, name: careerName, noteKey })}>관심 직무 삭제</button>
                       </div>
                       <div className="learning-course-note">
                       <label htmlFor={`career-note-${encodeURIComponent(careerName)}`}>간단 메모</label>

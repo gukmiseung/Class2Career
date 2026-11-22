@@ -13,7 +13,7 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
   const career = careers.find((item) => item.title === careerName)
   const [interestActionError, setInterestActionError] = useState('')
   const { registrations, loading: registrationsLoading, error: registrationsError, retryLoad, careerInterest } = useCourseRegistrations()
-  const isInterested = careerInterest.name === careerName
+  const isInterested = careerInterest.items.some(({ slug }) => slug === career?.slug)
   const { catalog, loading: catalogLoading, error: catalogError, retry: retryCatalog } = useCourseCatalog()
   const [showLoginModal, setShowLoginModal] = useState(false)
   const { loading, user } = useAuth()
@@ -71,14 +71,14 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
               }
               setInterestActionError('')
               try {
-                if (isInterested) await careerInterest.remove(career.title)
+                if (isInterested) await careerInterest.remove(career.slug)
                 else await careerInterest.save(career.slug)
               } catch (error) {
                 setInterestActionError(error instanceof Error ? error.message : '관심 직무를 변경하지 못했어요.')
               }
             }}
           >
-            {careerInterest.saving ? '처리 중…' : isInterested ? '관심 직무 해제' : careerInterest.name ? '관심 직무 변경' : '관심 직무 등록'}
+            {careerInterest.saving ? '처리 중…' : isInterested ? '관심 직무 해제' : '관심 직무 등록'}
           </button>
         </div>
         {careerInterest.error && <ErrorMessage message={careerInterest.error} onRetry={careerInterest.retry} compact />}

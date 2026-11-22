@@ -20,7 +20,7 @@ function previewError(error: unknown): string {
   return 'AI 로드맵을 생성하지 못했습니다. 잠시 후 다시 시도해 주세요.'
 }
 
-function RoadmapGenerator() {
+function RoadmapGenerator({ careerSlug }: { careerSlug: string }) {
   const [state, setState] = useState<PreviewState>({ status: 'idle' })
   const inFlight = useRef(false)
 
@@ -31,7 +31,7 @@ function RoadmapGenerator() {
 
     try {
       const { data, error } = await supabase.functions.invoke<RoadmapResponse>('generate-roadmap', {
-        body: { careerId: 'backend-developer' },
+        body: { careerId: careerSlug },
       })
       if (error) throw error
       if (!Array.isArray(data?.steps) || !data.steps.length) throw new Error('Missing roadmap steps')
@@ -84,7 +84,7 @@ function RoadmapGenerator() {
   )
 }
 
-export default function AiRoadmapPreview() {
+export default function AiRoadmapPreview({ careerSlug }: { careerSlug: string }) {
   const access = getPersonalizedRoadmapAccess(useAuth())
   const [loginDestination, setLoginDestination] = useState<string | null>(null)
 
@@ -95,7 +95,7 @@ export default function AiRoadmapPreview() {
       {access.status === 'checking' ? (
         <p role="status">로그인 상태를 확인하고 있어요.</p>
       ) : access.status === 'ready' ? (
-        <RoadmapGenerator key={access.userId} />
+        <RoadmapGenerator key={`${access.userId}:${careerSlug}`} careerSlug={careerSlug} />
       ) : (
         <>
           <p>개발자 테스트 계정으로 로그인하면 사용할 수 있습니다.</p>

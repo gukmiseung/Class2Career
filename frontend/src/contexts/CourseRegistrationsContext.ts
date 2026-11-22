@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react'
 import type { CourseStatus, Registrations } from '../courseRegistrations'
+import type { CareerInterest } from '../careerInterests'
 
 type CourseRegistrationsContextValue = {
   registrations: Registrations
@@ -10,13 +11,13 @@ type CourseRegistrationsContextValue = {
   retryLoad: () => void
   saveCourseStatus: (courseId: number, status: CourseStatus | null) => Promise<boolean>
   careerInterest: {
-    name: string | null
+    items: readonly CareerInterest[]
     loading: boolean
     error: string | null
     saving: boolean
     retry: () => void
     save: (careerSlug: string) => Promise<boolean>
-    remove: (careerName: string) => Promise<boolean>
+    remove: (careerSlug: string) => Promise<boolean>
   }
 }
 

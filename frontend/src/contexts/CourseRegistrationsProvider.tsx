@@ -3,7 +3,7 @@ import { loadRegistrations, saveRegistration, type CourseStatus, type Registrati
 import { useAuth } from './AuthContext'
 import { CourseRegistrationsContext } from './CourseRegistrationsContext'
 import { supabase } from '../lib/supabase'
-import { loadCareerInterest, removeCareerInterest, saveCareerInterest } from '../careerInterests'
+import { loadCareerInterests, removeCareerInterest, saveCareerInterest, type CareerInterest } from '../careerInterests'
 
 type Session = {
   userId: string
@@ -22,31 +22,31 @@ const emptySavingCourseIds: ReadonlySet<number> = new Set()
 
 function useCareerInterest(session: Session | null, authLoading: boolean) {
   const activeMutations = useRef(new WeakSet<Session>())
-  const [state, setState] = useState<{ session: Session; name: string | null; error: string | null; saving: boolean } | null>(null)
+  const [state, setState] = useState<{ session: Session; items: CareerInterest[]; error: string | null; saving: boolean } | null>(null)
   const [attempt, setAttempt] = useState(0)
   const current = state?.session === session ? state : null
 
   useEffect(() => {
     if (!session) return
     const controller = new AbortController()
-    loadCareerInterest(supabase, session.userId, controller.signal).then(
-      (name) => {
-        if (!controller.signal.aborted) setState({ session, name, error: null, saving: false })
+    loadCareerInterests(supabase, session.userId, controller.signal).then(
+      (items) => {
+        if (!controller.signal.aborted) setState({ session, items, error: null, saving: false })
       },
       (error: Error) => {
-        if (!controller.signal.aborted) setState({ session, name: null, error: error.message, saving: false })
+        if (!controller.signal.aborted) setState({ session, items: [], error: error.message, saving: false })
       },
     )
     return () => controller.abort()
   }, [session, attempt])
 
-  async function change(action: (userId: string) => Promise<string | null>) {
+  async function change(action: (userId: string) => Promise<(items: CareerInterest[]) => CareerInterest[]>) {
     if (!session || !current || current.error || activeMutations.current.has(session)) return false
     activeMutations.current.add(session)
     setState((previous) => previous?.session === session ? { ...previous, saving: true } : previous)
     try {
-      const name = await action(session.userId)
-      setState((previous) => previous?.session === session ? { ...previous, name } : previous)
+      const updateItems = await action(session.userId)
+      setState((previous) => previous?.session === session ? { ...previous, items: updateItems(previous.items) } : previous)
       return true
     } finally {
       activeMutations.current.delete(session)
@@ -55,7 +55,7 @@ function useCareerInterest(session: Session | null, authLoading: boolean) {
   }
 
   return {
-    name: current?.name ?? null,
+    items: current?.items ?? [],
     loading: authLoading || Boolean(session && !current),
     error: current?.error ?? null,
     saving: current?.saving ?? false,
@@ -64,8 +64,14 @@ function useCareerInterest(session: Session | null, authLoading: boolean) {
       setState(null)
       setAttempt((value) => value + 1)
     },
-    save: (careerSlug: string) => change((userId) => saveCareerInterest(supabase, userId, careerSlug)),
-    remove: (careerName: string) => change((userId) => removeCareerInterest(supabase, userId, careerName)),
+    save: (careerSlug: string) => change(async (userId) => {
+      const item = await saveCareerInterest(supabase, userId, careerSlug)
+      return (items) => items.some(({ slug }) => slug === item.slug) ? items : [...items, item]
+    }),
+    remove: (careerSlug: string) => change(async (userId) => {
+      await removeCareerInterest(supabase, userId, careerSlug)
+      return (items) => items.filter(({ slug }) => slug !== careerSlug)
+    }),
   }
 }
 
