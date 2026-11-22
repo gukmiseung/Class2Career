@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { loadRegistrations, saveRegistration, type CourseStatus, type Registrations } from '../courseRegistrations'
 import { useAuth } from './AuthContext'
 import { CourseRegistrationsContext } from './CourseRegistrationsContext'
+import { supabase } from '../lib/supabase'
 
 type Session = {
   userId: string
@@ -33,7 +34,7 @@ export function CourseRegistrationsProvider({ children }: { children: ReactNode 
     if (!session) return
 
     const controller = new AbortController()
-    loadRegistrations(session.userId, controller.signal)
+    loadRegistrations(supabase, session.userId, controller.signal)
       .then((registrations) => {
         if (!controller.signal.aborted) {
           setState({ session, registrations, error: null, savingCourseIds: emptySavingCourseIds })
@@ -67,7 +68,7 @@ export function CourseRegistrationsProvider({ children }: { children: ReactNode 
       : previous)
 
     try {
-      await saveRegistration(session.userId, courseId, status)
+      await saveRegistration(supabase, session.userId, courseId, status)
       setState((previous) => {
         if (previous?.session !== session || !previous.registrations) return previous
 

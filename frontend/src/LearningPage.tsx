@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { careerInterestsKey, loadCareerInterests } from './careerInterests'
-import { statusLabels, type CourseStatus } from './courseRegistrations'
+import { courseStatuses, statusLabels, type CourseStatus } from './courseRegistrations'
 import { useCourseRegistrations } from './contexts/CourseRegistrationsContext'
 import { useCourseCatalog } from './useCourseCatalog'
 import { useProfile } from './useProfile'
@@ -37,8 +37,8 @@ export default function LearningPage() {
     const status = registrations[course.dbId]
     return status ? [{ ...course, status }] : []
   })
-  const completedCount = registeredCourses.filter(({ status }) => status === 'completed').length
-  const plannedCount = registeredCourses.filter(({ status }) => status === 'planned').length
+  const courseCounts = { completed: 0, in_progress: 0, planned: 0 }
+  for (const { status } of registeredCourses) courseCounts[status]++
   const visibleCourses = registeredCourses.filter(({ status }) => status === activeTab)
   const courseDataLoading = catalogLoading || registrationsLoading
   const courseDataError = catalogError ?? registrationsError
@@ -134,16 +134,13 @@ export default function LearningPage() {
       </header>
 
       <section className="learning-summary" aria-label="학습 현황 요약">
-        <article>
-          <h2>수강 완료 과목</h2>
-          <strong>{courseDataLoading || courseDataError ? '—' : `${completedCount}개`}</strong>
-          <p>등록한 과목 기준</p>
-        </article>
-        <article>
-          <h2>수강 예정 과목</h2>
-          <strong>{courseDataLoading || courseDataError ? '—' : `${plannedCount}개`}</strong>
-          <p>앞으로 배울 과목</p>
-        </article>
+        {courseStatuses.map((status) => (
+          <article key={status}>
+            <h2>{statusLabels[status]} 과목</h2>
+            <strong>{courseDataLoading || courseDataError ? '—' : `${courseCounts[status]}개`}</strong>
+            <p>등록한 과목 기준</p>
+          </article>
+        ))}
         <article>
           <h2>관심 직무</h2>
           <strong>{interestedCareers.length}개</strong>
@@ -153,20 +150,11 @@ export default function LearningPage() {
 
       <section className="learning-courses" aria-labelledby="learning-courses-title">
         <div className="learning-status-tabs" aria-label="학습 항목 선택">
-          <button
-            type="button"
-            aria-pressed={activeTab === 'completed'}
-            onClick={() => setActiveTab('completed')}
-          >
-            수강 완료 과목
-          </button>
-          <button
-            type="button"
-            aria-pressed={activeTab === 'planned'}
-            onClick={() => setActiveTab('planned')}
-          >
-            수강 예정 과목
-          </button>
+          {courseStatuses.map((status) => (
+            <button key={status} type="button" aria-pressed={activeTab === status} onClick={() => setActiveTab(status)}>
+              {statusLabels[status]} 과목
+            </button>
+          ))}
           <button
             type="button"
             aria-pressed={activeTab === 'career'}

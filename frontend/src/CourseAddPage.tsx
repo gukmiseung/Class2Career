@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useRef, useState, type FormEvent } from 'react'
-import type { CourseStatus } from './courseRegistrations'
+import { courseStatuses, statusLabels, type CourseStatus } from './courseRegistrations'
 import { useCourseRegistrations } from './contexts/CourseRegistrationsContext'
 import {
   courseYears,
@@ -127,9 +127,10 @@ export default function CourseAddPage() {
   }
 
   async function registerCourse(courseId: number, status: CourseStatus) {
+    if (registrations[courseId] === status) return
     setSaveError('')
     try {
-      await saveCourseStatus(courseId, registrations[courseId] === status ? null : status)
+      await saveCourseStatus(courseId, status)
     } catch {
       setSaveError('수강 상태를 변경하지 못했어요. 다시 시도해 주세요.')
     }
@@ -140,7 +141,7 @@ export default function CourseAddPage() {
       <div className="course-page-content">
         <header className="course-page-heading">
           <h1 ref={titleRef} tabIndex={-1}>나의 과목 관리</h1>
-          <p>수강한 과목과 앞으로 수강할 과목을 등록해 나의 학습 현황을 관리해 보세요.</p>
+          <p>수강 완료·진행 중·예정 과목을 등록해 나의 학습 현황을 관리해 보세요.</p>
         </header>
 
         <form className="course-search" role="search" onSubmit={handleSearch}>
@@ -302,22 +303,17 @@ export default function CourseAddPage() {
                         <p className="course-card-description">{course.description}</p>
                       </div>
                       <div className="course-register-actions" aria-busy={saving}>
-                        <button
-                          type="button"
-                          aria-pressed={status === 'completed'}
-                          disabled={!registrationsReady || saving}
-                          onClick={() => registerCourse(course.dbId, 'completed')}
-                        >
-                          수강 완료
-                        </button>
-                        <button
-                          type="button"
-                          aria-pressed={status === 'planned'}
-                          disabled={!registrationsReady || saving}
-                          onClick={() => registerCourse(course.dbId, 'planned')}
-                        >
-                          수강 예정
-                        </button>
+                        {courseStatuses.map((option) => (
+                          <button
+                            key={option}
+                            type="button"
+                            aria-pressed={status === option}
+                            disabled={!registrationsReady || saving}
+                            onClick={() => registerCourse(course.dbId, option)}
+                          >
+                            {statusLabels[option]}
+                          </button>
+                        ))}
                       </div>
                     </li>
                   )
