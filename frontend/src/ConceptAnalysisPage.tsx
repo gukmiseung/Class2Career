@@ -3,6 +3,7 @@ import ConceptHeader from './ConceptHeader'
 import { getConceptAnalysis } from './conceptAnalysis'
 import type { CourseConcept } from './courseConcepts'
 import './ConceptAnalysisPage.css'
+import { useConceptExamples } from './useConceptExamples'
 
 type ConceptAnalysisPageProps = {
   courseName: string
@@ -21,8 +22,12 @@ const conceptExplanations: Record<string, string> = {
 export default function ConceptAnalysisPage({ courseName, concepts, selectionHref, recommendationHref }: ConceptAnalysisPageProps) {
   const titleRef = useRef<HTMLHeadingElement>(null)
   const analyses = concepts.map((concept) => ({ concept, analysis: getConceptAnalysis(concept) }))
-  // Gemini 연결 시 이 배열만 API 응답으로 교체하면 카드 UI는 그대로 재사용할 수 있습니다.
-  const examples = analyses[0].analysis.examples
+  const generated = useConceptExamples(concepts.map(concept => concept.id))
+  const examples = generated.examples ?? Array.from({ length: 3 }, () => ({
+    title: generated.error ? '사례를 불러오지 못했어요' : '실무 활용 사례 작성 중',
+    description: generated.error ?? '선택한 개념에 맞는 구체적인 활용 사례를 작성하고 있어요.',
+    topic: generated.error ? '잠시 후 다시 시도' : 'AI 생성 중',
+  }))
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
@@ -56,9 +61,9 @@ export default function ConceptAnalysisPage({ courseName, concepts, selectionHre
 
         <section className="analysis-examples" aria-labelledby="analysis-examples-title">
           <h2 id="analysis-examples-title">실무 활용 사례</h2>
-          <ol className="analysis-example-grid">
+          <ol className="analysis-example-grid" aria-busy={!generated.examples && !generated.error} aria-live="polite">
             {examples.map(({ title, description, topic }, index) => (
-              <li className="analysis-example" key={title}>
+              <li className="analysis-example" key={index}>
                 <span className="analysis-example-number">{String(index + 1).padStart(2, '0')}</span>
                 <h3>{title}</h3><p>{description}</p><strong># {topic}</strong>
               </li>
