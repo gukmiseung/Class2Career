@@ -114,6 +114,58 @@ function invoke(load: RoadmapDependencies['load'], generate: RoadmapDependencies
   }))
 }
 
+// Slugs and link counts from the development catalog audit; courses and concepts below are synthetic.
+const auditedCareers = [
+  ['frontend-developer', 6], ['backend-developer', 7], ['ai-engineer', 6],
+  ['data-analyst', 6], ['ui-ux-designer', 5], ['cloud-engineer', 6],
+  ['mobile-app-developer', 4], ['game-programmer', 4], ['systems-software-developer', 4],
+  ['embedded-software-developer', 4], ['iot-developer', 4], ['qa-engineer', 4],
+  ['xr-developer', 4], ['blockchain-developer', 4], ['data-engineer', 4],
+  ['data-scientist', 4], ['database-developer', 4], ['nlp-engineer', 4],
+  ['computer-vision-engineer', 4], ['game-designer', 3], ['web-service-planner', 3],
+  ['network-engineer', 4], ['systems-architect', 4], ['devops-engineer', 4],
+  ['systems-administrator', 4], ['security-analyst', 4], ['security-engineer', 4],
+  ['digital-forensics-analyst', 4],
+] as const
+
+for (const [slug, courseCount] of auditedCareers) {
+  test(`loads ${slug} and recommends only its unfinished linked courses`, async () => {
+    const selected = { slug, title: `직무 ${slug}`, description: '테스트 직무 설명' }
+    const linked = Array.from({ length: courseCount }, (_, index) => ({
+      ...structures,
+      id: index + 1,
+      name: `과목 ${index + 1}`,
+      c2c_course_concepts: [{ id: index + 100, name: `개념 ${index + 1}` }],
+    }))
+    const { load, requests } = fixture({
+      c2c_careers: [selected],
+      c2c_career_courses: linked.map((course) => ({ c2c_courses: course })),
+      c2c_user_courses: [{ status: 'completed', c2c_courses: linked[0] }],
+    })
+    const response = await invoke(load, async (input, candidates) => {
+      assert.equal(input.targetCareer.name, selected.title)
+      assert.deepEqual(input.skillGaps.map(({ name }) => name), linked.slice(1).map((course) => course.c2c_course_concepts[0].name))
+      assert.deepEqual(candidates.map(({ candidateRef }) => candidateRef), linked.slice(1).map(({ id }) => `c${id}`))
+      return { steps: [{ title: '학습 단계', learningGoals: ['개념 정리'], recommendedCourses: [], practiceProjects: [] }] }
+    }, { careerId: slug })
+
+    assert.equal(response.status, 200)
+    assert.equal(requests.find(({ pathname }) => pathname.endsWith('/c2c_careers'))?.searchParams.get('slug'), `eq.${slug}`)
+    assert.equal(requests.find(({ pathname }) => pathname.endsWith('/c2c_career_courses'))?.searchParams.get('career_slug'), `eq.${slug}`)
+  })
+}
+
+test('returns NO_COURSE_CANDIDATES without generation once all linked courses are completed', async () => {
+  const { load } = fixture({
+    c2c_user_courses: [structures, database].map((course) => ({ status: 'completed', c2c_courses: course })),
+  })
+  let calls = 0
+  const response = await invoke(load, async () => { calls++; return null }, { careerId: backend.slug })
+  assert.equal(response.status, 409)
+  assert.equal((await response.json()).code, 'NO_COURSE_CANDIDATES')
+  assert.equal(calls, 0)
+})
+
 test('passes the catalog-derived gaps and allowed recommendations into the existing generator', async () => {
   const { load } = fixture({ c2c_user_courses: [{ status: 'completed', c2c_courses: structures }] })
   const response = await invoke(load, async (input, candidates) => {

@@ -94,7 +94,7 @@ export default function RoadmapPage({ careerName }: { careerName: string }) {
         ) : <p>이 직무에 연결된 추천 과목이 없어요.</p>)}
       </section>
 
-      {import.meta.env.VITE_ENABLE_AI_ROADMAP === 'true' && careerName === '백엔드 개발자' && (
+      {import.meta.env.VITE_ENABLE_AI_ROADMAP === 'true' && (
         <AiRoadmapPreview careerSlug={career.slug} />
       )}
     </main>
