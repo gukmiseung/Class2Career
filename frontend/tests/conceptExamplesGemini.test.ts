@@ -61,3 +61,44 @@ test('reports a clear rate limit error when every model is limited', async () =>
   const request: typeof fetch = async () => new Response(null, { status: 429 })
   await assert.rejects(generateExamples([], 'test-key', 'gemini-2.5-flash', request), { code: 'GEMINI_RATE_LIMIT' })
 })
+
+test('recovers from a first 503 with a fresh timeout signal', async () => {
+  const signals: AbortSignal[] = []
+  const request: typeof fetch = async (_url, options) => {
+    assert.ok(options?.signal)
+    assert.equal(options.signal.aborted, false)
+    signals.push(options.signal)
+    if (signals.length === 1) return new Response(null, { status: 503 })
+    return Response.json({ candidates: [{ finishReason: 'STOP', content: { parts: [{ text: JSON.stringify({ examples }) }] } }] })
+  }
+  assert.deepEqual(await generateExamples([], 'test-key', 'gemini-2.5-flash', request), { examples })
+  assert.equal(signals.length, 2)
+  assert.notEqual(signals[0], signals[1])
+})
+
+test('stops after two transient retries and reports the final provider status', async () => {
+  const statuses = [500, 502, 504]
+  let calls = 0
+  const request: typeof fetch = async () => new Response(null, { status: statuses[calls++] })
+  await assert.rejects(generateExamples([], 'test-key', 'gemini-2.5-flash', request), {
+    code: 'GEMINI_HTTP_504',
+    message: '실무 사례 생성 서비스가 일시적으로 지연되고 있어요. 잠시 후 다시 생성해 주세요.',
+  })
+  assert.equal(calls, 3)
+})
+
+test('honors a short 429 hint and retries transient failures on the fallback model', async () => {
+  const urls: string[] = []
+  const request: typeof fetch = async url => {
+    urls.push(String(url))
+    if (urls.length === 1) return Response.json({ error: { details: [{ retryDelay: '0.001s' }] } }, { status: 429 })
+    if (urls.length === 2) return new Response(null, { status: 429 })
+    if (urls.length === 3) return new Response(null, { status: 503 })
+    return Response.json({ candidates: [{ finishReason: 'STOP', content: { parts: [{ text: JSON.stringify({ examples }) }] } }] })
+  }
+  assert.deepEqual(await generateExamples([], 'test-key', 'gemini-2.5-flash', request), { examples })
+  assert.equal(urls.length, 4)
+  assert.equal(urls[0], urls[1])
+  assert.ok(urls[2].endsWith('/models/gemini-2.5-flash-lite:generateContent'))
+  assert.equal(urls[2], urls[3])
+})

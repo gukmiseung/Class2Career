@@ -18,14 +18,29 @@ async function loadExamples(key: string): Promise<Example[]> {
     if (!Array.isArray(data?.examples) || data.examples.length !== 3 || data.examples.some((item: Example) => !item || ['title', 'description', 'topic'].some(field => typeof item[field as keyof Example] !== 'string'))) throw new Error('생성된 사례의 형식을 확인하지 못했습니다.')
     return data.examples as Example[]
   })()
-  if (requests.size >= 50) requests.delete(requests.keys().next().value!)
-  requests.set(cacheKey, { expires: Date.now() + 300000, result })
-  try { return await result } catch (error) { requests.delete(cacheKey); throw error }
+  const entry = { expires: Infinity, result }
+  requests.set(cacheKey, entry)
+  try {
+    const examples = await result
+    entry.expires = Date.now() + 300000
+    if (requests.size > 50) {
+      for (const [storedKey, stored] of requests) {
+        if (stored.expires === Infinity) continue
+        requests.delete(storedKey)
+        if (requests.size <= 50) break
+      }
+    }
+    return examples
+  } catch (error) {
+    requests.delete(cacheKey)
+    throw error
+  }
 }
 export function useConceptExamples(ids: readonly string[]) {
   const key = [...ids].sort().join(',')
   const [state, setState] = useState<{ key: string; examples?: Example[]; error?: string }>({ key: '' })
   const [attempt, setAttempt] = useState(0)
+  if (state.key !== key) setState({ key })
   useEffect(() => {
     let active = true
     async function load() {
@@ -36,8 +51,11 @@ export function useConceptExamples(ids: readonly string[]) {
         if (active) setState({ key, error: error instanceof Error ? error.message : '실무 사례를 불러오지 못했습니다.' })
       }
     }
-    if (key) void load()
-    return () => { active = false }
+    const timer = key ? setTimeout(() => void load(), 250) : undefined
+    return () => {
+      active = false
+      clearTimeout(timer)
+    }
   }, [key, attempt])
   const retry = () => {
     setState({ key })

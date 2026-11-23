@@ -2,7 +2,7 @@ import { GenerationError } from './errors.ts'
 import { createAuthenticator } from '../_shared/roadmap/auth.ts'
 import { createHandler } from './handler.ts'
 import { generateExamples } from './gemini.ts'
-import { cacheKey, createExampleCache } from './cache.ts'
+import { cacheKey, createExampleCache, getOrGenerateExamples } from './cache.ts'
 import { validateExamples } from './handler.ts'
 
 function configuration() {
@@ -32,13 +32,11 @@ Deno.serve(createHandler({
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     const cache = serviceKey ? createExampleCache(url, serviceKey) : null
     const hash = await cacheKey(concepts)
-    const cached = await cache?.read(hash).catch(() => null)
-    if (cached) return { examples: cached }
-    const key = Deno.env.get('GEMINI_API_KEY')?.trim()
-    if (!key) throw new GenerationError('GEMINI_KEY_MISSING', 'AI 서비스 키가 서버에 설정되지 않았습니다.')
-    const generated = await generateExamples(concepts, key, model)
-    const examples = validateExamples(generated)
-    await cache?.write(hash, ids, examples, model).catch(() => {})
+    const examples = await getOrGenerateExamples(cache, hash, ids, model, async () => {
+      const key = Deno.env.get('GEMINI_API_KEY')?.trim()
+      if (!key) throw new GenerationError('GEMINI_KEY_MISSING', 'AI 서비스 키가 서버에 설정되지 않았습니다.')
+      return validateExamples(await generateExamples(concepts, key, model))
+    })
     return { examples }
   },
 }))
