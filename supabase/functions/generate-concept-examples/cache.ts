@@ -36,3 +36,30 @@ export function createExampleCache(url: string, serviceKey: string, request: typ
     },
   }
 }
+
+const pendingExamples = new Map<string, Promise<Example[]>>()
+
+export async function getOrGenerateExamples(
+  cache: ReturnType<typeof createExampleCache> | null,
+  hash: string,
+  ids: string[],
+  model: string,
+  generate: () => Promise<Example[]>,
+): Promise<Example[]> {
+  const pending = pendingExamples.get(hash)
+  if (pending) return pending
+
+  const result = (async () => {
+    const cached = await cache?.read(hash).catch(() => null)
+    if (cached) return cached
+    const examples = await generate()
+    await cache?.write(hash, ids, examples, model).catch(() => {})
+    return examples
+  })()
+  pendingExamples.set(hash, result)
+  try {
+    return await result
+  } finally {
+    pendingExamples.delete(hash)
+  }
+}
