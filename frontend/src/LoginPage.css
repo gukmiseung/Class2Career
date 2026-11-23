@@ -63,56 +63,13 @@
 
 .login-card input#login-password { margin-bottom: 0; }
 
-.login-options {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin: 14px 0 28px;
-}
-
-.login-card .login-remember {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  margin: 0;
-  color: #4d5b72;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.login-card .login-remember input {
-  appearance: none;
-  width: 23px;
-  min-height: 23px;
-  height: 23px;
-  flex: 0 0 23px;
-  margin: 0;
-  padding: 0;
-  border: 1px solid #b8c4d7;
-  border-radius: 5px;
-  background: #fff;
-}
-
-.login-card .login-remember input:checked {
-  border-color: #485bdd;
-  background-color: #485bdd;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='m5 10 3 3 7-7' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-position: center;
-  background-size: 17px;
-  background-repeat: no-repeat;
-}
-
 .login-forgot {
-  margin: 0;
+  display: block;
+  width: fit-content;
+  margin: 14px 0 28px auto;
   color: #485bdd;
   font-size: 14px;
-  text-align: right;
   text-decoration: none;
-}
-
-@media (max-width: 460px) {
-  .login-options { align-items: flex-start; flex-direction: column; gap: 12px; }
 }
 
 .login-signup {

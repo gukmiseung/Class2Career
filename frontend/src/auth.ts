@@ -67,22 +67,3 @@ export async function updatePassword(
     password: newPassword,
   })
 }
-
-const savedEmailKey = 'class2career.saved-email'
-
-export function getSavedEmail() {
-  try {
-    return window.localStorage.getItem(savedEmailKey) ?? ''
-  } catch {
-    return ''
-  }
-}
-
-export function saveEmail(email: string | null) {
-  try {
-    if (email) window.localStorage.setItem(savedEmailKey, email)
-    else window.localStorage.removeItem(savedEmailKey)
-  } catch {
-    // 저장소를 사용할 수 없는 환경에서는 이메일을 저장하지 않습니다.
-  }
-}
