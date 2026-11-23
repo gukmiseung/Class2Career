@@ -255,6 +255,7 @@ export default function LearningPage({ userId }: { userId: string | null }) {
           <ul className="learning-course-list">
             {visibleCourses.map((course) => {
               const isExpanded = expandedItems.has(course.id)
+              const isSavingStatus = savingCourseIds.has(course.dbId)
               return (
               <li key={course.id}>
                 <button className="learning-item-toggle" type="button" aria-expanded={isExpanded} onClick={() => toggleItem(course.id)}>
@@ -272,23 +273,33 @@ export default function LearningPage({ userId }: { userId: string | null }) {
                     <button
                       className="learning-delete-button"
                       type="button"
-                      disabled={savingCourseIds.has(course.dbId)}
+                      disabled={isSavingStatus}
                       onClick={() => setDeleteTarget({ type: 'course', courseId: course.dbId, id: course.id, name: course.name, noteKey: course.id })}
                     >
                       과목 삭제
                     </button>
                   </div>
-                  <div className="learning-course-note">
-                    <label htmlFor={`course-status-${course.id}`}>수강 상태</label>
-                    <select
-                      id={`course-status-${course.id}`}
-                      value={course.status}
-                      disabled={savingCourseIds.has(course.dbId)}
-                      onChange={(event) => void changeCourseStatus(course.id, course.dbId, course.status, event.currentTarget.value)}
+                  <div className="learning-course-status">
+                    <p id={`course-status-${course.id}`}>수강 상태</p>
+                    <div
+                      className="learning-course-status-options"
+                      role="group"
+                      aria-labelledby={`course-status-${course.id}`}
+                      aria-busy={isSavingStatus}
                     >
-                      {courseStatuses.map((status) => <option key={status} value={status}>{statusLabels[status]}</option>)}
-                    </select>
-                    {statusErrors[course.dbId] && <p role="alert">{statusErrors[course.dbId]}</p>}
+                      {courseStatuses.map((status) => (
+                        <button
+                          key={status}
+                          type="button"
+                          aria-pressed={course.status === status}
+                          disabled={isSavingStatus}
+                          onClick={() => void changeCourseStatus(course.id, course.dbId, course.status, status)}
+                        >
+                          {statusLabels[status]}
+                        </button>
+                      ))}
+                    </div>
+                    {statusErrors[course.dbId] && <p className="learning-course-status-error" role="alert">{statusErrors[course.dbId]}</p>}
                   </div>
                   <div className="learning-course-note">
                   <label htmlFor={`course-note-${course.id}`}>간단 메모</label>

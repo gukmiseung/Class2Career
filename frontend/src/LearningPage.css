@@ -65,6 +65,40 @@
 .learning-delete-button { margin-top: 14px; padding: 0; border: 0; color: #c23e4a; background: transparent; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .learning-delete-button:hover { text-decoration: underline; text-underline-offset: 3px; }
 
+.learning-course-status { margin-top: 20px; }
+.learning-course-status > p { margin: 0 0 8px; color: #43526a; font-size: 14px; font-weight: 700; }
+
+.learning-course-status-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: fit-content;
+  max-width: 100%;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid #dce5f4;
+  border-radius: 12px;
+  background: #f1f5fc;
+}
+
+.learning-course-status-options button {
+  min-height: 44px;
+  padding: 4px clamp(6px, 2vw, 14px);
+  border: 0;
+  border-radius: 8px;
+  color: #43526a;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.learning-course-status-options button[aria-pressed='false']:enabled:hover { color: #1f56d1; background: #e4edff; }
+.learning-course-status-options button[aria-pressed='true'] { color: #fff; background: #2865ec; box-shadow: 0 1px 3px #204a9e33; }
+.learning-course-status-options button:focus-visible { outline: 2px solid #1f56d1; outline-offset: 1px; }
+.learning-course-status-options button:disabled { opacity: .65; cursor: wait; }
+.learning-course-status > .learning-course-status-error { margin: 8px 0 0; color: #aa3939; font-weight: 500; }
+
 .learning-course-note { display: block; margin-top: 20px; }
 .learning-course-note > label { display: block; margin-bottom: 8px; color: #43526a; font-size: 14px; font-weight: 700; }
 .learning-note-guide { margin: -1px 0 9px; color: #7a879b; font-size: 13px; }
