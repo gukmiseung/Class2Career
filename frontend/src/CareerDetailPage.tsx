@@ -63,10 +63,10 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
             className="career-interest-button"
             type="button"
             aria-pressed={isInterested}
-            disabled={careerInterest.loading || careerInterest.saving || Boolean(careerInterest.error)}
+            disabled={loading || careerInterest.loading || careerInterest.saving || Boolean(careerInterest.error)}
             onClick={async () => {
               if (!user) {
-                if (!loading) setShowLoginModal(true)
+                setShowLoginModal(true)
                 return
               }
               setInterestActionError('')

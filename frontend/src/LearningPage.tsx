@@ -101,7 +101,7 @@ export default function LearningPage({ userId }: { userId: string | null }) {
   }
 
   async function confirmDelete() {
-    if (!deleteTarget || deleting) return
+    if (!userId || !deleteTarget || deleting) return
     setDeleteError('')
 
     if (deleteTarget.type === 'course') {
@@ -115,7 +115,7 @@ export default function LearningPage({ userId }: { userId: string | null }) {
       try {
         if (!await careerInterest.remove(deleteTarget.id)) return
       } catch (error) {
-        setDeleteError(error instanceof Error ? error.message : '관심 직무를 삭제하지 못했어요.')
+        setDeleteError(error instanceof Error ? error.message : '관심 직무를 삭제하지 못했어요. 다시 시도해 주세요.')
         return
       }
     }

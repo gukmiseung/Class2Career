@@ -37,7 +37,7 @@ export async function saveCareerInterest(client: SupabaseClient, userId: string,
 export async function removeCareerInterest(client: SupabaseClient, userId: string, careerSlug: string) {
   const result = await client.from(table).delete().eq('user_id', userId).eq('career_slug', careerSlug)
     .select('career_slug').maybeSingle<{ career_slug: string }>()
-  checkRequest(result, '관심 직무를 삭제하지 못했어요.')
+  checkRequest(result, '관심 직무를 삭제하지 못했어요. 다시 시도해 주세요.')
   if (result.data) return
 
   const remaining = await client.from(table).select('career_slug').eq('user_id', userId).eq('career_slug', careerSlug).maybeSingle()
