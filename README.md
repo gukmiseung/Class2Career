@@ -22,9 +22,8 @@
 5. [차별점](#-차별점)
 6. [기술 스택](#-기술-스택)
 7. [프로젝트 구조](#-프로젝트-구조)
-8. [로컬에서 실행하기](#-로컬에서-실행하기)
-9. [향후 계획](#-향후-계획)
-10. [팀 소개](#-팀-소개)
+8. [향후 계획](#-향후-계획)
+9. [팀 소개](#-팀-소개)
 
 ---
 
@@ -167,79 +166,6 @@ Class2Career
     │   └── generate-roadmap/            # 직무별 학습 로드맵 생성 (OpenAI)
     └── seed-*.sql             # 과목 · 개념 · 직무 시드 데이터
 ```
-
----
-
-## 💻 로컬에서 실행하기
-
-> 서비스는 이미 배포되어 있어 [링크](https://class2-career-five.vercel.app)로 바로 체험할 수 있습니다. 코드를 직접 실행해 보고 싶은 경우에만 펼쳐 보세요.
-
-<details>
-<summary><b>실행 방법 펼치기</b></summary>
-
-### 준비물
-
-- Node.js 20.19 이상
-- [Supabase](https://supabase.com) 프로젝트 (직접 만든 프로젝트 사용)
-
-### 1. 저장소 받기
-
-```bash
-git clone https://github.com/gukmiseung/Class2Career.git
-cd Class2Career/frontend
-npm install
-```
-
-### 2. 환경 변수 설정
-
-`frontend/.env.local` 파일을 만들고 본인 Supabase 프로젝트 값을 넣습니다.
-
-```env
-VITE_SUPABASE_URL=https://<your-project-ref>.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=<your-publishable-key>
-```
-
-### 3. 개발 서버 실행
-
-```bash
-npm run dev
-```
-
-브라우저에서 터미널에 표시된 주소(기본 `http://localhost:5173`)로 접속합니다.
-
-### 빌드
-
-```bash
-npm run build     # 타입 검사 + 프로덕션 빌드
-npm run preview   # 빌드 결과 미리보기
-```
-
-### (선택) 백엔드 직접 구성하기
-
-AI 기능까지 직접 띄우려면 Supabase CLI가 필요합니다.
-
-1. `supabase/migrations`의 SQL을 프로젝트에 적용합니다. (`supabase db push`)
-2. `supabase/seed-*.sql`로 과목 · 개념 · 직무 데이터를 채웁니다.
-3. Edge Function Secrets에 키를 등록합니다.
-
-   | Secret | 용도 |
-   | --- | --- |
-   | `GEMINI_API_KEY` | 개념 활용 사례 생성 |
-   | `OPENAI_API_KEY` | 학습 로드맵 생성 |
-
-4. 함수를 배포합니다.
-
-   ```bash
-   supabase functions deploy generate-concept-examples --project-ref <your-project-ref>
-   supabase functions deploy generate-roadmap --project-ref <your-project-ref>
-   ```
-
-자세한 내용은 각 함수 폴더의 README를 참고하세요.
-([개념 활용 사례](supabase/functions/generate-concept-examples/README.md) · [AI 로드맵](supabase/functions/generate-roadmap/README.md))
-
-> ⚠️ API 키는 절대 `VITE_` 변수나 저장소에 넣지 마세요.
-
-</details>
 
 ---
 
