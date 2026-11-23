@@ -21,17 +21,18 @@ export function createExampleCache(url: string, serviceKey: string, request: typ
       query.searchParams.set('cache_key', `eq.${key}`)
       query.searchParams.set('limit', '1')
       const response = await request(query, { headers, signal: AbortSignal.timeout(5000) })
-      if (!response.ok) return null
+      if (!response.ok) { console.error(JSON.stringify({ event: 'concept_examples_cache_read_failed', status: response.status })); return null }
       const rows = await response.json().catch(() => null)
       try { return validateExamples({ examples: rows?.[0]?.examples }) } catch { return null }
     },
     async write(key: string, conceptIds: string[], examples: Example[], model: string): Promise<void> {
-      await request(endpoint, {
+      const response = await request(endpoint, {
         method: 'POST',
         headers: { ...headers, Prefer: 'resolution=merge-duplicates,return=minimal' },
         body: JSON.stringify({ cache_key: key, concept_ids: conceptIds.map(Number), examples, model }),
         signal: AbortSignal.timeout(5000),
       })
+      if (!response.ok) console.error(JSON.stringify({ event: 'concept_examples_cache_write_failed', status: response.status }))
     },
   }
 }
