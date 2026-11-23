@@ -53,20 +53,23 @@ export default function ConceptAnalysisPage({ courseName, concepts, selectionHre
 
         <section className="analysis-examples" aria-labelledby="analysis-examples-title">
           <h2 id="analysis-examples-title">실무 활용 사례</h2>
-          {generated.error ? (
-            <div role="alert">
-              <p>{generated.error}</p>
-              <button type="button" onClick={generated.retry}>다시 생성</button>
-            </div>
-          ) : !generated.examples && <p role="status">선택한 개념의 실무 사례를 생성하고 있어요.</p>}
-          {generated.examples && <ol className="analysis-example-grid" aria-live="polite">
-            {generated.examples.map(({ title, description, topic }, index) => (
-              <li className="analysis-example" key={index}>
-                <span className="analysis-example-number">{String(index + 1).padStart(2, '0')}</span>
-                <h3>{title}</h3><p>{description}</p><strong># {topic}</strong>
-              </li>
-            ))}
-          </ol>}
+          <ol className="analysis-example-grid" aria-live="polite" aria-busy={!generated.examples && !generated.error}>
+            {[0, 1, 2].map(index => {
+              const example = generated.examples?.[index]
+              return (
+                <li className="analysis-example" key={index}>
+                  <span className="analysis-example-number">{String(index + 1).padStart(2, '0')}</span>
+                  {example ? (
+                    <>
+                      <h3>{example.title}</h3><p>{example.description}</p><strong># {example.topic}</strong>
+                    </>
+                  ) : generated.error ? (
+                    index === 0 && <div role="alert"><p>{generated.error}</p><button type="button" onClick={generated.retry}>다시 생성</button></div>
+                  ) : <p>실무 활용 사례 생성 중…</p>}
+                </li>
+              )
+            })}
+          </ol>
         </section>
 
         <section className="analysis-next" aria-label="관련 직무와 다음 학습 추천">
