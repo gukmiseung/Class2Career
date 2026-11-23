@@ -1,15 +1,20 @@
 import { useEffect, useRef } from 'react'
+import { EmptyState, ErrorMessage, Loading } from './AsyncState'
 import ConceptHeader from './ConceptHeader'
 import type { CourseConcept } from './courseConcepts'
-import './ConceptAnalysisPage.css'
+import { useCareerCatalog } from './useCareerCatalog'
 import { useConceptExamples } from './useConceptExamples'
+import './ConceptAnalysisPage.css'
 
 type ConceptAnalysisPageProps = {
+  courseId: number
   courseName: string
+  courseCategories: readonly string[]
   concepts: readonly CourseConcept[]
   selectionHref: string
-  recommendationHref: string
 }
+
+const examplesOnlyCategories = new Set(['교양', '교직', '기본소양', '일반선택'])
 
 const conceptExplanations: Record<string, string> = {
   lists: '배열은 데이터를 연속된 공간에 저장해 빠르게 조회하고, 연결 리스트는 각 데이터를 연결해 삽입과 삭제를 유연하게 처리해요. 상품 목록이나 최근 사용 기록처럼 순서가 중요한 서비스에서 활용돼요.',
@@ -18,9 +23,11 @@ const conceptExplanations: Record<string, string> = {
   'sorting-search': '정렬은 데이터를 기준에 맞게 순서대로 배치하고, 탐색은 필요한 데이터를 효율적으로 찾는 방법이에요. 상품 정렬이나 로그 검색처럼 많은 정보에서 원하는 결과를 빠르게 보여줄 때 활용돼요.',
 }
 
-export default function ConceptAnalysisPage({ courseName, concepts, selectionHref, recommendationHref }: ConceptAnalysisPageProps) {
+export default function ConceptAnalysisPage({ courseId, courseName, courseCategories, concepts, selectionHref }: ConceptAnalysisPageProps) {
   const titleRef = useRef<HTMLHeadingElement>(null)
   const generated = useConceptExamples(concepts.map(concept => concept.id))
+  const showRelatedCareers = !courseCategories.some((category) => examplesOnlyCategories.has(category))
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
     titleRef.current?.focus({ preventScroll: true })
@@ -72,13 +79,35 @@ export default function ConceptAnalysisPage({ courseName, concepts, selectionHre
           </ol>
         </section>
 
-        <section className="analysis-next" aria-label="관련 직무와 다음 학습 추천">
-          <div><h2>이 과목과 연결되는 직무가 궁금하다면?</h2><p>관련 직무와 이어서 살펴볼 학습 내용을 확인할 수 있어요.</p></div>
-          <a className="analysis-next-link" href={recommendationHref}>
-            관련 직무 · 다음 학습 추천 보기 <span aria-hidden="true">→</span>
-          </a>
-        </section>
+        {showRelatedCareers && <RelatedCareers courseId={courseId} courseName={courseName} />}
       </main>
     </div>
+  )
+}
+
+function RelatedCareers({ courseId, courseName }: { courseId: number; courseName: string }) {
+  const { careers, loading, error, retry } = useCareerCatalog()
+  const relatedCareers = careers.filter(({ courses }) => courses.some(({ course_id }) => course_id === courseId))
+
+  return (
+    <section className="analysis-careers" aria-labelledby="analysis-careers-title">
+      <h2 id="analysis-careers-title">{courseName} 관련 직무</h2>
+      {loading ? (
+        <Loading message="관련 직무를 불러오고 있어요." compact />
+      ) : error ? (
+        <ErrorMessage message={error} onRetry={retry} />
+      ) : relatedCareers.length === 0 ? (
+        <EmptyState title="아직 연결된 직무가 없어요" message={`${courseName}에 연결된 직무가 등록되면 여기에 표시돼요.`} />
+      ) : (
+        <ul className="analysis-career-grid">
+          {relatedCareers.map(({ slug, title, description }) => (
+            <li className="analysis-career-card" key={slug}>
+              <h3>{title}</h3>
+              <p>{description}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   )
 }

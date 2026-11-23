@@ -7,7 +7,6 @@ import CareerDetailPage from './CareerDetailPage'
 import CareerConceptPage from './CareerConceptPage'
 import RoadmapPage from './RoadmapPage'
 import ConceptAnalysisPage from './ConceptAnalysisPage'
-import ConceptRecommendationPage from './ConceptRecommendationPage'
 import ConceptSelectionPage from './ConceptSelectionPage'
 import CourseAddPage from './CourseAddPage'
 import LoadingPage from './LoadingPage'
@@ -139,10 +138,10 @@ function App() {
 
     const conceptRoute = '#explore/concepts/'
     if (hash.startsWith(conceptRoute)) {
-      const [path, query] = hash.slice(conceptRoute.length).split('?', 2)
-      const [courseId] = path.split('/', 1)
+      const [routePath, query] = hash.slice(conceptRoute.length).split('?', 2)
+      const [courseId] = routePath.split('/', 1)
       const analysisPath = `${courseId}/analysis`
-      const recommendationPath = `${courseId}/recommendations`
+      const path = routePath === `${courseId}/recommendations` ? analysisPath : routePath
       if (catalogLoading) return <LoadingPage message="과목 정보를 불러오고 있어요." />
       if (catalogError) return <ErrorMessage message={catalogError} onRetry={retryCatalog} retrying={catalogLoading} />
       if (!catalog || catalog.courses.length === 0) return <EmptyState message="등록된 교과목이 아직 없습니다." />
@@ -167,7 +166,7 @@ function App() {
         )
       }
 
-      if (path !== courseId && path !== analysisPath && path !== recommendationPath) {
+      if (path !== courseId && path !== analysisPath) {
         return <CourseAddPage />
       }
 
@@ -176,26 +175,15 @@ function App() {
       const selectedId = requestedIds.find(id => concepts.some(concept => concept.id === id))
       const selectedConcepts = concepts.filter(concept => concept.id === selectedId)
 
-      if (path === recommendationPath && selectedConcepts.length > 0) {
-        return (
-          <ConceptRecommendationPage
-            key={hash}
-            courseId={course.dbId}
-            courseName={course.name}
-            concepts={selectedConcepts}
-            analysisHref={`${conceptRoute}${analysisPath}?${query}`}
-          />
-        )
-      }
-
       if (path === analysisPath && selectedConcepts.length > 0) {
         return (
           <ConceptAnalysisPage
             key={hash}
+            courseId={course.dbId}
             courseName={course.name}
+            courseCategories={course.categories}
             concepts={selectedConcepts}
             selectionHref={`${selectionHref}?${query}`}
-            recommendationHref={`${conceptRoute}${recommendationPath}?${query}`}
           />
         )
       }
