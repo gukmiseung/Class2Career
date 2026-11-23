@@ -1,12 +1,10 @@
 import { useRef, useState, type FormEvent } from 'react'
 import './LoginPage.css'
-import { getSavedEmail, saveEmail, signIn } from './auth'
+import { signIn } from './auth'
 import { useAuth } from './contexts/AuthContext'
 import { authHref } from './authNavigation'
 
 export default function LoginPage({ callbackMessage, returnTo }: { callbackMessage: string; returnTo: string }) {
-  const [email, setEmail] = useState(getSavedEmail)
-  const [rememberEmail, setRememberEmail] = useState(Boolean(email))
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [showSignupPrompt, setShowSignupPrompt] = useState(false)
@@ -18,8 +16,9 @@ export default function LoginPage({ callbackMessage, returnTo }: { callbackMessa
     event.preventDefault()
     if (pending.current || loading || user) return
     const form = event.currentTarget
-    const password = String(new FormData(form).get('password') ?? '')
-    const loginEmail = email.trim()
+    const formData = new FormData(form)
+    const loginEmail = String(formData.get('email') ?? '').trim()
+    const password = String(formData.get('password') ?? '')
     pending.current = true
     setSubmitting(true)
     setError('')
@@ -43,7 +42,6 @@ export default function LoginPage({ callbackMessage, returnTo }: { callbackMessa
         setError(`로그인 실패: ${error.message}`)
         return
       }
-      saveEmail(rememberEmail ? loginEmail : null)
       form.reset()
       window.location.hash = returnTo
     } catch {
@@ -77,8 +75,6 @@ export default function LoginPage({ callbackMessage, returnTo }: { callbackMessa
                 type="email"
                 autoComplete="username"
                 placeholder="학교 이메일 또는 가입한 이메일을 입력하세요"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
                 required
               />
             </div>
@@ -95,17 +91,7 @@ export default function LoginPage({ callbackMessage, returnTo }: { callbackMessa
               />
             </div>
 
-            <div className="login-options">
-              <label className="login-remember">
-                <input
-                  type="checkbox"
-                  checked={rememberEmail}
-                  onChange={(event) => setRememberEmail(event.target.checked)}
-                />
-                <span>이메일 기억하기</span>
-              </label>
-              <a className="login-forgot" href="#reset-password">비밀번호를 잊으셨나요?</a>
-            </div>
+            <a className="login-forgot" href="#reset-password">비밀번호를 잊으셨나요?</a>
             {error && <p role="alert">{error}</p>}
             <button type="submit" disabled={loading || submitting}>{submitting ? '로그인 중…' : '로그인'}</button>
 
