@@ -1,3 +1,4 @@
+import { GenerationError } from './errors.ts'
 export type Example = { title: string; description: string; topic: string }
 export function validateExamples(value: unknown): Example[] {
   const items = (value as { examples?: unknown })?.examples
@@ -30,8 +31,13 @@ export function createHandler(deps: {
       const ids = body?.conceptIds
       if (!Array.isArray(ids) || ids.length < 1 || ids.length > 20 || ids.some(id => typeof id !== 'string' || !/^[1-9][0-9]{0,18}$/.test(id)) || new Set(ids).size !== ids.length) return reply({ message: '개념을 1~20개 선택해 주세요.' }, 400)
       return reply({ examples: validateExamples(await deps.generate(ids, token)) })
-    } catch {
-      return reply({ message: '사례를 생성하지 못했습니다. 잠시 후 다시 시도해 주세요.' }, 502)
+    } catch (error) {
+      const code = error instanceof GenerationError ? error.code : error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError') ? 'UPSTREAM_TIMEOUT' : 'GENERATION_FAILED'
+      const requestId = crypto.randomUUID()
+      // Log only controlled codes, never tokens, prompts or raw provider errors.
+      console.error(JSON.stringify({ event: 'concept_examples_failed', code, requestId }))
+      const message = error instanceof GenerationError ? error.message : '사례를 생성하지 못했습니다. 잠시 후 다시 시도해 주세요.'
+      return reply({ code, message, requestId }, 502)
     }
   }
 }

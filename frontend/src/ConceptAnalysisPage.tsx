@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
 import ConceptHeader from './ConceptHeader'
-import { getConceptAnalysis } from './conceptAnalysis'
 import type { CourseConcept } from './courseConcepts'
 import './ConceptAnalysisPage.css'
 import { useConceptExamples } from './useConceptExamples'
@@ -21,14 +20,7 @@ const conceptExplanations: Record<string, string> = {
 
 export default function ConceptAnalysisPage({ courseName, concepts, selectionHref, recommendationHref }: ConceptAnalysisPageProps) {
   const titleRef = useRef<HTMLHeadingElement>(null)
-  const analyses = concepts.map((concept) => ({ concept, analysis: getConceptAnalysis(concept) }))
   const generated = useConceptExamples(concepts.map(concept => concept.id))
-  const examples = generated.examples ?? Array.from({ length: 3 }, () => ({
-    title: generated.error ? '사례를 불러오지 못했어요' : '실무 활용 사례 작성 중',
-    description: generated.error ?? '선택한 개념에 맞는 구체적인 활용 사례를 작성하고 있어요.',
-    topic: generated.error ? '잠시 후 다시 시도' : 'AI 생성 중',
-  }))
-
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
     titleRef.current?.focus({ preventScroll: true })
@@ -50,7 +42,7 @@ export default function ConceptAnalysisPage({ courseName, concepts, selectionHre
         </header>
 
         <section className="analysis-concept-list" aria-label="선택한 개념 설명">
-          {analyses.map(({ concept }) => (
+          {concepts.map((concept) => (
             <article className="analysis-concept-card" key={concept.id}>
               <span>선택한 개념 · {courseName}</span>
               <h2>{concept.name}</h2>
@@ -61,13 +53,22 @@ export default function ConceptAnalysisPage({ courseName, concepts, selectionHre
 
         <section className="analysis-examples" aria-labelledby="analysis-examples-title">
           <h2 id="analysis-examples-title">실무 활용 사례</h2>
-          <ol className="analysis-example-grid" aria-busy={!generated.examples && !generated.error} aria-live="polite">
-            {examples.map(({ title, description, topic }, index) => (
-              <li className="analysis-example" key={index}>
-                <span className="analysis-example-number">{String(index + 1).padStart(2, '0')}</span>
-                <h3>{title}</h3><p>{description}</p><strong># {topic}</strong>
-              </li>
-            ))}
+          <ol className="analysis-example-grid" aria-live="polite" aria-busy={!generated.examples && !generated.error}>
+            {[0, 1, 2].map(index => {
+              const example = generated.examples?.[index]
+              return (
+                <li className="analysis-example" key={index}>
+                  <span className="analysis-example-number">{String(index + 1).padStart(2, '0')}</span>
+                  {example ? (
+                    <>
+                      <h3>{example.title}</h3><p>{example.description}</p><strong># {example.topic}</strong>
+                    </>
+                  ) : generated.error ? (
+                    index === 0 && <div role="alert"><p>{generated.error}</p><button type="button" onClick={generated.retry}>다시 생성</button></div>
+                  ) : <p>실무 활용 사례 생성 중…</p>}
+                </li>
+              )
+            })}
           </ol>
         </section>
 
