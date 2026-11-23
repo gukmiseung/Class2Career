@@ -44,6 +44,23 @@ export async function generateExamples(concepts: unknown, key: string, model: st
     selected = candidates[0].name.slice('models/'.length)
     response = await generate(selected)
   }
+  if (response.status === 429) {
+    // Quota is tracked per model, so a short wait and then a lighter model often succeeds.
+    const hint = await response.clone().json().catch(() => null)
+    const delay = hint?.error?.details?.find((d: { retryDelay?: string }) => d?.retryDelay)?.retryDelay
+    const seconds = delay ? parseFloat(delay) : NaN
+    if (seconds > 0 && seconds <= 5) {
+      await new Promise(resolve => setTimeout(resolve, seconds * 1000))
+      response = await generate(selected)
+    }
+    for (const fallback of ['gemini-2.5-flash-lite', 'gemini-2.0-flash']) {
+      if (response.status !== 429) break
+      if (fallback === selected) continue
+      response = await generate(fallback)
+      if (response.ok) selected = fallback
+    }
+    if (response.status === 429) throw new GenerationError('GEMINI_RATE_LIMIT', 'Gemini 요청 한도를 초과했습니다. 잠시 후 다시 시도하거나 API 키의 할당량/결제 설정을 확인해 주세요.')
+  }
   if (response.status === 400) {
     const issue = (await response.json().catch(() => null))?.error
     if (issue?.details?.some((detail: { reason?: string }) => detail?.reason === 'API_KEY_INVALID')) {

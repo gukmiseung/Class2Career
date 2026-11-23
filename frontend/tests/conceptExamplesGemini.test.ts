@@ -45,3 +45,19 @@ test('recovers from unsupported generation options using the same selected conce
   assert.deepEqual(await generateExamples(concepts, 'test-key', 'gemini-3-flash', request), { examples })
   assert.equal(calls, 2)
 })
+
+test('falls back to a lighter model when the preferred model is rate limited', async () => {
+  const urls: string[] = []
+  const request: typeof fetch = async url => {
+    urls.push(String(url))
+    if (urls.length === 1) return Response.json({ error: { details: [{ retryDelay: '30s' }] } }, { status: 429 })
+    return Response.json({ candidates: [{ finishReason: 'STOP', content: { parts: [{ text: JSON.stringify({ examples }) }] } }] })
+  }
+  assert.deepEqual(await generateExamples([], 'test-key', 'gemini-2.5-flash', request), { examples })
+  assert.ok(urls[1].endsWith('/models/gemini-2.5-flash-lite:generateContent'))
+})
+
+test('reports a clear rate limit error when every model is limited', async () => {
+  const request: typeof fetch = async () => new Response(null, { status: 429 })
+  await assert.rejects(generateExamples([], 'test-key', 'gemini-2.5-flash', request), { code: 'GEMINI_RATE_LIMIT' })
+})
