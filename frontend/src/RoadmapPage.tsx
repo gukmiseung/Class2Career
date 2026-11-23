@@ -1,4 +1,5 @@
 import { ErrorMessage, Loading } from './AsyncState'
+import { getPersonalizedRoadmapAccess } from './authNavigation'
 import { useAuth } from './contexts/AuthContext'
 import { useCourseRegistrations } from './contexts/CourseRegistrationsContext'
 import { useCareerCatalog } from './useCareerCatalog'
@@ -9,7 +10,7 @@ import { buildGeneralRoadmap } from './roadmap/generalRoadmap'
 import './RoadmapPage.css'
 
 export default function RoadmapPage({ careerName }: { careerName: string }) {
-  const { user } = useAuth()
+  const auth = useAuth()
   const { registrations, loading: registrationsLoading, error: registrationsError } = useCourseRegistrations()
   const { careers, loading: careersLoading, error: careersError, retry: retryCareers } = useCareerCatalog()
   const { catalog, loading: coursesLoading, error: coursesError, retry: retryCourses } = useCourseCatalog()
@@ -35,7 +36,8 @@ export default function RoadmapPage({ careerName }: { careerName: string }) {
   }
 
   const { career, skillKeywords, recommendedCourses, steps } = roadmap
-  const showProgress = Boolean(user && catalog && !coursesLoading && !coursesError && !registrationsLoading && !registrationsError && steps.length > 0)
+  const showLoginNotice = getPersonalizedRoadmapAccess(auth).status === 'login-required'
+  const showProgress = Boolean(auth.user && catalog && !coursesLoading && !coursesError && !registrationsLoading && !registrationsError && steps.length > 0)
   const completedCourseNames = new Set(
     showProgress ? catalog?.courses.filter(({ dbId }) => registrations[dbId] === 'completed')
       .map(({ name }) => name.replaceAll(' ', '')) : [],
@@ -54,6 +56,11 @@ export default function RoadmapPage({ careerName }: { careerName: string }) {
         <h1>{careerName} 학습 로드맵</h1>
         <p>{career.description}</p>
         {skillKeywords.length > 0 && <p><strong>핵심 역량</strong> {skillKeywords.join(' · ')}</p>}
+        {showLoginNotice && (
+          <p className="roadmap-login-notice">
+            로그인하면 수강 이력을 바탕으로 나에게 맞는 학습 로드맵을 확인할 수 있어요.
+          </p>
+        )}
       </section>
 
       {showProgress && <section className="roadmap-progress" aria-label="학습 진행률">

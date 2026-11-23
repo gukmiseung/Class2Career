@@ -10,6 +10,17 @@
 .roadmap-intro { margin-top: 28px; }
 .roadmap-intro h1 { margin: 0; font-size: clamp(29px, 3vw, 36px); letter-spacing: -1.2px; }
 .roadmap-intro p { margin: 20px 0 0; color: #65738b; font-size: 16px; }
+.roadmap-intro .roadmap-login-notice {
+  padding: 14px 16px;
+  border: 1px solid #d9e5ff;
+  border-inline-start: 4px solid #2865ec;
+  border-radius: 12px;
+  background: #edf4ff;
+  color: #17458f;
+  font-weight: 700;
+  line-height: 1.6;
+  word-break: keep-all;
+}
 .roadmap-progress { margin-top: 48px; }
 .progress-track { height: 12px; overflow: hidden; border-radius: 999px; background: #e1e7f0; }
 .progress-track span { height: 100%; display: block; border-radius: inherit; background: #2865ec; }
