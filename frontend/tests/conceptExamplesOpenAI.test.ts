@@ -26,7 +26,18 @@ test('rejects provider errors, refusals, truncation and invalid generated cards'
   for (const response of responses) await assert.rejects(generateExamples([], 'test-key', 'gpt-4.1-mini', async () => response))
 })
 test('distinguishes quota, authentication and model errors without leaking provider messages', async () => {
-  for (const [status, providerCode, expected] of [[401, 'invalid_api_key', 'OPENAI_AUTH'], [429, 'insufficient_quota', 'OPENAI_QUOTA'], [404, 'model_not_found', 'OPENAI_MODEL']] as const) {
+  for (const [status, providerCode, expected] of [[401, 'invalid_api_key', 'OPENAI_INVALID_KEY'], [401, null, 'OPENAI_AUTH'], [429, 'insufficient_quota', 'OPENAI_QUOTA'], [404, 'model_not_found', 'OPENAI_MODEL']] as const) {
     await assert.rejects(generateExamples([], 'secret-key', 'gpt-4.1-mini', async () => Response.json({ error: { code: providerCode, message: 'secret-key' } }, { status })), (error: Error & { code?: string }) => error.code === expected && !error.message.includes('secret-key'))
+  }
+})
+
+test('trims surrounding secret whitespace and rejects malformed keys before making a request', async () => {
+  const request: typeof fetch = async (_url, options) => {
+    assert.equal(new Headers(options?.headers).get('Authorization'), 'Bearer test-key')
+    return Response.json({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({ examples }) } }] })
+  }
+  await generateExamples([], '  test-key\n', 'gpt-4.1-mini', request)
+  for (const key of [' ', 'test key', '"test-key"']) {
+    await assert.rejects(generateExamples([], key, 'gpt-4.1-mini', async () => { assert.fail('must not send malformed secrets') }), (error: Error & { code?: string }) => ['OPENAI_KEY_MISSING', 'OPENAI_KEY_FORMAT'].includes(error.code ?? ''))
   }
 })

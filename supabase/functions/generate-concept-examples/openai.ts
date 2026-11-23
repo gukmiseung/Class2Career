@@ -2,9 +2,13 @@ import { GenerationError } from './errors.ts'
 import { validateExamples } from './handler.ts'
 
 export async function generateExamples(concepts: unknown, key: string, model: string, request: typeof fetch = fetch) {
+  // Secrets may contain surrounding whitespace from copying; never log their values.
+  const apiKey = key.trim()
+  if (!apiKey) throw new GenerationError('OPENAI_KEY_MISSING', 'AI 서비스 키가 서버에 설정되지 않았습니다.')
+  if (/\s/.test(apiKey) || /^["']|["']$/.test(apiKey)) throw new GenerationError('OPENAI_KEY_FORMAT', '서버의 AI 키에 공백 또는 따옴표가 포함되어 있습니다.')
   const response = await request('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
     signal: AbortSignal.timeout(45000),
     body: JSON.stringify({
       model,
@@ -37,6 +41,7 @@ export async function generateExamples(concepts: unknown, key: string, model: st
   if (!response.ok) {
     const body = await response.json().catch(() => null)
     const providerCode = body?.error?.code
+    if (response.status === 401 && providerCode === 'invalid_api_key') throw new GenerationError('OPENAI_INVALID_KEY', 'OpenAI가 현재 서버 키를 유효한 키로 인정하지 않았습니다.')
     if (response.status === 401) throw new GenerationError('OPENAI_AUTH', 'AI 서비스 인증 설정을 확인해야 합니다.')
     if (providerCode === 'insufficient_quota') throw new GenerationError('OPENAI_QUOTA', 'AI 서비스 사용 한도 또는 결제 설정을 확인해야 합니다.')
     if (response.status === 429) throw new GenerationError('OPENAI_RATE_LIMIT', 'AI 요청이 몰리고 있습니다. 잠시 후 다시 시도해 주세요.')
