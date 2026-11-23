@@ -5,14 +5,16 @@ import './ConceptSelectionPage.css'
 
 type ConceptSelectionPageProps = {
   courseName: string
+  noteHref: string
   concepts: readonly CourseConcept[]
   initialSelectedIds: readonly string[]
   onAnalyze: (conceptIds: readonly string[]) => void
 }
 
-export default function ConceptSelectionPage({ courseName, concepts, initialSelectedIds, onAnalyze }: ConceptSelectionPageProps) {
+export default function ConceptSelectionPage({ courseName, noteHref, concepts, initialSelectedIds, onAnalyze }: ConceptSelectionPageProps) {
   const titleRef = useRef<HTMLHeadingElement>(null)
   const [selectedId, setSelectedId] = useState<string | undefined>(initialSelectedIds[0])
+  const courseNoteHref = selectedId ? `${noteHref}?${new URLSearchParams({ concept: selectedId })}` : noteHref
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
@@ -35,10 +37,13 @@ export default function ConceptSelectionPage({ courseName, concepts, initialSele
           {courseName}에서 더 알아보고 싶은 개념을 선택해 보세요.
         </p>
 
-        <dl className="concept-course">
-          <dt>선택한 과목</dt>
-          <dd>{courseName}</dd>
-        </dl>
+        <div className="concept-course">
+          <dl>
+            <dt>선택한 과목</dt>
+            <dd>{courseName}</dd>
+          </dl>
+          <a className="concept-course-note" href={courseNoteHref}>과목 노트</a>
+        </div>
 
         <fieldset className="concept-fieldset" aria-describedby="concept-hint">
           <legend>세부 개념 선택</legend>

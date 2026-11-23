@@ -16,16 +16,41 @@ export type RoadmapRequest = {
   }[]
 }
 
+export type RoadmapStepDetails = {
+  weeks: number
+  outcome: string
+  competition: {
+    type: string
+    query: string
+    submission: string
+    whatToCheck: string
+  }
+  experience: {
+    setting: string
+    actions: string[]
+    evidence: string
+  }
+}
+
+export type RoadmapProjectPlan = {
+  tasks: string[]
+  deliverable: string
+  doneWhen: string
+}
+
 export type RoadmapStep = {
   title: string
   learningGoals: string[]
+  details?: RoadmapStepDetails
   recommendedCourses: {
     course: RoadmapCourse
     reason: string
+    application?: string
   }[]
   practiceProjects: {
     title: string
     description: string
+    plan?: RoadmapProjectPlan
   }[]
 }
 

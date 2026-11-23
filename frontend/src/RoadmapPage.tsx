@@ -1,11 +1,10 @@
 import { ErrorMessage, Loading } from './AsyncState'
-import { getPersonalizedRoadmapAccess } from './authNavigation'
 import { useAuth } from './contexts/AuthContext'
 import { useCourseRegistrations } from './contexts/CourseRegistrationsContext'
 import { useCareerCatalog } from './useCareerCatalog'
 import { useCourseCatalog } from './useCourseCatalog'
 import type { RoadmapStep } from './careerRoadmaps'
-import AiRoadmapPreview from './roadmap/AiRoadmapPreview'
+import AiRoadmap from './roadmap/AiRoadmap'
 import { buildGeneralRoadmap } from './roadmap/generalRoadmap'
 import './RoadmapPage.css'
 
@@ -13,7 +12,7 @@ export default function RoadmapPage({ careerName }: { careerName: string }) {
   const auth = useAuth()
   const { registrations, loading: registrationsLoading, error: registrationsError } = useCourseRegistrations()
   const { careers, loading: careersLoading, error: careersError, retry: retryCareers } = useCareerCatalog()
-  const { catalog, loading: coursesLoading, error: coursesError, retry: retryCourses } = useCourseCatalog()
+  const { catalog, loading: coursesLoading, error: coursesError } = useCourseCatalog()
 
   if (careersLoading || careersError) {
     return (
@@ -35,8 +34,7 @@ export default function RoadmapPage({ careerName }: { careerName: string }) {
     )
   }
 
-  const { career, skillKeywords, recommendedCourses, steps } = roadmap
-  const showLoginNotice = getPersonalizedRoadmapAccess(auth).status === 'login-required'
+  const { career, skillKeywords, steps } = roadmap
   const showProgress = Boolean(auth.user && catalog && !coursesLoading && !coursesError && !registrationsLoading && !registrationsError && steps.length > 0)
   const completedCourseNames = new Set(
     showProgress ? catalog?.courses.filter(({ dbId }) => registrations[dbId] === 'completed')
@@ -56,12 +54,9 @@ export default function RoadmapPage({ careerName }: { careerName: string }) {
         <h1>{careerName} 학습 로드맵</h1>
         <p>{career.description}</p>
         {skillKeywords.length > 0 && <p><strong>핵심 역량</strong> {skillKeywords.join(' · ')}</p>}
-        {showLoginNotice && (
-          <p className="roadmap-login-notice">
-            로그인하면 수강 이력을 바탕으로 나에게 맞는 학습 로드맵을 확인할 수 있어요.
-          </p>
-        )}
       </section>
+
+      <AiRoadmap key={career.slug} careerSlug={career.slug} />
 
       {showProgress && <section className="roadmap-progress" aria-label="학습 진행률">
         <div className="progress-track"><span style={{ width: `${(completedCount / steps.length) * 100}%` }} /></div>
@@ -83,27 +78,6 @@ export default function RoadmapPage({ careerName }: { careerName: string }) {
         ))}
       </ol> : <div className="roadmap-intro"><p>이 직무의 권장 학습 단계는 준비 중이에요.</p></div>}
 
-      <section className="roadmap-intro" aria-labelledby="roadmap-recommended-courses">
-        <h2 id="roadmap-recommended-courses">경북대학교 컴퓨터학부 추천 교과목</h2>
-        {coursesLoading && <Loading message="추천 과목을 불러오고 있어요." compact />}
-        {coursesError && <ErrorMessage message={coursesError} onRetry={retryCourses} compact />}
-        {!coursesLoading && !coursesError && (recommendedCourses.length > 0 ? (
-          <ul className="roadmap-list">
-            {recommendedCourses.map(({ course, reason }) => (
-              <li className="roadmap-step" key={course.dbId}>
-                <div className="step-copy">
-                  <h3>{course.name}</h3>
-                  {reason && <p>{reason}</p>}
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : <p>이 직무에 연결된 추천 과목이 없어요.</p>)}
-      </section>
-
-      {import.meta.env.VITE_ENABLE_AI_ROADMAP === 'true' && (
-        <AiRoadmapPreview careerSlug={career.slug} />
-      )}
     </main>
   )
 }

@@ -1,9 +1,15 @@
+import { useEffect, useRef } from 'react'
+import type { CourseConcept } from './courseConcepts'
 import './CareerConceptPage.css'
 
-type Props = { careerName: string; courseName: string; conceptSummary: string }
-type Note = { definition: string; keywords: string[]; flow: string[]; example: string; checkpoint: string }
+type Props = { courseName: string } & (
+  { careerName: string; conceptSummary: string }
+  | { selectionHref: string; courseDescription: string; concepts: readonly CourseConcept[] }
+)
+type Note = { definition: string; keywords: string[]; flow: string[]; example?: string; checkpoint?: string }
 
-function getCourseNote(courseName: string, summary: string): Note {
+function getCourseNote(props: Props): Note {
+  const { courseName } = props
   if (courseName.includes('자료구조')) return {
     definition: '자료구조는 데이터를 목적에 맞는 형태로 배치하고 저장하여 효율적으로 사용하는 방법을 배우는 과목이에요. 배열, 연결 리스트, 스택, 큐, 트리, 그래프의 동작 원리를 비교하고, 검색·추가·삭제처럼 자주 수행하는 연산에 어떤 구조가 적합한지 판단합니다. 데이터의 양이 커질수록 구조 선택에 따른 속도와 메모리 차이가 커지기 때문에 실제 서비스의 성능을 설계하는 기초가 돼요.',
     keywords: ['배열과 연결 리스트', '스택과 큐', '트리와 그래프', '시간 복잡도'],
@@ -25,6 +31,15 @@ function getCourseNote(courseName: string, summary: string): Note {
     example: '웹 주소를 입력하면 DNS가 서버 주소를 찾고, 브라우저가 HTTP 요청을 보내 응답 화면을 받아요.',
     checkpoint: 'URL 입력 후 화면이 나타날 때까지의 흐름을 순서대로 적어 보세요.',
   }
+  if ('concepts' in props) {
+    return {
+      definition: props.courseDescription.trim(),
+      keywords: [...new Set(props.concepts.map(({ name }) => name))].slice(0, 4),
+      flow: props.concepts.map(({ name, description }) => description ? `${name} · ${description}` : name),
+    }
+  }
+
+  const summary = props.conceptSummary
   return {
     definition: `${courseName}은(는) ${summary}을 중심으로 핵심 원리와 문제 해결 방법을 배우는 과목이에요. 단순히 용어를 암기하는 데서 끝나지 않고, 각 개념이 어떤 조건에서 동작하며 서로 어떻게 연결되는지를 작은 예제로 확인합니다. 이후 실제 직무에서 만나는 요구사항을 분석하고 적절한 방법을 선택·적용한 뒤 결과를 검증하는 힘을 기를 수 있어요.`,
     keywords: summary.split(/\s*[·,]\s*|\s+와\s+|\s+과\s+/).filter(Boolean).slice(0, 4),
@@ -34,26 +49,39 @@ function getCourseNote(courseName: string, summary: string): Note {
   }
 }
 
-export default function CareerConceptPage({ careerName, courseName, conceptSummary }: Props) {
-  const note = getCourseNote(courseName, conceptSummary)
+export default function CareerConceptPage(props: Props) {
+  const { courseName } = props
+  const fromExplore = 'selectionHref' in props
+  const parentHref = fromExplore ? props.selectionHref : `#career-${encodeURIComponent(props.careerName)}`
+  const note = getCourseNote(props)
+  const titleRef = useRef<HTMLHeadingElement>(null)
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' })
+    titleRef.current?.focus({ preventScroll: true })
+  }, [])
+
   return (
     <main className="career-concept-page">
       <nav className="career-concept-breadcrumb" aria-label="현재 위치">
-        <a href="#career">직무 탐색</a><span>/</span>
-        <a href={`#career-${encodeURIComponent(careerName)}`}>{careerName}</a><span>/</span>
-        <span aria-current="page">{courseName}</span>
+        <a href={fromExplore ? '#explore' : '#career'}>{fromExplore ? '전공 탐색' : '직무 탐색'}</a><span aria-hidden="true">/</span>
+        <a href={parentHref}>{fromExplore ? courseName : props.careerName}</a><span aria-hidden="true">/</span>
+        <span aria-current="page">{fromExplore ? '과목 노트' : courseName}</span>
       </nav>
       <header className="career-concept-intro">
-        <p>{careerName} · 과목 노트</p><h1>{courseName}</h1><span>{conceptSummary}</span>
+        <p>{fromExplore ? '과목 노트' : `${props.careerName} · 과목 노트`}</p>
+        <h1 ref={titleRef} tabIndex={-1}>{courseName}</h1>
+        {!fromExplore && <span>{props.conceptSummary}</span>}
       </header>
       <article className="course-notebook" aria-label={`${courseName} 상세 개념 노트`}>
-        <section><span className="note-label">01. 한 줄 개념</span><h2>{courseName}이란?</h2><p>{note.definition}</p></section>
-        <section><span className="note-label">02. 핵심 키워드</span><ul className="note-keywords">{note.keywords.map((word) => <li key={word}># {word}</li>)}</ul></section>
-        <section><span className="note-label">03. 공부 흐름</span><ol className="note-flow">{note.flow.map((step, i) => <li key={step}><b>{i + 1}</b>{step}</li>)}</ol></section>
-        <section className="note-example"><span className="note-label">04. {careerName} 실무 예시</span><p>{note.example}</p></section>
-        <aside className="note-checkpoint"><strong>✓ 학습 체크</strong><p>{note.checkpoint}</p></aside>
+        {note.definition && <section><span className="note-label">{fromExplore ? '과목 소개' : '01. 한 줄 개념'}</span><h2>{courseName}이란?</h2><p>{note.definition}</p></section>}
+        {note.keywords.length > 0 && <section><span className="note-label">{fromExplore ? '핵심 키워드' : '02. 핵심 키워드'}</span><ul className="note-keywords">{note.keywords.map((word) => <li key={word}># {word}</li>)}</ul></section>}
+        {note.flow.length > 0 && <section><span className="note-label">{fromExplore ? '개념 정리' : '03. 공부 흐름'}</span><ol className="note-flow">{note.flow.map((step, i) => <li key={step}><b>{i + 1}</b>{step}</li>)}</ol></section>}
+        {note.example && <section className="note-example"><span className="note-label">{fromExplore ? '실무 예시' : `04. ${props.careerName} 실무 예시`}</span><p>{note.example}</p></section>}
+        {note.checkpoint && <aside className="note-checkpoint"><strong>✓ 학습 체크</strong><p>{note.checkpoint}</p></aside>}
+        {!note.definition && note.flow.length === 0 && <p>아직 등록된 과목 소개나 개념이 없어요.</p>}
       </article>
-      <a className="back-to-career" href={`#career-${encodeURIComponent(careerName)}`}>← {careerName}의 다른 과목 보기</a>
+      <a className="back-to-career" href={parentHref}>← {fromExplore ? '개념 선택으로 돌아가기' : `${props.careerName}의 다른 과목 보기`}</a>
     </main>
   )
 }

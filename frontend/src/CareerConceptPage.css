@@ -5,6 +5,7 @@
 .career-concept-intro { margin-top: 34px; }
 .career-concept-intro > p { margin: 0; color: #2865ec; font-size: 15px; font-weight: 700; }
 .career-concept-intro h1 { margin: 10px 0 0; font-size: clamp(30px, 4vw, 42px); letter-spacing: -1.2px; }
+.career-concept-intro h1:focus { outline: none; }
 .career-concept-intro > span { display: inline-flex; margin-top: 18px; padding: 9px 17px; border-radius: 999px; color: #1760ef; background: #e8f0ff; font-size: 14px; }
 .course-notebook { position: relative; margin-top: 38px; padding: 42px 48px; border: 1px solid #d7dce5; border-radius: 8px; background: repeating-linear-gradient(#fff 0, #fff 39px, #dce8f5 40px); box-shadow: 0 14px 35px rgba(36,48,74,.09); overflow: hidden; }
 .course-notebook section { position: relative; margin-bottom: 34px; }
@@ -15,7 +16,7 @@
 .note-keywords li { padding: 5px 11px; border-radius: 6px; color: #245ac2; background: #e9f0ff; font-size: 13px; font-weight: 700; }
 .note-flow { display: grid; gap: 10px; margin: 12px 0 0; padding: 0; list-style: none; }
 .note-flow li { display: flex; align-items: center; gap: 11px; color: #3d4960; font-size: 14px; }
-.note-flow b { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; color: #fff; background: #4b72d6; font-size: 12px; }
+.note-flow b { display: grid; place-items: center; flex: 0 0 24px; width: 24px; height: 24px; border-radius: 50%; color: #fff; background: #4b72d6; font-size: 12px; }
 .note-example { padding: 18px 20px; border-left: 4px solid #f2b84b; background: rgba(255,248,218,.88); }
 .note-checkpoint { position: relative; padding: 18px 20px; border: 1px dashed #7693da; border-radius: 8px; background: rgba(239,244,255,.92); }
 .note-checkpoint strong { color: #2857bd; font-size: 14px; }

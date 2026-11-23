@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useCourseCatalog } from './useCourseCatalog'
-import { statusLabels } from './courseRegistrations'
+import { courseStatuses, statusLabels, type CourseStatus } from './courseRegistrations'
 import { useCourseRegistrations } from './contexts/CourseRegistrationsContext'
 import { useAuth } from './contexts/AuthContext'
 import LearningLoginModal from './LearningLoginModal'
@@ -12,11 +12,33 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
   const { careers, loading: careersLoading, error: careersError, retry: retryCareers } = useCareerCatalog()
   const career = careers.find((item) => item.title === careerName)
   const [interestActionError, setInterestActionError] = useState('')
-  const { registrations, loading: registrationsLoading, error: registrationsError, retryLoad, careerInterest } = useCourseRegistrations()
+  const [courseStatusErrors, setCourseStatusErrors] = useState<Partial<Record<number, string | null>>>({})
+  const {
+    registrations, ready: registrationsReady, loading: registrationsLoading, error: registrationsError,
+    retryLoad, savingCourseIds, saveCourseStatus, careerInterest,
+  } = useCourseRegistrations()
   const isInterested = careerInterest.items.some(({ slug }) => slug === career?.slug)
   const { catalog, loading: catalogLoading, error: catalogError, retry: retryCatalog } = useCourseCatalog()
   const [showLoginModal, setShowLoginModal] = useState(false)
   const { loading, user } = useAuth()
+
+  async function selectCourseStatus(courseId: number, status: CourseStatus) {
+    if (!user) {
+      setShowLoginModal(true)
+      return
+    }
+    if (!registrationsReady || savingCourseIds.has(courseId)) return
+
+    const nextStatus = registrations[courseId] === status ? null : status
+    setCourseStatusErrors((errors) => ({ ...errors, [courseId]: null }))
+    const saved = await saveCourseStatus(courseId, nextStatus).catch(() => false)
+    if (!saved) {
+      const message = nextStatus === null
+        ? '수강 등록을 취소하지 못했어요. 다시 시도해 주세요.'
+        : '수강 상태를 저장하지 못했어요. 다시 시도해 주세요.'
+      setCourseStatusErrors((errors) => ({ ...errors, [courseId]: message }))
+    }
+  }
 
   if (careersLoading || careersError) {
     return (
@@ -87,36 +109,54 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
 
       <section className="connected-courses" aria-labelledby="course-heading">
         <h2 id="course-heading">이 직무와 연결되는 전공 과목</h2>
-        <p>과목을 수강했는지에 따라 현재 학습 이력을 비교해요.</p>
+        <p id="career-course-status-hint">수강 상태를 선택하면 내 학습에 저장돼요. 선택한 버튼을 다시 누르면 등록이 취소돼요.</p>
 
         {catalogLoading && <Loading message="수강 이력을 확인하고 있어요." compact />}
         {catalogError && <ErrorMessage message={catalogError} onRetry={retryCatalog} compact />}
         {!catalogLoading && !catalogError && registrationsError && relatedCourses.length > 0 && (
           <ErrorMessage message={registrationsError} onRetry={retryLoad} compact />
         )}
+        {!catalogLoading && !catalogError && registrationsLoading && relatedCourses.length > 0 && (
+          <Loading message="수강 상태를 불러오고 있어요." compact />
+        )}
         {!catalogLoading && !catalogError && relatedCourses.length === 0 && <EmptyState title="연결된 교과목 정보가 없어요" message="전공탐색 과목이 등록되면 이곳에 표시됩니다." compact />}
 
         {!catalogLoading && !catalogError && relatedCourses.length > 0 && <div className="course-list">
           {relatedCourses.map(({ course, concepts }) => {
             const status = registrations[course.dbId]
-            const statusLabel = status ? statusLabels[status]
-              : registrationsLoading ? '확인 중'
-                : registrationsError ? '확인 불가' : '미수강'
+            const saving = savingCourseIds.has(course.dbId)
+            const statusError = courseStatusErrors[course.dbId]
+            const yearLabel = course.years.length > 0 ? `${course.years.join('·')}학년` : '학년 미지정'
             return (
-            <article className={`course-row${status ? ` ${status}` : ''}`} key={course.id}>
-              <div>
-                <h3>{course.name}</h3>
-                <p>{concepts}</p>
-                <p className="career-course-meta">{course.code} · {course.credits}학점 · {course.categories.join(' · ')}</p>
-              </div>
-              <div className="course-actions">
-                <span className={`course-status${status ? ` ${status}` : ''}`}>
-                  {statusLabel}
-                </span>
-                <a href={`#job-concept/${encodeURIComponent(career.title)}/${encodeURIComponent(course.name)}/${encodeURIComponent(concepts)}`}>과목 노트</a>
-              </div>
-            </article>
-          )})}
+              <article className={`course-row${status ? ` ${status}` : ''}`} key={course.id}>
+                <div>
+                  <h3>{course.name}</h3>
+                  <p>{concepts}</p>
+                  <p className="career-course-meta">{course.code} · {course.credits}학점 · {course.categories.join(' · ')} · {yearLabel}</p>
+                </div>
+                <div className="course-controls">
+                  <div className="course-actions">
+                    <div className="course-status-options" role="group" aria-label={`${course.name} 수강 상태`} aria-busy={saving}>
+                      {courseStatuses.map((option) => (
+                        <button
+                          key={option}
+                          type="button"
+                          aria-pressed={status === option}
+                          aria-describedby={status === option ? 'career-course-status-hint' : undefined}
+                          disabled={loading || saving || Boolean(user && !registrationsReady)}
+                          onClick={() => void selectCourseStatus(course.dbId, option)}
+                        >
+                          {statusLabels[option]}
+                        </button>
+                      ))}
+                    </div>
+                    <a href={`#job-concept/${encodeURIComponent(career.title)}/${encodeURIComponent(course.name)}/${encodeURIComponent(concepts)}`}>과목 노트</a>
+                  </div>
+                  {statusError && <p className="course-status-error" role="alert">{statusError}</p>}
+                </div>
+              </article>
+            )
+          })}
         </div>}
 
         <p className="course-note">※ 과목 수강 이력은 학습 경험을 나타내며, 개별 개념의 숙련도를 의미하지는 않아요.</p>

@@ -161,14 +161,6 @@ test('accepts ready empty requirements and an empty skill gap list', async () =>
   assert.equal(response.status, 200)
 })
 
-test('rejects an empty candidate set before generation', async () => {
-  const response = await handler({
-    load: withData((data) => { data.candidates = [] }),
-    generate: async () => assert.fail('no candidates reached generator'),
-  })(request())
-  await expectError(response, 409, 'NO_COURSE_CANDIDATES')
-})
-
 test('rejects unknown recommendation references and invalid output shape or array lengths', async () => {
   const step = { title: '기초', learningGoals: ['목표'], recommendedCourses: [], practiceProjects: [] }
   for (const value of [

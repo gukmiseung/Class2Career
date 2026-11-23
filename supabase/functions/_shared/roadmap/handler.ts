@@ -45,7 +45,7 @@ export function createRoadmapHandler(dependencies: RoadmapDependencies) {
       const user = token ? await dependencies.authenticate(token) : null
       if (!token || !user) return failure(401, 'UNAUTHORIZED', '로그인이 필요합니다.')
       if (!dependencies.isAllowedUser(user.userId)) {
-        return failure(403, 'ROADMAP_ACCESS_DENIED', 'AI 로드맵 테스트 접근 권한이 없습니다.')
+        return failure(403, 'ROADMAP_ACCESS_DENIED', 'AI 로드맵 접근 권한이 없습니다.')
       }
 
       const body = await request.json().catch(() => null)
@@ -66,10 +66,6 @@ export function createRoadmapHandler(dependencies: RoadmapDependencies) {
       if (coverage.unknown.length) {
         return failure(409, 'COURSE_CONCEPT_MAPPING_NOT_READY', '완료 과목의 개념 매핑을 준비 중입니다.')
       }
-      if (!data.candidates.length) {
-        return failure(409, 'NO_COURSE_CANDIDATES', '추천할 교과목 후보가 없습니다.')
-      }
-
       const generated = await dependencies.generate({
         ...data.request,
         skillGaps: toRoadmapSkillGaps(coverage),
@@ -79,7 +75,11 @@ export function createRoadmapHandler(dependencies: RoadmapDependencies) {
 
       return Response.json(roadmap, { headers: corsHeaders })
     } catch (error) {
-      if (error instanceof RoadmapProviderError) return failure(error.status, error.code, error.message)
+      if (error instanceof RoadmapProviderError) {
+        console.error(JSON.stringify({ event: 'roadmap_generation_failed', requestId, code: error.code }))
+        return failure(error.status, error.code, error.message)
+      }
+      console.error(JSON.stringify({ event: 'roadmap_generation_failed', requestId, code: 'INTERNAL_ERROR' }))
       return failure(500, 'INTERNAL_ERROR', '로드맵 생성 중 오류가 발생했습니다.')
     }
   }

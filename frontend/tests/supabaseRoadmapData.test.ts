@@ -155,15 +155,21 @@ for (const [slug, courseCount] of auditedCareers) {
   })
 }
 
-test('returns NO_COURSE_CANDIDATES without generation once all linked courses are completed', async () => {
+test('generates a practice roadmap without recommending courses already completed', async () => {
   const { load } = fixture({
     c2c_user_courses: [structures, database].map((course) => ({ status: 'completed', c2c_courses: course })),
   })
-  let calls = 0
-  const response = await invoke(load, async () => { calls++; return null }, { careerId: backend.slug })
-  assert.equal(response.status, 409)
-  assert.equal((await response.json()).code, 'NO_COURSE_CANDIDATES')
-  assert.equal(calls, 0)
+  const step = {
+    title: '배운 개념 적용', learningGoals: ['자료 구조와 데이터베이스 연결'], recommendedCourses: [],
+    practiceProjects: [{ title: '수강 신청 서비스', description: '신청 순서와 신청 내역을 구현합니다.' }],
+  }
+  const response = await invoke(load, async (input, candidates) => {
+    assert.deepEqual(input.skillGaps, [])
+    assert.deepEqual(candidates, [])
+    return { steps: [step] }
+  }, { careerId: backend.slug })
+  assert.equal(response.status, 200)
+  assert.deepEqual(await response.json(), { steps: [step] })
 })
 
 test('passes the catalog-derived gaps and allowed recommendations into the existing generator', async () => {

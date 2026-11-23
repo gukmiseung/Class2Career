@@ -1,0 +1,137 @@
+.roadmap-ai {
+  padding: clamp(16px, 3vw, 30px);
+  border: 1px solid #d9e4f7;
+  border-radius: 20px;
+  background: #f3f7ff;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.roadmap-ai h2 { margin: 0; font-size: clamp(21px, 2.6vw, 25px); }
+.roadmap-ai p { margin: 8px 0 0; line-height: 1.65; }
+.roadmap-ai [role='alert'] { color: #9b2424; }
+
+.roadmap-ai-button {
+  margin-top: 16px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 10px;
+  background: #215bd9;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.roadmap-ai-button:hover:not(:disabled) { background: #174ab9; }
+.roadmap-ai-button:disabled { opacity: .7; cursor: wait; }
+.ai-guide { margin-top: 22px; }
+
+.ai-guide-stages {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 182px), 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ai-guide-stage {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  width: 100%;
+  height: 100%;
+  padding: 12px 15px;
+  border: 1px solid #d4deef;
+  border-radius: 11px;
+  background: #fff;
+  color: #18253c;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.ai-guide-stage:hover { border-color: #3c6ad1; }
+.ai-guide-stage[aria-pressed='true'] {
+  border-color: #2c59c2;
+  background: #214cae;
+  color: #fff;
+}
+
+.ai-guide-stage-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: .8rem; }
+.ai-guide-stage-meta span:first-child { font-weight: 700; }
+.roadmap-ai :is(button, a):focus-visible { outline: 3px solid #245ccb; outline-offset: 3px; }
+.ai-guide-panel { margin-top: 14px; }
+
+.ai-guide-overview {
+  padding: 17px 20px;
+  border: 1px solid #d6e1f4;
+  border-radius: 12px;
+  background: #e8effe;
+}
+
+.ai-guide-overview h3 { margin: 0; font-size: 1.25rem; line-height: 1.35; }
+.roadmap-ai .ai-guide-outcome { color: #243c68; font-size: .96rem; }
+.ai-guide-outcome strong { margin-inline-end: .35em; }
+.ai-guide-goals { margin: 9px 0 0; padding-inline-start: 1.3em; color: #33496c; font-size: .92rem; line-height: 1.55; }
+.ai-guide-goals li + li { margin-top: 4px; }
+
+.ai-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+  align-items: stretch;
+}
+
+.ai-guide-card {
+  --card-ink: #2853a7;
+  --card-tone: #eff4ff;
+  min-width: 0;
+  padding: 18px 20px;
+  border: 1px solid #d9e1ee;
+  border-radius: 13px;
+  background: #fff;
+}
+
+.ai-guide-projects { --card-ink: #076a64; --card-tone: #e7f6f2; }
+.ai-guide-competitions { --card-ink: #794710; --card-tone: #fff1dd; }
+.ai-guide-experience { --card-ink: #6440a1; --card-tone: #f2ecff; }
+
+.ai-guide-card h4 {
+  margin: 0 0 13px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  background: var(--card-tone);
+  color: var(--card-ink);
+  font-size: .92rem;
+}
+
+.ai-guide-card h5 { margin: 0; font-size: 1rem; line-height: 1.45; }
+.roadmap-ai .ai-guide-card p { color: #41516a; font-size: .91rem; }
+.ai-guide-items { margin: 0; padding: 0; list-style: none; }
+.ai-guide-items > li + li { margin-top: 13px; padding-top: 13px; border-top: 1px solid #e1e8f2; }
+.ai-guide-items p strong { display: block; color: #203354; font-size: .82rem; }
+.ai-guide-actions { margin: 11px 0 0; padding-inline-start: 1.35em; font-size: .92rem; line-height: 1.55; }
+.ai-guide-actions li + li { margin-top: 5px; }
+.ai-guide-actions li::marker { color: var(--card-ink); font-weight: 700; }
+
+.ai-guide-facts { display: grid; gap: 8px; margin: 12px 0 0; }
+.ai-guide-facts div { display: grid; grid-template-columns: minmax(5.5em, auto) 1fr; gap: 8px; font-size: .87rem; line-height: 1.5; }
+.ai-guide-facts dt { color: #263955; font-weight: 700; }
+.ai-guide-facts dd { color: #41516a; margin: 0; }
+.ai-guide-search { display: inline-block; margin-top: 12px; color: #1f4fad; font-size: .88rem; font-weight: 700; }
+
+.ai-guide-sources { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-top: 14px; color: #41516a; font-size: .82rem; }
+.ai-guide-sources a { color: #1f4fad; }
+
+@media (max-width: 680px) {
+  .ai-guide-grid { grid-template-columns: 1fr; }
+  .ai-guide-card, .ai-guide-overview { padding: 15px; }
+  .ai-guide-stage-meta { justify-content: start; }
+}
+
+@media (max-width: 380px) {
+  .ai-guide-facts div { grid-template-columns: 1fr; gap: 2px; }
+}

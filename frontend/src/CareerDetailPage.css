@@ -84,27 +84,38 @@
 .course-row h3 { margin: 0; font-size: 18px; }
 .course-row p { margin: 14px 0 0; color: #65738b; font-size: 14px; }
 .course-row .career-course-meta { margin-top: 7px; color: #8a96a9; font-size: 12px; }
+.course-controls { flex-shrink: 0; max-width: 100%; }
+
 .course-actions {
-  min-width: 282px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 22px;
+  gap: 12px;
 }
 
-.course-status {
-  width: 180px;
-  min-height: 39px;
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-  background: #f0f3f7;
-  color: #65738b;
+.course-status-options { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.course-status-options button {
+  min-height: 44px;
+  padding: 5px 12px;
+  border: 1px solid #cdd8eb;
+  border-radius: 9px;
+  background: #f3f6fb;
+  color: #34445e;
+  font: inherit;
   font-size: 14px;
   font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
 }
-.course-status.completed { color: #1760ef; background: #e5edff; }
-.course-status.planned { color: #08795b; background: #e3f4ef; }
-.course-row.completed { border-color: #c8d7fb; }
+
+.course-status-options button[aria-pressed='false']:enabled:hover { border-color: #9fb7e5; background: #e7efff; }
+.course-status-options button[aria-pressed='true'] { border-color: #245fdf; background: #245fdf; color: #fff; }
+.course-status-options button:focus-visible { outline: 2px solid #1f56d1; outline-offset: 2px; }
+.course-status-options button:disabled { opacity: .65; cursor: default; }
+.course-status-options[aria-busy='true'] button { cursor: wait; }
+.course-row .course-status-error { margin: 8px 0 0; color: #af3434; }
+.course-row.completed, .course-row.in_progress { border-color: #c8d7fb; }
 .course-row.planned { border-color: #c5e4da; }
 
 .course-actions a {
@@ -128,16 +139,18 @@
 }
 
 .course-actions a:hover,
-.course-actions a:focus-visible { color: #4c91e8; background: #dfedff; }
+.course-actions a:focus-visible { color: #174ab9; background: #dfedff; }
 
 .connected-courses > .course-note { margin-top: 42px; color: #91a0b7; font-size: 13px; }
 .career-not-found { padding-top: 160px; }
 .career-not-found a { color: #1760ef; }
 
+@media (max-width: 800px) {
+  .course-row { align-items: flex-start; flex-direction: column; gap: 16px; padding: 18px; }
+}
+
 @media (max-width: 680px) {
   .career-detail-page { width: min(100% - 32px, 1280px); padding-top: 100px; }
   .career-tags { margin-top: 28px; }
-  .course-row { align-items: flex-start; flex-direction: column; padding: 20px; }
-  .course-actions { width: 100%; min-width: 0; justify-content: space-between; }
-  .course-status { width: min(180px, 70%); }
+  .course-status-options button { padding-inline: 9px; font-size: 13px; }
 }

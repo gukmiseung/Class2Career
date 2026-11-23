@@ -26,8 +26,22 @@ function roadmap(candidateRef = 'c1') {
     steps: [{
       title: '데이터 모델링',
       learningGoals: ['정규화 이해'],
-      recommendedCourses: [{ candidateRef, reason: '설계 실습' }],
-      practiceProjects: [{ title: '대출 시스템', description: '관계형 모델 실습' }],
+      details: {
+        weeks: 3, outcome: '대출 이력을 조회하는 API를 만듭니다.',
+        competition: {
+          type: '대학생 서비스 개발 해커톤', query: '대학생 서비스 개발 해커톤 공고',
+          submission: '교내 물품 대출 서비스 데모', whatToCheck: '팀 인원과 코드 제출 조건을 확인합니다.',
+        },
+        experience: {
+          setting: '교내 개발 동아리', actions: ['API 계약을 맞춥니다.', '동시성 테스트에 대해 코드 리뷰를 받습니다.'],
+          evidence: '피드백과 수정 전후 테스트 결과',
+        },
+      },
+      recommendedCourses: [{ candidateRef, reason: '설계 실습', application: '정규화를 대출 기록 테이블에 적용합니다.' }],
+      practiceProjects: [{
+        title: '대출 시스템', description: '관계형 모델 실습',
+        plan: { tasks: ['ERD를 그립니다.', '대출 API를 구현합니다.'], deliverable: 'ERD와 시연 영상', doneWhen: '중복 대출 테스트를 통과합니다.' },
+      }],
     }],
   }
 }
@@ -67,7 +81,9 @@ test('counts input tokens and generates a Korean roadmap with the configured sch
     assert.equal(steps.maxItems, 3)
     assert.equal(steps.items.properties.learningGoals.maxItems, 2)
     assert.equal(steps.items.properties.recommendedCourses.maxItems, 2)
+    assert.equal(steps.items.properties.practiceProjects.minItems, 1)
     assert.equal(steps.items.properties.practiceProjects.maxItems, 1)
+    assert.deepEqual(steps.items.properties.details.required, ['weeks', 'outcome', 'competition', 'experience'])
     assert.deepEqual(
       body.text.format.schema.properties.steps.items.properties.recommendedCourses.items.properties.candidateRef.enum,
       ['c1'],
@@ -77,6 +93,8 @@ test('counts input tokens and generates a Korean roadmap with the configured sch
     assert.deepEqual(input.completedCourses, [{ name: '자료구조' }])
     assert.deepEqual(input.plannedCourses, [{ name: '데이터베이스' }])
     assert.equal(input.skillGaps[0].name, '관계형 데이터 모델링')
+    assert.match(input.skillGapContext, /수강 완료 과목/)
+    assert.equal(input.skillGaps[0].context, undefined)
     assert.deepEqual(input.candidates, [{ candidateRef: 'c1', name: '데이터베이스' }])
     assert.doesNotMatch(String(options?.body), /private-test-user|private\.test\.jwt|unit-test-only|email/)
     if (calls.length === 1) return Response.json({ input_tokens: 150 })
@@ -87,7 +105,27 @@ test('counts input tokens and generates a Korean roadmap with the configured sch
   assert.deepEqual(calls, [`${endpoint}/input_tokens`, endpoint])
   assert.equal(response.status, 200)
   const { steps } = await response.json()
-  assert.deepEqual(steps[0].recommendedCourses[0], { course: { name: '데이터베이스' }, reason: '설계 실습' })
+  const [sample] = roadmap().steps
+  assert.deepEqual(steps[0], {
+    ...sample,
+    recommendedCourses: [{
+      course: { name: '데이터베이스' }, reason: sample.recommendedCourses[0].reason,
+      application: sample.recommendedCourses[0].application,
+    }],
+  })
+})
+
+test('rejects detail cards with unusable project plans or competition guidance', async () => {
+  const [step] = roadmap().steps
+  for (const malformed of [
+    { ...step, practiceProjects: [{ ...step.practiceProjects[0], plan: { tasks: ['한 가지 행동'] } }] },
+    { ...step, details: { ...step.details, competition: { ...step.details.competition, query: ' ' } } },
+  ]) {
+    const reply = await handle(async (url) => String(url).endsWith('/input_tokens')
+      ? Response.json({ input_tokens: 150 })
+      : output(JSON.stringify({ steps: [malformed] })))
+    await expectError(reply, 500, 'INVALID_ROADMAP_RESPONSE')
+  }
 })
 
 test('blocks over-budget input before generation', async () => {
@@ -176,4 +214,59 @@ test('uses Mock mode by default and rejects client-side mode or model overrides'
   const request = { careerId: 'backend-developer', mode: 'openai', model: 'client-model' }
   await expectError(await handle(fetchResponse, {}, request), 400, 'INVALID_REQUEST')
   assert.equal(calls, 0)
+})
+
+test('the deployed entry point uses its own project and lets the same account generate more than eight times', async (t) => {
+  const settings: Record<string, string> = {
+    SUPABASE_URL: 'https://production-fixture.supabase.co',
+    SUPABASE_PUBLISHABLE_KEYS: '{"default":"test-publishable-key"}',
+    OPENAI_API_KEY: 'unit-test-only',
+  }
+  let run: ((request: Request) => Promise<Response>) | undefined
+  const runtime = globalThis as typeof globalThis & { Deno?: unknown }
+  runtime.Deno = {
+    env: { get: (name: string) => settings[name] },
+    serve: (handler: typeof run) => { run = handler },
+  }
+  t.after(() => { delete runtime.Deno })
+
+  const calls: string[] = []
+  t.mock.method(globalThis, 'fetch', async (input: URL | string, init: RequestInit) => {
+    const url = new URL(input)
+    calls.push(url.pathname)
+    if (url.origin === 'https://api.openai.com') {
+      assert.equal(JSON.parse(String(init.body)).model, 'gpt-5.4-nano')
+      assert.doesNotMatch(String(init.body), /signed-in-user|test\.session\.token/)
+      return url.pathname.endsWith('/input_tokens')
+        ? Response.json({ input_tokens: 5000 })
+        : output(JSON.stringify(roadmap()))
+    }
+
+    assert.equal(url.origin, settings.SUPABASE_URL)
+    assert.equal(new Headers(init.headers).get('authorization'), 'Bearer test.session.token')
+    switch (url.pathname) {
+      case '/auth/v1/user': return Response.json({ id: 'signed-in-user', role: 'authenticated' })
+      case '/rest/v1/c2c_careers': return Response.json([{ slug: 'backend-developer', title: '백엔드', description: 'API 구현' }])
+      case '/rest/v1/c2c_career_courses': return Response.json([{ c2c_courses: {
+        id: 1, name: '데이터베이스', department: '컴퓨터학부', c2c_course_concepts: [{ id: 10, name: '정규화' }],
+      } }])
+      case '/rest/v1/c2c_user_courses':
+        assert.equal(url.searchParams.get('user_id'), 'eq.signed-in-user')
+        return Response.json([])
+      default: return assert.fail(`Unexpected path ${url.pathname}`)
+    }
+  })
+
+  await import('../../supabase/functions/generate-roadmap/index.ts')
+  assert.ok(run)
+  for (let attempt = 0; attempt < 9; attempt++) {
+    const response = await run(new Request('https://production-fixture.supabase.co/functions/v1/generate-roadmap', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer test.session.token' },
+      body: JSON.stringify({ careerId: 'backend-developer' }),
+    }))
+    assert.equal(response.status, 200)
+    assert.equal((await response.json()).steps[0].recommendedCourses[0].course.name, '데이터베이스')
+  }
+  assert.equal(calls.filter((path) => path === '/v1/responses').length, 9)
 })

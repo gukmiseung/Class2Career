@@ -4,9 +4,11 @@ import { authHref, getAuthReturnTo, getPersonalizedRoadmapAccess } from '../src/
 
 test('preserves the selected career when navigating through login or signup', () => {
   for (const career of ['백엔드 개발자', 'UI/UX 디자이너']) {
-    const destination = `#roadmap-${encodeURIComponent(career)}`
-    equal(getAuthReturnTo(authHref('#login', destination)), destination)
-    equal(getAuthReturnTo(authHref('#signup', destination)), destination)
+    for (const page of ['career', 'roadmap']) {
+      const destination = `#${page}-${encodeURIComponent(career)}`
+      equal(getAuthReturnTo(authHref('#login', destination)), destination)
+      equal(getAuthReturnTo(authHref('#signup', destination)), destination)
+    }
   }
 })
 
@@ -15,6 +17,7 @@ test('rejects external, malformed, and ambiguous return destinations', () => {
     'https://example.com', '//example.com', 'javascript:alert(1)', '#login',
     '#roadmap-', '#roadmap-%20', '#roadmap-%E0%A4', '#roadmap-%250A',
     '#roadmap-job%0A', '#roadmap-job%3Fnext=other', '#roadmap-job%23other',
+    '#career-', '#career-%2F%2Fexample.com', '#career-job%23other',
   ]) {
     equal(getAuthReturnTo(authHref('#login', destination)), '#dashboard', destination)
   }

@@ -141,6 +141,7 @@ function App() {
       const [routePath, query] = hash.slice(conceptRoute.length).split('?', 2)
       const [courseId] = routePath.split('/', 1)
       const analysisPath = `${courseId}/analysis`
+      const notePath = `${courseId}/note`
       const path = routePath === `${courseId}/recommendations` ? analysisPath : routePath
       if (catalogLoading) return <LoadingPage message="과목 정보를 불러오고 있어요." />
       if (catalogError) return <ErrorMessage message={catalogError} onRetry={retryCatalog} retrying={catalogLoading} />
@@ -154,19 +155,7 @@ function App() {
         return <LoadingPage message="과목 개념을 불러오고 있어요." />
       }
       if (conceptState.error) return <p role="alert">{conceptState.error}</p>
-      if (concepts.length === 0) {
-        return (
-          <ConceptSelectionPage
-            key={hash}
-            courseName={course.name}
-            concepts={[]}
-            initialSelectedIds={[]}
-            onAnalyze={() => {}}
-          />
-        )
-      }
-
-      if (path !== courseId && path !== analysisPath) {
+      if (path !== courseId && path !== analysisPath && path !== notePath) {
         return <CourseAddPage />
       }
 
@@ -174,6 +163,21 @@ function App() {
       const requestedIds = new URLSearchParams(query).getAll('concept')
       const selectedId = requestedIds.find(id => concepts.some(concept => concept.id === id))
       const selectedConcepts = concepts.filter(concept => concept.id === selectedId)
+
+      if (path === notePath) {
+        return (
+          <div className="home-page dashboard-shell">
+            <SiteHeader />
+            <CareerConceptPage
+              key={hash}
+              courseName={course.name}
+              courseDescription={course.description}
+              concepts={concepts}
+              selectionHref={selectedId ? `${selectionHref}?${new URLSearchParams({ concept: selectedId })}` : selectionHref}
+            />
+          </div>
+        )
+      }
 
       if (path === analysisPath && selectedConcepts.length > 0) {
         return (
@@ -192,6 +196,7 @@ function App() {
         <ConceptSelectionPage
           key={hash}
           courseName={course.name}
+          noteHref={`${conceptRoute}${notePath}`}
           concepts={concepts}
           initialSelectedIds={selectedConcepts.map(({ id }) => id)}
           onAnalyze={(conceptIds) => {

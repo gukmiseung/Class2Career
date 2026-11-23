@@ -8,9 +8,9 @@ export function authHref(route: '#login' | '#signup', returnTo: string) {
   return `${route}?${new URLSearchParams({ next: returnTo })}`
 }
 
-function isRoadmapRoute(hash: string) {
-  const prefix = '#roadmap-'
-  if (!hash.startsWith(prefix)) return false
+function isCareerRoute(hash: string) {
+  const prefix = ['#career-', '#roadmap-'].find((route) => hash.startsWith(route))
+  if (!prefix) return false
 
   try {
     const encodedTitle = hash.slice(prefix.length)
@@ -28,7 +28,7 @@ export function getAuthReturnTo(hash: string) {
   const destinations = new URLSearchParams(hash.slice(queryStart + 1)).getAll('next')
   const [destination] = destinations
   return destinations.length === 1 && destination &&
-    (destination === '#profile' || isLearningRoute(destination) || isRoadmapRoute(destination))
+    (destination === '#profile' || isLearningRoute(destination) || isCareerRoute(destination))
     ? destination
     : '#dashboard'
 }

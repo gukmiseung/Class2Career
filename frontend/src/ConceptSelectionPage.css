@@ -20,14 +20,35 @@
 }
 
 .concept-course {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
   margin: 41px 0 35px;
   padding: 12px 22px;
   border-radius: 13px;
   background: #eaf0fb;
 }
 
+.concept-course dl { min-width: 0; margin: 0; overflow-wrap: anywhere; }
 .concept-course dt { color: var(--concept-muted); font-size: 12px; }
 .concept-course dd { margin: 2px 0 0; color: #233477; font-size: 18px; font-weight: 700; }
+.concept-course .concept-course-note {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 126px;
+  min-height: 40px;
+  padding: 8px 16px;
+  border-radius: 9px;
+  background: var(--concept-accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.concept-course .concept-course-note:hover { background: #394ccd; text-decoration: none; }
 
 .concept-fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .concept-fieldset legend { margin: 0; padding: 0; font-size: 19px; font-weight: 700; letter-spacing: -.025em; }
