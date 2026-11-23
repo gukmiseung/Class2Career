@@ -58,3 +58,5 @@ BEGIN
   END IF;
 END;
 $migration$;
+
+NOTIFY pgrst, 'reload schema';
