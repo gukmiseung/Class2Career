@@ -25,3 +25,8 @@ test('rejects provider errors, refusals, truncation and invalid generated cards'
   ]
   for (const response of responses) await assert.rejects(generateExamples([], 'test-key', 'gpt-4.1-mini', async () => response))
 })
+test('distinguishes quota, authentication and model errors without leaking provider messages', async () => {
+  for (const [status, providerCode, expected] of [[401, 'invalid_api_key', 'OPENAI_AUTH'], [429, 'insufficient_quota', 'OPENAI_QUOTA'], [404, 'model_not_found', 'OPENAI_MODEL']] as const) {
+    await assert.rejects(generateExamples([], 'secret-key', 'gpt-4.1-mini', async () => Response.json({ error: { code: providerCode, message: 'secret-key' } }, { status })), (error: Error & { code?: string }) => error.code === expected && !error.message.includes('secret-key'))
+  }
+})

@@ -1,3 +1,4 @@
+import { GenerationError } from './errors.ts'
 import { validateExamples } from './handler.ts'
 
 export async function generateExamples(concepts: unknown, key: string, model: string, request: typeof fetch = fetch) {
@@ -33,9 +34,18 @@ export async function generateExamples(concepts: unknown, key: string, model: st
       },
     }),
   })
-  if (!response.ok) throw new Error('Generation failed')
+  if (!response.ok) {
+    const body = await response.json().catch(() => null)
+    const providerCode = body?.error?.code
+    if (response.status === 401) throw new GenerationError('OPENAI_AUTH', 'AI 서비스 인증 설정을 확인해야 합니다.')
+    if (providerCode === 'insufficient_quota') throw new GenerationError('OPENAI_QUOTA', 'AI 서비스 사용 한도 또는 결제 설정을 확인해야 합니다.')
+    if (response.status === 429) throw new GenerationError('OPENAI_RATE_LIMIT', 'AI 요청이 몰리고 있습니다. 잠시 후 다시 시도해 주세요.')
+    if (providerCode === 'model_not_found') throw new GenerationError('OPENAI_MODEL', 'AI 모델 설정 또는 접근 권한을 확인해야 합니다.')
+    throw new GenerationError(`OPENAI_HTTP_${response.status}`, 'AI 서비스 요청을 처리하지 못했습니다.')
+  }
   const data = await response.json()
   const choice = data.choices?.[0]
-  if (choice?.finish_reason !== 'stop' || choice.message?.refusal || typeof choice.message?.content !== 'string') throw new Error('Incomplete generation')
-  return { examples: validateExamples(JSON.parse(choice.message.content)) }
+  if (choice?.finish_reason !== 'stop' || choice.message?.refusal || typeof choice.message?.content !== 'string') throw new GenerationError('OPENAI_INCOMPLETE', 'AI가 완성된 사례를 반환하지 못했습니다. 다시 시도해 주세요.')
+  try { return { examples: validateExamples(JSON.parse(choice.message.content)) } }
+  catch { throw new GenerationError('OPENAI_OUTPUT', 'AI 응답 형식이 올바르지 않습니다. 다시 시도해 주세요.') }
 }
