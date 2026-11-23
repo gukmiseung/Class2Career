@@ -126,13 +126,15 @@ export default function CourseAddPage() {
     setPage(1)
   }
 
-  async function registerCourse(courseId: number, status: CourseStatus) {
-    if (registrations[courseId] === status) return
+  async function toggleCourseStatus(courseId: number, status: CourseStatus) {
+    const nextStatus = registrations[courseId] === status ? null : status
     setSaveError('')
     try {
-      await saveCourseStatus(courseId, status)
+      await saveCourseStatus(courseId, nextStatus)
     } catch {
-      setSaveError('수강 상태를 변경하지 못했어요. 다시 시도해 주세요.')
+      setSaveError(nextStatus === null
+        ? '과목 등록을 취소하지 못했어요. 다시 시도해 주세요.'
+        : '수강 상태를 변경하지 못했어요. 다시 시도해 주세요.')
     }
   }
 
@@ -270,7 +272,7 @@ export default function CourseAddPage() {
             <header className="course-results-heading">
               <div>
                 <h2 id="course-results-title">과목 검색 결과</h2>
-                <p>등록된 전공 교육과정 과목</p>
+                <p id="course-status-hint">선택한 수강 상태를 다시 누르면 등록이 취소돼요.</p>
               </div>
               <p className="course-result-count" aria-live="polite">총 {results.length}개 과목</p>
             </header>
@@ -308,8 +310,9 @@ export default function CourseAddPage() {
                             key={option}
                             type="button"
                             aria-pressed={status === option}
+                            aria-describedby={status === option ? 'course-status-hint' : undefined}
                             disabled={!registrationsReady || saving}
-                            onClick={() => registerCourse(course.dbId, option)}
+                            onClick={() => toggleCourseStatus(course.dbId, option)}
                           >
                             {statusLabels[option]}
                           </button>
