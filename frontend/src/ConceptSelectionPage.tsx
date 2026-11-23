@@ -12,18 +12,12 @@ type ConceptSelectionPageProps = {
 
 export default function ConceptSelectionPage({ courseName, concepts, initialSelectedIds, onAnalyze }: ConceptSelectionPageProps) {
   const titleRef = useRef<HTMLHeadingElement>(null)
-  const [selectedIds, setSelectedIds] = useState(initialSelectedIds)
+  const [selectedId, setSelectedId] = useState<string | undefined>(initialSelectedIds[0])
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
     titleRef.current?.focus({ preventScroll: true })
   }, [])
-
-  function toggleConcept(id: string) {
-    setSelectedIds((ids) => ids.includes(id)
-      ? ids.filter((selectedId) => selectedId !== id)
-      : [...ids, id])
-  }
 
   return (
     <div className="concept-page">
@@ -48,7 +42,7 @@ export default function ConceptSelectionPage({ courseName, concepts, initialSele
 
         <fieldset className="concept-fieldset" aria-describedby="concept-hint">
           <legend>세부 개념 선택</legend>
-          <p id="concept-hint">관심 있는 개념을 여러 개 선택할 수 있어요.</p>
+          <p id="concept-hint">실무 활용 사례를 보고 싶은 개념 하나를 선택하세요.</p>
 
           {concepts.length === 0 ? (
             <p role="status">아직 등록된 개념이 없습니다.</p>
@@ -58,13 +52,13 @@ export default function ConceptSelectionPage({ courseName, concepts, initialSele
             {concepts.map(({ id, name, description }) => (
               <label className="concept-card" key={id}>
                 <input
-                  type="checkbox"
+                  type="radio"
                   name="concept"
                   value={id}
-                  checked={selectedIds.includes(id)}
+                  checked={selectedId === id}
                   aria-labelledby={`concept-name-${id}`}
                   aria-describedby={`concept-description-${id}`}
-                  onChange={() => toggleConcept(id)}
+                  onChange={() => setSelectedId(id)}
                 />
                 <span className="concept-card-copy">
                   <strong id={`concept-name-${id}`}>{name}</strong>
@@ -77,11 +71,11 @@ export default function ConceptSelectionPage({ courseName, concepts, initialSele
         </fieldset>
 
         {concepts.length > 0 && <div className="concept-actions">
-          <p role="status">선택한 개념 {selectedIds.length}개</p>
+          <p role="status">선택한 개념 {selectedId ? 1 : 0}개</p>
           <button
             type="button"
-            disabled={selectedIds.length === 0}
-            onClick={() => onAnalyze(selectedIds)}
+            disabled={!selectedId}
+            onClick={() => selectedId && onAnalyze([selectedId])}
           >
             선택한 개념 분석하기
           </button>

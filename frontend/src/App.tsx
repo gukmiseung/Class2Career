@@ -172,8 +172,9 @@ function App() {
       }
 
       const selectionHref = `${conceptRoute}${courseId}`
-      const requestedIds = new Set(new URLSearchParams(query).getAll('concept'))
-      const selectedConcepts = concepts.filter(({ id }) => requestedIds.has(id))
+      const requestedIds = new URLSearchParams(query).getAll('concept')
+      const selectedId = requestedIds.find(id => concepts.some(concept => concept.id === id))
+      const selectedConcepts = concepts.filter(concept => concept.id === selectedId)
 
       if (path === recommendationPath && selectedConcepts.length > 0) {
         return (
