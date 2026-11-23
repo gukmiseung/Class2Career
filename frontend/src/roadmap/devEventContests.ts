@@ -1,11 +1,19 @@
-type DevEventContest = {
+import { getDevEventMatch, type DevEventListing } from './devEventMatching.ts'
+
+type ContestCard = {
   title: string
   organizer: string
-  audience: string
+  audience?: string
   devEventId: number
   officialUrl: string
   date: string
+  dateOnly?: boolean
   dateLabel: '접수 마감' | '접수·제출 마감' | '작품 제출 마감' | '행사 시작'
+  reason: string
+  isCurated: boolean
+}
+
+type DevEventContest = Omit<ContestCard, 'reason' | 'isCurated' | 'dateOnly'> & {
   recommendations: Readonly<Partial<Record<string, string>>>
 }
 
@@ -187,9 +195,40 @@ const contests: readonly DevEventContest[] = [
   },
 ]
 
-export function getDevEventContests(careerSlug: string, now = Date.now()) {
-  return contests.filter(({ date }) => now < Date.parse(date)).flatMap((contest) => {
-    const reason = Object.hasOwn(contest.recommendations, careerSlug) ? contest.recommendations[careerSlug] : undefined
-    return reason ? [{ ...contest, reason }] : []
-  }).sort((left, right) => left.date.localeCompare(right.date))
+const curatedById = new Map(contests.map((contest) => [contest.devEventId, contest]))
+
+function curatedReason({ recommendations }: DevEventContest, careerSlug: string) {
+  return Object.hasOwn(recommendations, careerSlug) ? recommendations[careerSlug] : undefined
+}
+
+export function getDevEventContests(careerSlug: string, now = Date.now(), live?: readonly DevEventListing[]) {
+  const cards = live ? live.flatMap<ContestCard>((listing) => {
+    const curated = curatedById.get(listing.devEventId)
+    const reason = (curated && curatedReason(curated, careerSlug)) ?? getDevEventMatch(careerSlug, listing)
+    if (!reason || (listing.kind === 'RECRUIT' && now < Date.parse(listing.startsAt))) return []
+
+    const dateLabel = listing.kind === 'DATE'
+      ? curated?.dateLabel === '작품 제출 마감' ? '작품 제출 마감' : '행사 시작'
+      : curated?.dateLabel === '접수·제출 마감' ? '접수·제출 마감' : '접수 마감'
+    const eventStart = dateLabel === '행사 시작'
+
+    return [{
+      devEventId: listing.devEventId,
+      title: listing.title,
+      organizer: listing.organizer,
+      audience: curated?.audience,
+      officialUrl: curated?.officialUrl ?? `https://dev-event.vercel.app/event/detail/${listing.devEventId}`,
+      date: eventStart ? listing.startsAt : listing.endsAt,
+      dateOnly: !eventStart && listing.endDateOnly,
+      dateLabel,
+      reason,
+      isCurated: Boolean(curated),
+    }]
+  }) : contests.flatMap<ContestCard>((contest) => {
+    const reason = curatedReason(contest, careerSlug)
+    return reason ? [{ ...contest, reason, isCurated: true }] : []
+  })
+
+  return cards.filter(({ date }) => now < Date.parse(date))
+    .sort((left, right) => Date.parse(left.date) - Date.parse(right.date))
 }
