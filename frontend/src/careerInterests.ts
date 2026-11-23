@@ -1,24 +1,53 @@
-export const careerInterestsKey = 'class2career.career-interests'
+import { useCallback, useSyncExternalStore } from 'react'
 
-export function loadCareerInterests(): string[] {
+const interestsChangedEvent = 'class2career:career-interests-changed'
+
+function careerInterestsStorageKey(userId: string) {
+  return `class2career.career-interests:${userId}`
+}
+
+function parseCareerInterests(stored: string | null): string[] {
   try {
-    const value: unknown = JSON.parse(window.localStorage.getItem(careerInterestsKey) ?? '[]')
+    const value: unknown = JSON.parse(stored ?? '[]')
     return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : []
   } catch {
     return []
   }
 }
 
-export function toggleCareerInterest(careerName: string) {
-  const current = loadCareerInterests()
-  const interested = current.includes(careerName)
-  const next = interested ? current.filter((name) => name !== careerName) : [...current, careerName]
+export function setCareerInterest(userId: string, careerName: string, interested: boolean) {
+  const key = careerInterestsStorageKey(userId)
+  const interests = new Set(parseCareerInterests(window.localStorage.getItem(key)))
+  if (interested) interests.add(careerName)
+  else interests.delete(careerName)
+  window.localStorage.setItem(key, JSON.stringify([...interests]))
+  window.dispatchEvent(new Event(interestsChangedEvent))
+}
 
-  try {
-    window.localStorage.setItem(careerInterestsKey, JSON.stringify(next))
-  } catch {
-    return interested
-  }
+export function useCareerInterests(userId: string | null) {
+  const key = userId ? careerInterestsStorageKey(userId) : null
+  const subscribe = useCallback((onChange: () => void) => {
+    if (!key) return () => {}
 
-  return !interested
+    function syncFromOtherTab(event: StorageEvent) {
+      if (event.key === key || event.key === null) onChange()
+    }
+
+    window.addEventListener('storage', syncFromOtherTab)
+    window.addEventListener(interestsChangedEvent, onChange)
+    return () => {
+      window.removeEventListener('storage', syncFromOtherTab)
+      window.removeEventListener(interestsChangedEvent, onChange)
+    }
+  }, [key])
+
+  const getSnapshot = useCallback(() => {
+    try {
+      return key ? window.localStorage.getItem(key) : null
+    } catch {
+      return null
+    }
+  }, [key])
+
+  return parseCareerInterests(useSyncExternalStore(subscribe, getSnapshot))
 }

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { careerInterestsKey, loadCareerInterests } from './careerInterests'
+import { useState } from 'react'
+import { setCareerInterest, useCareerInterests } from './careerInterests'
 import { statusLabels, type CourseStatus } from './courseRegistrations'
 import { useCourseRegistrations } from './contexts/CourseRegistrationsContext'
 import { useCourseCatalog } from './useCourseCatalog'
@@ -20,7 +20,7 @@ export default function LearningPage({ userId }: { userId: string | null }) {
     savingCourseIds, retryLoad, saveCourseStatus,
   } = useCourseRegistrations()
   const [activeTab, setActiveTab] = useState<LearningTab | null>('completed')
-  const [interestedCareers, setInterestedCareers] = useState(loadCareerInterests)
+  const interestedCareers = useCareerInterests(userId)
   const [noteFeedback, setNoteFeedback] = useState<{ key: string; saved: boolean } | null>(null)
   const [expandedItems, setExpandedItems] = useState<Set<string>>(() => new Set())
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null)
@@ -85,7 +85,7 @@ export default function LearningPage({ userId }: { userId: string | null }) {
   }
 
   async function confirmDelete() {
-    if (!deleteTarget || deletingCourse) return
+    if (!userId || !deleteTarget || deletingCourse) return
     setDeleteError('')
 
     if (deleteTarget.type === 'course') {
@@ -96,9 +96,12 @@ export default function LearningPage({ userId }: { userId: string | null }) {
         return
       }
     } else {
-      const next = interestedCareers.filter((name) => name !== deleteTarget.id)
-      window.localStorage.setItem(careerInterestsKey, JSON.stringify(next))
-      setInterestedCareers(next)
+      try {
+        setCareerInterest(userId, deleteTarget.id, false)
+      } catch {
+        setDeleteError('관심 직무를 삭제하지 못했어요. 다시 시도해 주세요.')
+        return
+      }
     }
 
     setNotes((current) => {
@@ -121,17 +124,6 @@ export default function LearningPage({ userId }: { userId: string | null }) {
     })
     setDeleteTarget(null)
   }
-
-  useEffect(() => {
-    function syncCareerInterests(event: StorageEvent) {
-      if (event.key === careerInterestsKey || event.key === null) {
-        setInterestedCareers(loadCareerInterests())
-      }
-    }
-
-    window.addEventListener('storage', syncCareerInterests)
-    return () => window.removeEventListener('storage', syncCareerInterests)
-  }, [])
 
   return (
     <main className="learning-page">

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { loadCareerInterests, toggleCareerInterest } from './careerInterests'
+import { setCareerInterest, useCareerInterests } from './careerInterests'
 import { useCourseCatalog } from './useCourseCatalog'
 import { statusLabels } from './courseRegistrations'
 import { useCourseRegistrations } from './contexts/CourseRegistrationsContext'
@@ -13,11 +13,12 @@ import './CareerDetailPage.css'
 export default function CareerDetailPage({ careerName }: { careerName: string }) {
   const { careers, loading: careersLoading, error: careersError, retry: retryCareers } = useCareerCatalog()
   const career = careers.find((item) => item.title === careerName)
-  const [isInterested, setIsInterested] = useState(() => loadCareerInterests().includes(careerName))
   const { registrations, loading: registrationsLoading, error: registrationsError, retryLoad } = useCourseRegistrations()
   const { catalog, loading: catalogLoading, error: catalogError, retry: retryCatalog } = useCourseCatalog()
   const [showLoginModal, setShowLoginModal] = useState(false)
   const { loading, user } = useAuth()
+  const [interestSaveFailed, setInterestSaveFailed] = useState(false)
+  const isInterested = useCareerInterests(user?.id ?? null).includes(careerName)
 
   if (careersLoading || careersError) {
     return (
@@ -66,17 +67,25 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
             className="career-interest-button"
             type="button"
             aria-pressed={isInterested}
+            disabled={loading}
             onClick={() => {
               if (!user) {
-                if (!loading) setShowLoginModal(true)
+                setShowLoginModal(true)
                 return
               }
-              setIsInterested(toggleCareerInterest(career.title))
+
+              try {
+                setCareerInterest(user.id, career.title, !isInterested)
+                setInterestSaveFailed(false)
+              } catch {
+                setInterestSaveFailed(true)
+              }
             }}
           >
             {isInterested ? '관심 직무 해제' : '관심 직무 등록'}
           </button>
         </div>
+        {user && interestSaveFailed && <p role="alert">관심 직무를 저장하지 못했어요. 다시 시도해 주세요.</p>}
       </section>
 
       <section className="connected-courses" aria-labelledby="course-heading">
