@@ -23,11 +23,13 @@ export default function ConceptAnalysisPage({ courseName, concepts, selectionHre
   const titleRef = useRef<HTMLHeadingElement>(null)
   const analyses = concepts.map((concept) => ({ concept, analysis: getConceptAnalysis(concept) }))
   const generated = useConceptExamples(concepts.map(concept => concept.id))
-  const examples = generated.examples ?? Array.from({ length: 3 }, () => ({
-    title: generated.error ? '사례를 불러오지 못했어요' : '실무 활용 사례 작성 중',
-    description: generated.error ?? '선택한 개념에 맞는 구체적인 활용 사례를 작성하고 있어요.',
-    topic: generated.error ? '잠시 후 다시 시도' : 'AI 생성 중',
-  }))
+  const first = analyses[0]
+  const basicExamples = first?.concept.name.replace(/\s+/g, '') === '우선순위큐' ? [
+    { title: '장애 알림 처리', description: '대기 중인 장애 알림을 심각도 순으로 꺼내 결제 중단 같은 긴급 장애를 먼저 담당자에게 전달해요.', topic: '장애 대응' },
+    { title: '최단 경로 탐색', description: '길찾기에서 누적 이동 시간이 가장 짧은 후보 지점을 먼저 꺼내 주변 도로를 탐색해요.', topic: '길찾기' },
+    { title: '예약 작업 실행', description: '실행 예정 시각이 가장 이른 작업을 먼저 꺼내고, 새 예약은 도착 순서와 관계없이 시각에 맞춰 대기열에 넣어요.', topic: '스케줄링' },
+  ] : first?.analysis.examples ?? []
+  const examples = generated.examples ?? basicExamples
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
@@ -60,8 +62,8 @@ export default function ConceptAnalysisPage({ courseName, concepts, selectionHre
         </section>
 
         <section className="analysis-examples" aria-labelledby="analysis-examples-title">
-          <h2 id="analysis-examples-title">실무 활용 사례</h2>
-          <ol className="analysis-example-grid" aria-busy={!generated.examples && !generated.error} aria-live="polite">
+          <h2 id="analysis-examples-title">실무 활용 사례{generated.examples ? '' : ' · 기본 예시'}</h2>
+          <ol className="analysis-example-grid" aria-live="polite">
             {examples.map(({ title, description, topic }, index) => (
               <li className="analysis-example" key={index}>
                 <span className="analysis-example-number">{String(index + 1).padStart(2, '0')}</span>
