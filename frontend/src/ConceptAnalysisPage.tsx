@@ -26,7 +26,7 @@ const conceptExplanations: Record<string, string> = {
 export default function ConceptAnalysisPage({ courseId, courseName, courseCategories, concepts, selectionHref }: ConceptAnalysisPageProps) {
   const titleRef = useRef<HTMLHeadingElement>(null)
   const generated = useConceptExamples(concepts.map(concept => concept.id))
-  const showRelatedCareers = !courseCategories.some((category) => examplesOnlyCategories.has(category))
+  const showRelatedCareers = courseCategories.some((category) => !examplesOnlyCategories.has(category))
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
