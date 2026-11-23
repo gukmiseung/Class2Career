@@ -2,7 +2,7 @@ import { GenerationError } from './errors.ts'
 
 export async function generateExamples(concepts: unknown, key: string, model: string, request: typeof fetch = fetch) {
   const base = 'https://generativelanguage.googleapis.com/v1beta/models'
-  const preferred = model.trim().replace(/^models\//, '') || 'gemini-2.5-flash'
+  const preferred = model.trim().replace(/^models\//, '') || 'gemini-3.5-flash-lite'
   const options: RequestInit = {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
@@ -53,7 +53,7 @@ export async function generateExamples(concepts: unknown, key: string, model: st
       await new Promise(resolve => setTimeout(resolve, seconds * 1000))
       response = await generate(selected)
     }
-    for (const fallback of ['gemini-2.5-flash-lite', 'gemini-2.0-flash']) {
+    for (const fallback of ['gemini-2.5-flash-lite', 'gemini-2.5-flash']) {
       if (response.status !== 429) break
       if (fallback === selected) continue
       response = await generate(fallback)

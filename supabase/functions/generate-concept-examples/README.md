@@ -5,7 +5,7 @@ Generates three Korean practice example cards from authenticated users' selected
 ## Deploy
 
 1. In this Supabase project's Edge Function secrets, set `GEMINI_API_KEY` to the existing Gemini key. Do not put it in frontend `VITE_` variables or commit it. A key configured in another service is not automatically available here.
-2. Optionally set `GEMINI_MODEL` (default `gemini-2.5-flash`) to a model available to the project.
+2. Optionally set `GEMINI_MODEL` (default `gemini-3.5-flash-lite`) to a model available to the project.
 3. Deploy from the repository root:
 
    supabase functions deploy generate-concept-examples --project-ref bnjskjmikxsrwpedmnvh

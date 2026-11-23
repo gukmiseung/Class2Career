@@ -27,6 +27,6 @@ Deno.serve(createHandler({
     if (!Array.isArray(concepts) || concepts.length !== ids.length || new Set(concepts.map(c => c.course_id)).size !== 1) throw new GenerationError('CONCEPT_SELECTION', '개념 정보가 변경되었습니다. 과목에서 개념을 다시 선택해 주세요.')
     const key = Deno.env.get('GEMINI_API_KEY')?.trim()
     if (!key) throw new GenerationError('GEMINI_KEY_MISSING', 'AI 서비스 키가 서버에 설정되지 않았습니다.')
-    return generateExamples(concepts, key, Deno.env.get('GEMINI_MODEL') ?? 'gemini-2.5-flash')
+    return generateExamples(concepts, key, Deno.env.get('GEMINI_MODEL') ?? 'gemini-3.5-flash-lite')
   },
 }))
