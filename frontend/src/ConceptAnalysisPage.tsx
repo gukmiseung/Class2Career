@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
 import ConceptHeader from './ConceptHeader'
-import { getConceptAnalysis } from './conceptAnalysis'
 import type { CourseConcept } from './courseConcepts'
 import './ConceptAnalysisPage.css'
 import { useConceptExamples } from './useConceptExamples'
@@ -21,16 +20,7 @@ const conceptExplanations: Record<string, string> = {
 
 export default function ConceptAnalysisPage({ courseName, concepts, selectionHref, recommendationHref }: ConceptAnalysisPageProps) {
   const titleRef = useRef<HTMLHeadingElement>(null)
-  const analyses = concepts.map((concept) => ({ concept, analysis: getConceptAnalysis(concept) }))
   const generated = useConceptExamples(concepts.map(concept => concept.id))
-  const first = analyses[0]
-  const basicExamples = first?.concept.name.replace(/\s+/g, '') === '우선순위큐' ? [
-    { title: '장애 알림 처리', description: '대기 중인 장애 알림을 심각도 순으로 꺼내 결제 중단 같은 긴급 장애를 먼저 담당자에게 전달해요.', topic: '장애 대응' },
-    { title: '최단 경로 탐색', description: '길찾기에서 누적 이동 시간이 가장 짧은 후보 지점을 먼저 꺼내 주변 도로를 탐색해요.', topic: '길찾기' },
-    { title: '예약 작업 실행', description: '실행 예정 시각이 가장 이른 작업을 먼저 꺼내고, 새 예약은 도착 순서와 관계없이 시각에 맞춰 대기열에 넣어요.', topic: '스케줄링' },
-  ] : first?.analysis.examples ?? []
-  const examples = generated.examples ?? basicExamples
-
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
     titleRef.current?.focus({ preventScroll: true })
@@ -52,7 +42,7 @@ export default function ConceptAnalysisPage({ courseName, concepts, selectionHre
         </header>
 
         <section className="analysis-concept-list" aria-label="선택한 개념 설명">
-          {analyses.map(({ concept }) => (
+          {concepts.map((concept) => (
             <article className="analysis-concept-card" key={concept.id}>
               <span>선택한 개념 · {courseName}</span>
               <h2>{concept.name}</h2>
@@ -62,15 +52,21 @@ export default function ConceptAnalysisPage({ courseName, concepts, selectionHre
         </section>
 
         <section className="analysis-examples" aria-labelledby="analysis-examples-title">
-          <h2 id="analysis-examples-title">실무 활용 사례{generated.examples ? '' : ' · 기본 예시'}</h2>
-          <ol className="analysis-example-grid" aria-live="polite">
-            {examples.map(({ title, description, topic }, index) => (
+          <h2 id="analysis-examples-title">실무 활용 사례</h2>
+          {generated.error ? (
+            <div role="alert">
+              <p>{generated.error}</p>
+              <button type="button" onClick={generated.retry}>다시 생성</button>
+            </div>
+          ) : !generated.examples && <p role="status">선택한 개념의 실무 사례를 생성하고 있어요.</p>}
+          {generated.examples && <ol className="analysis-example-grid" aria-live="polite">
+            {generated.examples.map(({ title, description, topic }, index) => (
               <li className="analysis-example" key={index}>
                 <span className="analysis-example-number">{String(index + 1).padStart(2, '0')}</span>
                 <h3>{title}</h3><p>{description}</p><strong># {topic}</strong>
               </li>
             ))}
-          </ol>
+          </ol>}
         </section>
 
         <section className="analysis-next" aria-label="관련 직무와 다음 학습 추천">
