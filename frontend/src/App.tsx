@@ -230,6 +230,20 @@ function App() {
       }
     }
 
+    const roadmapPrefix = '#roadmap-'
+    if (hash.startsWith(roadmapPrefix)) {
+      const [encodedCareerName, view] = hash.slice(roadmapPrefix.length).split('/', 2)
+      return (
+        <div className="home-page dashboard-shell roadmap-shell">
+          <SiteHeader />
+          <RoadmapPage
+            careerName={decodeURIComponent(encodedCareerName)}
+            view={view === 'contests' || view === 'weekly' ? view : 'overview'}
+          />
+        </div>
+      )
+    }
+
     return (
       <div className={`home-page${hash !== '#login' && hash !== '#signup' ? ' dashboard-shell' : ''}${hash === '' || hash === '#dashboard' ? ' dashboard-home-shell' : ''}`}>
         <SiteHeader />
@@ -248,8 +262,6 @@ function App() {
           <CareerPage />
         ) : hash.startsWith('#career-') ? (
           <CareerDetailPage key={hash} careerName={decodeURIComponent(hash.slice('#career-'.length))} />
-        ) : hash.startsWith('#roadmap-') ? (
-          <RoadmapPage careerName={decodeURIComponent(hash.slice('#roadmap-'.length))} />
         ) : (
           <DashboardPage />
         )}
