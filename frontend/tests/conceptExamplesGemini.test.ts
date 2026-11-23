@@ -31,3 +31,17 @@ test('recovers from a missing model using an available text Flash model', async 
   assert.ok(urls[1].includes('/models?pageSize='))
   assert.ok(urls[2].endsWith('/models/gemini-3-flash:generateContent'))
 })
+
+test('recovers from unsupported generation options using the same selected concept', async () => {
+  let calls = 0
+  const concepts = [{ name: '큐' }]
+  const request: typeof fetch = async (_url, options) => {
+    const body = JSON.parse(options?.body as string)
+    assert.deepEqual(JSON.parse(body.contents[0].parts[0].text), concepts)
+    if (++calls === 1) return Response.json({ error: { status: 'INVALID_ARGUMENT' } }, { status: 400 })
+    assert.deepEqual(body.generationConfig, { responseMimeType: 'application/json' })
+    return Response.json({ candidates: [{ finishReason: 'STOP', content: { parts: [{ text: JSON.stringify({ examples }) }] } }] })
+  }
+  assert.deepEqual(await generateExamples(concepts, 'test-key', 'gemini-3-flash', request), { examples })
+  assert.equal(calls, 2)
+})
