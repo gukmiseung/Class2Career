@@ -1,5 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { authHref } from './authNavigation'
+import lockBackground from './assets/login-lock-background.png'
+import lockBody from './assets/login-lock-body.png'
+import lockKeyhole from './assets/login-lock-keyhole.png'
+import lockShackle from './assets/login-lock-shackle.png'
 
 export default function LearningLoginModal({ destination, onClose, description }: {
   destination: string
@@ -42,7 +46,12 @@ export default function LearningLoginModal({ destination, onClose, description }
         }}
       >
         <button className="learning-login-close" type="button" ref={closeButton} aria-label="안내창 닫기" onClick={onClose}>×</button>
-        <div className="learning-login-lock" aria-hidden="true"><span /></div>
+        <div className="learning-login-lock" aria-hidden="true">
+          <img className="lock-background" src={lockBackground} alt="" />
+          <img className="lock-shackle" src={lockShackle} alt="" />
+          <img className="lock-body" src={lockBody} alt="" />
+          <img className="lock-keyhole" src={lockKeyhole} alt="" />
+        </div>
         <h2 id="learning-login-title">로그인 후 이용해주세요</h2>
         <p id="learning-login-description">{description ?? <>로그인하면 나의 수강 과목과 학습 현황을<br />확인하고 관리할 수 있어요.</>}</p>
         <a className="learning-login-button" href={authHref('#login', destination)}>로그인하기</a>
