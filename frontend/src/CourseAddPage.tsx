@@ -140,8 +140,8 @@ export default function CourseAddPage() {
     <main className="course-page">
       <div className="course-page-content">
         <header className="course-page-heading">
-          <h1 ref={titleRef} tabIndex={-1}>나의 과목 관리</h1>
-          <p>수강 완료·진행 중·예정 과목을 등록해 나의 학습 현황을 관리해 보세요.</p>
+          <h1 ref={titleRef} tabIndex={-1}>과목 검색하기</h1>
+<p>경북대학교 컴퓨터학부 교육과정에 포함된 과목을 찾아 내 학습에 등록해 보세요.</p>
         </header>
 
         <form className="course-search" role="search" onSubmit={handleSearch}>
