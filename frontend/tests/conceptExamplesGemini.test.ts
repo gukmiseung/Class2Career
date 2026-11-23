@@ -14,3 +14,20 @@ test('sends the server key and selected DB concepts to Gemini with a strict sche
   }
   assert.deepEqual(await generateExamples(concepts, 'test-key', 'gemini-2.5-flash', request), { examples })
 })
+
+test('recovers from a missing model using an available text Flash model', async () => {
+  const urls: string[] = []
+  const request: typeof fetch = async url => {
+    urls.push(String(url))
+    if (urls.length === 1) return new Response(null, { status: 404 })
+    if (urls.length === 2) return Response.json({ models: [
+      { name: 'models/gemini-3-flash-image', supportedGenerationMethods: ['generateContent'] },
+      { name: 'models/gemini-3-flash', supportedGenerationMethods: ['generateContent'] },
+    ] })
+    return Response.json({ candidates: [{ finishReason: 'STOP', content: { parts: [{ text: JSON.stringify({ examples }) }] } }] })
+  }
+  assert.deepEqual(await generateExamples([], 'test-key', 'models/gemini-old', request), { examples })
+  assert.ok(urls[0].endsWith('/models/gemini-old:generateContent'))
+  assert.ok(urls[1].includes('/models?pageSize='))
+  assert.ok(urls[2].endsWith('/models/gemini-3-flash:generateContent'))
+})

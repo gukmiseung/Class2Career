@@ -1,7 +1,9 @@
 import { GenerationError } from './errors.ts'
 
 export async function generateExamples(concepts: unknown, key: string, model: string, request: typeof fetch = fetch) {
-  const response = await request(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+  const base = 'https://generativelanguage.googleapis.com/v1beta/models'
+  const preferred = model.trim().replace(/^models\//, '') || 'gemini-2.5-flash'
+  const options: RequestInit = {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
     signal: AbortSignal.timeout(45000),
@@ -12,7 +14,24 @@ export async function generateExamples(concepts: unknown, key: string, model: st
         type: 'OBJECT', required: ['examples'], properties: { examples: { type: 'ARRAY', minItems: 3, maxItems: 3, items: { type: 'OBJECT', required: ['title', 'description', 'topic'], properties: { title: { type: 'STRING' }, description: { type: 'STRING' }, topic: { type: 'STRING' } } } } },
       } },
     }),
-  })
+  }
+  const generate = (name: string) => request(base + '/' + encodeURIComponent(name) + ':generateContent', options)
+  let response = await generate(preferred)
+  if (response.status === 404) {
+    const list = await request(base + '?pageSize=1000', {
+      headers: { 'x-goog-api-key': key }, signal: options.signal,
+    })
+    if (!list.ok) throw new GenerationError('GEMINI_LIST_' + list.status, '사용 가능한 Gemini 모델을 조회하지 못했습니다.')
+    const catalog = await list.json()
+    type Model = { name: string; supportedGenerationMethods?: string[] }
+    const candidates = (catalog.models ?? []).filter((entry: Model) =>
+      /^models\/gemini-[\d.]+-flash(?:-lite)?(?:-\d+)?$/.test(entry.name) &&
+      entry.name !== 'models/' + preferred && entry.supportedGenerationMethods?.includes('generateContent')
+    ) as Model[]
+    candidates.sort((a, b) => b.name.localeCompare(a.name, 'en', { numeric: true }))
+    if (!candidates.length) throw new GenerationError('GEMINI_MODEL_UNAVAILABLE', '사용 가능한 텍스트 모델을 GEMINI_MODEL에 지정해 주세요.')
+    response = await generate(candidates[0].name.slice('models/'.length))
+  }
   if (!response.ok) throw new GenerationError('GEMINI_HTTP_' + response.status, 'Gemini 요청을 처리하지 못했습니다.')
   const data = await response.json()
   const candidate = data.candidates?.[0]
