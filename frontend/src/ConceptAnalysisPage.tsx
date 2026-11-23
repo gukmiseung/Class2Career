@@ -73,7 +73,7 @@ export default function ConceptAnalysisPage({ courseName, concepts, selectionHre
         </section>
 
         <section className="analysis-next" aria-label="관련 직무와 다음 학습 추천">
-          <div><h2>이 개념과 연결되는 직무가 궁금하다면?</h2><p>관련 직무와 이어서 살펴볼 학습 내용을 확인할 수 있어요.</p></div>
+          <div><h2>이 과목과 연결되는 직무가 궁금하다면?</h2><p>관련 직무와 이어서 살펴볼 학습 내용을 확인할 수 있어요.</p></div>
           <a className="analysis-next-link" href={recommendationHref}>
             관련 직무 · 다음 학습 추천 보기 <span aria-hidden="true">→</span>
           </a>

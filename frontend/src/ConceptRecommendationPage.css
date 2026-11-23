@@ -7,9 +7,9 @@
 .recommendation-content section > h2 { margin: 0; font-size: 22px; letter-spacing: -.03em; }
 .recommendation-roles { margin-top: 30px; }
 .recommendation-roles ul { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; margin: 18px 0 0; padding: 0; list-style: none; }
-.recommendation-roles li { min-height: 126px; padding: 24px 22px; border: 1px solid #d8e1ed; border-radius: 16px; background: #fff; }
-.recommendation-roles li strong { font-size: 19px; }
-.recommendation-roles li p { margin: 9px 0 0; color: #66758e; font-size: 14px; line-height: 1.45; }
+.recommendation-role-card { min-height: 126px; padding: 24px 22px; border: 1px solid #d8e1ed; border-radius: 16px; background: #fff; }
+.recommendation-role-card strong { font-size: 19px; }
+.recommendation-role-card p { margin: 9px 0 0; color: #66758e; font-size: 14px; line-height: 1.45; }
 .recommendation-learning { margin-top: 46px; }
 .recommendation-learning ol { display: grid; gap: 20px; margin: 28px 0 0; padding: 0; list-style: none; }
 .recommendation-learning li { min-height: 84px; display: grid; grid-template-columns: 50px minmax(0, 1fr) auto; align-items: center; gap: 18px; padding: 14px 24px; border: 1px solid #d8e1ed; border-radius: 16px; background: #fff; }

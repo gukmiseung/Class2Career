@@ -9,7 +9,6 @@ type AnalysisExample = {
 export type ConceptAnalysis = {
   title: string
   examples: readonly AnalysisExample[]
-  roles: readonly string[]
   recommendation: string
   steps: readonly string[]
 }
@@ -34,7 +33,6 @@ export const conceptAnalyses: Record<string, ConceptAnalysis> = {
         topic: '연속 데이터',
       },
     ],
-    roles: ['프론트엔드 개발자', '백엔드 개발자', '오디오 소프트웨어 개발자'],
     recommendation: '배열과 연결 리스트의 접근·삽입 비용을 비교하고 최근 사용 항목 캐시를 만들어 보세요.',
     steps: [
       '배열과 연결 리스트에서 인덱스 조회, 삽입, 삭제에 드는 시간을 비교해 보세요.',
@@ -61,7 +59,6 @@ export const conceptAnalyses: Record<string, ConceptAnalysis> = {
         topic: '중첩 검사',
       },
     ],
-    roles: ['프론트엔드 개발자', '백엔드 개발자', '개발 도구 엔지니어'],
     recommendation: '스택으로 실행 취소를 만들고 큐로 발송 요청을 처리하는 미니 프로젝트를 해 보세요.',
     steps: [
       '스택과 큐의 저장 및 꺼내기 순서를 같은 입력으로 비교해 보세요.',
@@ -88,7 +85,6 @@ export const conceptAnalyses: Record<string, ConceptAnalysis> = {
         topic: '링크 분석',
       },
     ],
-    roles: ['백엔드 개발자', '데이터 엔지니어', '검색·추천 시스템 개발자'],
     recommendation: '그래프 탐색 알고리즘을 더 이해하고, 간단한 친구 추천 프로젝트를 만들어 보세요.',
     steps: [
       '폴더 계층을 트리로, 친구 관계를 인접 리스트 그래프로 표현해 보세요.',
@@ -115,7 +111,6 @@ export const conceptAnalyses: Record<string, ConceptAnalysis> = {
         topic: '상위 K개 선택',
       },
     ],
-    roles: ['백엔드 개발자', '데이터 엔지니어', '검색·추천 시스템 개발자'],
     recommendation: '여러 정렬 기준과 이진 탐색을 적용해 상품을 좁혀 보는 검색 화면을 만들어 보세요.',
     steps: [
       '상품 목록을 가격순과 등록일순으로 정렬해 보세요.',
@@ -148,7 +143,6 @@ export function getConceptAnalysis(concept: CourseConcept): ConceptAnalysis {
         topic: '프로젝트 실습',
       },
     ],
-    roles: ['소프트웨어 개발자', '서비스 기획자', '데이터 분석가'],
     recommendation: `${concept.name}의 기본 원리를 익힌 뒤 작은 예제 프로젝트에 직접 적용해 보세요.`,
     steps: [
       `${concept.name}의 핵심 용어와 동작 과정을 정리해 보세요.`,

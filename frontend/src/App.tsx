@@ -180,6 +180,7 @@ function App() {
         return (
           <ConceptRecommendationPage
             key={hash}
+            courseId={course.dbId}
             courseName={course.name}
             concepts={selectedConcepts}
             analysisHref={`${conceptRoute}${analysisPath}?${query}`}

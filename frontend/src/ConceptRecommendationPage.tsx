@@ -1,34 +1,25 @@
 import { useEffect, useRef } from 'react'
+import { EmptyState, ErrorMessage, Loading } from './AsyncState'
 import ConceptHeader from './ConceptHeader'
 import { getConceptAnalysis } from './conceptAnalysis'
 import type { CourseConcept } from './courseConcepts'
+import { useCareerCatalog } from './useCareerCatalog'
 import './ConceptRecommendationPage.css'
 
 type Props = {
+  courseId: number
   courseName: string
   concepts: readonly CourseConcept[]
   analysisHref: string
 }
 
-const roleDescriptions: Record<string, string> = {
-  '프론트엔드 개발자': '사용자 화면과 상호작용을 구현하고 서비스의 사용 경험을 개선하는 직무',
-  '백엔드 개발자': '데이터 간 연결 관계와 탐색 기능을 구현하는 직무',
-  '오디오 소프트웨어 개발자': '소리 데이터를 처리하고 재생·편집 기능을 구현하는 직무',
-  '개발 도구 엔지니어': '개발자의 반복 작업을 줄이는 편집·빌드·테스트 도구를 만드는 직무',
-  '데이터 엔지니어': '복잡한 데이터 관계를 처리하고 분석 기반을 구축하는 직무',
-  '검색·추천 시스템 개발자': '사용자 및 콘텐츠의 연결 정보를 활용해 추천 기능을 만드는 직무',
-  '소프트웨어 개발자': '전공 개념을 활용해 서비스 문제를 분석하고 기능을 구현하는 직무',
-  '서비스 기획자': '사용자 문제를 기능과 정책, 화면 흐름으로 구체화하는 직무',
-  '데이터 분석가': '데이터의 패턴을 찾아 의사결정에 필요한 인사이트를 전달하는 직무',
-}
-
 const learningTitles = ['개념 심화 학습', '직무 연계 실습', '미니 프로젝트 완성']
 
-export default function ConceptRecommendationPage({ courseName, concepts, analysisHref }: Props) {
+export default function ConceptRecommendationPage({ courseId, courseName, concepts, analysisHref }: Props) {
   const titleRef = useRef<HTMLHeadingElement>(null)
-  const analyses = concepts.map((concept) => ({ concept, analysis: getConceptAnalysis(concept) }))
-  const roles = [...new Set(analyses.flatMap(({ analysis }) => analysis.roles))].slice(0, 3)
-  const steps = analyses[0].analysis.steps.slice(0, 3)
+  const { careers, loading, error, retry } = useCareerCatalog()
+  const relatedCareers = careers.filter(({ courses }) => courses.some(({ course_id }) => course_id === courseId))
+  const steps = getConceptAnalysis(concepts[0]).steps.slice(0, 3)
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
@@ -46,18 +37,31 @@ export default function ConceptRecommendationPage({ courseName, concepts, analys
           <span aria-current="page">관련 직무 · 다음 학습 추천</span>
         </nav>
 
-        <h1 ref={titleRef} tabIndex={-1}>이 개념과 연결되는 직무와 다음 학습</h1>
+        <h1 ref={titleRef} tabIndex={-1}>관련 직무와 다음 학습 추천</h1>
 
         <section className="recommendation-selection" aria-label="선택한 개념">
           <span>선택한 개념</span>
-          <strong>{courseName} · {concepts.map(({ name }) => name.replace('와 ', '와 ').replace('과 ', '과 ')).join(' · ')}</strong>
+          <strong>{courseName} · {concepts.map(({ name }) => name).join(' · ')}</strong>
         </section>
 
         <section className="recommendation-roles" aria-labelledby="recommendation-roles-title">
-          <h2 id="recommendation-roles-title">관련 직무</h2>
-          <ul>
-            {roles.map((role) => <li key={role}><strong>{role}</strong><p>{roleDescriptions[role] ?? `${courseName} 개념을 활용해 서비스 문제를 해결하는 직무`}</p></li>)}
-          </ul>
+          <h2 id="recommendation-roles-title">{courseName} 관련 직무</h2>
+          {loading ? (
+            <Loading message="관련 직무를 불러오고 있어요." compact />
+          ) : error ? (
+            <ErrorMessage message={error} onRetry={retry} />
+          ) : relatedCareers.length === 0 ? (
+            <EmptyState title="아직 연결된 직무가 없어요" message={`${courseName}에 연결된 직무가 등록되면 여기에 표시돼요.`} />
+          ) : (
+            <ul>
+              {relatedCareers.map(({ slug, title, description }) => (
+                <li className="recommendation-role-card" key={slug}>
+                  <strong>{title}</strong>
+                  <p>{description}</p>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         <section className="recommendation-learning" aria-labelledby="recommendation-learning-title">
