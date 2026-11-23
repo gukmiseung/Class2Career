@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { createAuthenticator } from '../../supabase/functions/_shared/roadmap/auth.ts'
+import { createAuthenticator, createRoadmapAllowlist } from '../../supabase/functions/_shared/roadmap/auth.ts'
 import { createRoadmapHandler, type RoadmapData, type RoadmapDependencies } from '../../supabase/functions/_shared/roadmap/handler.ts'
 import { generateMockRoadmap, loadMockRoadmap } from '../../supabase/functions/_shared/roadmap/mock.ts'
 
@@ -22,6 +22,7 @@ function request(body = JSON.stringify({ careerId }), bearer: string | null = to
 function handler(overrides: Partial<RoadmapDependencies> = {}) {
   return createRoadmapHandler({
     authenticate: async (token) => token === mockSelection.accessToken ? { userId: mockSelection.userId } : null,
+    isAllowedUser: createRoadmapAllowlist(mockSelection.userId),
     load: loadMockRoadmap,
     generate: generateMockRoadmap,
     ...overrides,
@@ -72,6 +73,39 @@ test('rejects missing, invalid or publishable-key bearer credentials before load
   const handle = handler({ load: async () => assert.fail('unauthenticated request reached loader') })
   for (const credential of [null, 'other.jwt.signature', 'publishable-key']) {
     await expectError(await handle(request(undefined, credential)), 401, 'UNAUTHORIZED')
+  }
+})
+
+test('authorizes only verified IDs in a nonempty server allowlist before loading or generating', async () => {
+  const cases = [
+    { config: mockSelection.userId, credential: null, status: 401, code: 'UNAUTHORIZED' },
+    { config: mockSelection.userId, credential: 'other.jwt.signature', status: 401, code: 'UNAUTHORIZED' },
+    { config: 'different-user', credential: token, status: 403, code: 'ROADMAP_ACCESS_DENIED' },
+    { config: undefined, credential: token, status: 403, code: 'ROADMAP_ACCESS_DENIED' },
+    { config: ' , ', credential: token, status: 403, code: 'ROADMAP_ACCESS_DENIED' },
+    { config: `other-user, ${mockSelection.userId} `, credential: token, status: 200 },
+  ]
+
+  for (const scenario of cases) {
+    let loads = 0
+    let generations = 0
+    const response = await handler({
+      isAllowedUser: createRoadmapAllowlist(scenario.config),
+      load: (selection) => {
+        loads++
+        return loadMockRoadmap(selection)
+      },
+      generate: (input, candidates) => {
+        generations++
+        return generateMockRoadmap(input, candidates)
+      },
+    })(request(undefined, scenario.credential))
+
+    if (scenario.code) await expectError(response, scenario.status, scenario.code)
+    else assert.equal(response.status, 200)
+    const expectedCalls = scenario.status === 200 ? 1 : 0
+    assert.equal(loads, expectedCalls)
+    assert.equal(generations, expectedCalls)
   }
 })
 

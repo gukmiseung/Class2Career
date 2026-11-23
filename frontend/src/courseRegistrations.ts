@@ -1,13 +1,18 @@
-import { supabase } from './lib/supabase'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
-export const statusLabels = { completed: '수강 완료', planned: '수강 예정' } as const
+export const courseStatuses = ['completed', 'in_progress', 'planned'] as const
+export type CourseStatus = typeof courseStatuses[number]
+export const statusLabels: Record<CourseStatus, string> = {
+  completed: '수강 완료',
+  in_progress: '수강 중',
+  planned: '수강 예정',
+}
 
-export type CourseStatus = keyof typeof statusLabels
 export type Registrations = Partial<Record<number, CourseStatus>>
 
 const registrationTable = 'c2c_user_courses'
 
-export async function loadRegistrations(userId: string, signal: AbortSignal): Promise<Registrations> {
+export async function loadRegistrations(supabase: SupabaseClient, userId: string, signal: AbortSignal): Promise<Registrations> {
   const registrations: Registrations = {}
   const pageSize = 1000
 
@@ -22,14 +27,25 @@ export async function loadRegistrations(userId: string, signal: AbortSignal): Pr
       .throwOnError()
 
     for (const { course_id, status } of data) {
-      if (status === 'completed' || status === 'planned') registrations[course_id] = status
+      if (isCourseId(course_id) && isCourseStatus(status)) registrations[course_id] = status
     }
 
     if (data.length < pageSize) return registrations
   }
 }
 
-export async function saveRegistration(userId: string, courseId: number, status: CourseStatus | null) {
+function isCourseId(value: unknown): value is number {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value > 0
+}
+
+function isCourseStatus(value: unknown): value is CourseStatus {
+  return typeof value === 'string' && Object.hasOwn(statusLabels, value)
+}
+
+export async function saveRegistration(supabase: SupabaseClient, userId: string, courseId: number, status: CourseStatus | null) {
+  if (!isCourseId(courseId)) throw new Error('유효하지 않은 과목 ID입니다.')
+  if (status !== null && !isCourseStatus(status)) throw new Error('유효하지 않은 수강 상태입니다.')
+
   if (status !== null) {
     await supabase
       .from(registrationTable)

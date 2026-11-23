@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { setCareerInterest, useCareerInterests } from './careerInterests'
-import { statusLabels, type CourseStatus } from './courseRegistrations'
+import { courseStatuses, statusLabels, type CourseStatus } from './courseRegistrations'
 import { useCourseRegistrations } from './contexts/CourseRegistrationsContext'
 import { useCourseCatalog } from './useCourseCatalog'
 import { useProfile } from './useProfile'
 import { EmptyState, ErrorMessage, Loading } from './AsyncState'
+import { changeLearningCourseStatus } from './learningCourseStatus'
 import { courseNotesStorageKey, legacyLearningNotesKey, loadLearningNotes, storeLearningNote } from './learningNotes'
 import './LearningPage.css'
 
@@ -17,14 +17,16 @@ export default function LearningPage({ userId }: { userId: string | null }) {
   const { catalog, loading: catalogLoading, error: catalogError, retry: retryCatalog } = useCourseCatalog()
   const {
     registrations, loading: registrationsLoading, error: registrationsError,
-    savingCourseIds, retryLoad, saveCourseStatus,
+    savingCourseIds, retryLoad, saveCourseStatus, careerInterest,
   } = useCourseRegistrations()
   const [activeTab, setActiveTab] = useState<LearningTab | null>('completed')
-  const interestedCareers = useCareerInterests(userId)
+  const interestedCareers = careerInterest.items
+  const careerCount = careerInterest.loading || careerInterest.error ? null : interestedCareers.length
   const [noteFeedback, setNoteFeedback] = useState<{ key: string; saved: boolean } | null>(null)
   const [expandedItems, setExpandedItems] = useState<Set<string>>(() => new Set())
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null)
   const [deleteError, setDeleteError] = useState('')
+  const [statusErrors, setStatusErrors] = useState<Partial<Record<number, string | null>>>({})
   const { profile: learningProfile } = useProfile()
   const learnerName = learningProfile?.name.trim() ?? ''
   const courseNotesKey = userId ? courseNotesStorageKey(userId) : null
@@ -39,12 +41,26 @@ export default function LearningPage({ userId }: { userId: string | null }) {
     const status = registrations[course.dbId]
     return status ? [{ ...course, status }] : []
   })
-  const completedCount = registeredCourses.filter(({ status }) => status === 'completed').length
-  const plannedCount = registeredCourses.filter(({ status }) => status === 'planned').length
+  const courseCounts = { completed: 0, in_progress: 0, planned: 0 }
+  for (const { status } of registeredCourses) courseCounts[status]++
   const visibleCourses = registeredCourses.filter(({ status }) => status === activeTab)
   const courseDataLoading = catalogLoading || registrationsLoading
   const courseDataError = catalogError ?? registrationsError
-  const deletingCourse = deleteTarget?.type === 'course' && savingCourseIds.has(deleteTarget.courseId)
+  const deleting = deleteTarget?.type === 'career' ? careerInterest.saving
+    : deleteTarget?.type === 'course' && savingCourseIds.has(deleteTarget.courseId)
+
+  async function changeCourseStatus(itemId: string, courseId: number, currentStatus: CourseStatus, selection: string) {
+    if (savingCourseIds.has(courseId) || selection === currentStatus) return
+    setStatusErrors((errors) => ({ ...errors, [courseId]: null }))
+    const error = await changeLearningCourseStatus(courseId, currentStatus, selection, saveCourseStatus, () => {
+      setExpandedItems((current) => {
+        const next = new Set(current)
+        next.delete(itemId)
+        return next
+      })
+    })
+    if (error) setStatusErrors((errors) => ({ ...errors, [courseId]: error }))
+  }
 
   function updateNote(noteKey: string, note: string) {
     setNotes((current) => ({ ...current, [noteKey]: note }))
@@ -79,13 +95,13 @@ export default function LearningPage({ userId }: { userId: string | null }) {
   }
 
   function dismissDelete() {
-    if (deletingCourse) return
+    if (deleting) return
     setDeleteError('')
     setDeleteTarget(null)
   }
 
   async function confirmDelete() {
-    if (!userId || !deleteTarget || deletingCourse) return
+    if (!userId || !deleteTarget || deleting) return
     setDeleteError('')
 
     if (deleteTarget.type === 'course') {
@@ -97,9 +113,9 @@ export default function LearningPage({ userId }: { userId: string | null }) {
       }
     } else {
       try {
-        setCareerInterest(userId, deleteTarget.id, false)
-      } catch {
-        setDeleteError('관심 직무를 삭제하지 못했어요. 다시 시도해 주세요.')
+        if (!await careerInterest.remove(deleteTarget.id)) return
+      } catch (error) {
+        setDeleteError(error instanceof Error ? error.message : '관심 직무를 삭제하지 못했어요. 다시 시도해 주세요.')
         return
       }
     }
@@ -141,39 +157,27 @@ export default function LearningPage({ userId }: { userId: string | null }) {
       </header>
 
       <section className="learning-summary" aria-label="학습 현황 요약">
-        <article>
-          <h2>수강 완료 과목</h2>
-          <strong>{courseDataLoading || courseDataError ? '—' : `${completedCount}개`}</strong>
-          <p>등록한 과목 기준</p>
-        </article>
-        <article>
-          <h2>수강 예정 과목</h2>
-          <strong>{courseDataLoading || courseDataError ? '—' : `${plannedCount}개`}</strong>
-          <p>앞으로 배울 과목</p>
-        </article>
+        {courseStatuses.map((status) => (
+          <article key={status}>
+            <h2>{statusLabels[status]} 과목</h2>
+            <strong>{courseDataLoading || courseDataError ? '—' : `${courseCounts[status]}개`}</strong>
+            <p>등록한 과목 기준</p>
+          </article>
+        ))}
         <article>
           <h2>관심 직무</h2>
-          <strong>{interestedCareers.length}개</strong>
+          <strong>{careerCount === null ? '—' : `${careerCount}개`}</strong>
           <p>저장한 직무</p>
         </article>
       </section>
 
       <section className="learning-courses" aria-labelledby="learning-courses-title">
         <div className="learning-status-tabs" aria-label="학습 항목 선택">
-          <button
-            type="button"
-            aria-pressed={activeTab === 'completed'}
-            onClick={() => setActiveTab('completed')}
-          >
-            수강 완료 과목
-          </button>
-          <button
-            type="button"
-            aria-pressed={activeTab === 'planned'}
-            onClick={() => setActiveTab('planned')}
-          >
-            수강 예정 과목
-          </button>
+          {courseStatuses.map((status) => (
+            <button key={status} type="button" aria-pressed={activeTab === status} onClick={() => setActiveTab(status)}>
+              {statusLabels[status]} 과목
+            </button>
+          ))}
           <button
             type="button"
             aria-pressed={activeTab === 'career'}
@@ -184,7 +188,7 @@ export default function LearningPage({ userId }: { userId: string | null }) {
         </div>
         {activeTab !== null && <p id="learning-courses-title">
           {activeTab === 'career'
-            ? `관심 직무 · 총 ${interestedCareers.length}개`
+            ? careerCount === null ? '관심 직무' : `관심 직무 · 총 ${careerCount}개`
             : courseDataLoading || courseDataError
               ? statusLabels[activeTab]
               : `${statusLabels[activeTab]} · 총 ${visibleCourses.length}개 과목`}
@@ -196,13 +200,15 @@ export default function LearningPage({ userId }: { userId: string | null }) {
         ) : activeTab !== 'career' && catalog?.courses.length === 0 ? (
           <EmptyState title="등록된 과목 정보가 없어요" message="교과목 정보가 등록되면 학습 현황을 확인할 수 있어요." />
         ) : activeTab === null ? null : activeTab === 'career' ? (
-          interestedCareers.length > 0 ? (
+          careerInterest.loading ? <Loading message="관심 직무를 불러오고 있어요." />
+          : careerInterest.error ? <ErrorMessage message={careerInterest.error} onRetry={careerInterest.retry} />
+          : interestedCareers.length > 0 ? (
             <ul className="learning-course-list">
-              {interestedCareers.map((careerName) => {
+              {interestedCareers.map(({ slug, name: careerName }) => {
                 const noteKey = `career:${careerName}`
                 const isExpanded = expandedItems.has(noteKey)
                 return (
-                  <li key={careerName}>
+                  <li key={slug}>
                     <button className="learning-item-toggle" type="button" aria-expanded={isExpanded} onClick={() => toggleItem(noteKey)}>
                       <span>{careerName}</span><span aria-hidden="true">{isExpanded ? '−' : '+'}</span>
                     </button>
@@ -210,7 +216,7 @@ export default function LearningPage({ userId }: { userId: string | null }) {
                       <p className="learning-course-description">관심 직무로 저장한 직무예요. 상세 페이지에서 관련 과목과 로드맵을 확인할 수 있어요.</p>
                       <div className="learning-item-actions">
                         <a className="learning-career-link" href={`#career-${encodeURIComponent(careerName)}`}>직무 상세 보기</a>
-                        <button className="learning-delete-button" type="button" onClick={() => setDeleteTarget({ type: 'career', id: careerName, name: careerName, noteKey })}>관심 직무 삭제</button>
+                        <button className="learning-delete-button" type="button" onClick={() => setDeleteTarget({ type: 'career', id: slug, name: careerName, noteKey })}>관심 직무 삭제</button>
                       </div>
                       <div className="learning-course-note">
                       <label htmlFor={`career-note-${encodeURIComponent(careerName)}`}>간단 메모</label>
@@ -273,6 +279,18 @@ export default function LearningPage({ userId }: { userId: string | null }) {
                     </button>
                   </div>
                   <div className="learning-course-note">
+                    <label htmlFor={`course-status-${course.id}`}>수강 상태</label>
+                    <select
+                      id={`course-status-${course.id}`}
+                      value={course.status}
+                      disabled={savingCourseIds.has(course.dbId)}
+                      onChange={(event) => void changeCourseStatus(course.id, course.dbId, course.status, event.currentTarget.value)}
+                    >
+                      {courseStatuses.map((status) => <option key={status} value={status}>{statusLabels[status]}</option>)}
+                    </select>
+                    {statusErrors[course.dbId] && <p role="alert">{statusErrors[course.dbId]}</p>}
+                  </div>
+                  <div className="learning-course-note">
                   <label htmlFor={`course-note-${course.id}`}>간단 메모</label>
                   <p className="learning-note-guide" id={`course-note-guide-${course.id}`}>
                     이 과목에 대해 기억할 내용을 적어보세요.
@@ -314,10 +332,10 @@ export default function LearningPage({ userId }: { userId: string | null }) {
               <strong>{deleteTarget.name}</strong>{deleteTarget.type === 'course' ? ' 과목을 내 학습에서 삭제해요.' : ' 직무를 관심 직무에서 삭제해요.'}<br />작성한 메모도 함께 삭제됩니다.
             </p>
             {deleteError && <p role="alert">{deleteError}</p>}
-            <div className="learning-delete-actions" aria-busy={deletingCourse}>
-              <button type="button" autoFocus disabled={deletingCourse} onClick={dismissDelete}>취소</button>
-              <button className="learning-delete-confirm" type="button" disabled={deletingCourse} onClick={confirmDelete}>
-                {deletingCourse ? '삭제 중…' : '삭제'}
+            <div className="learning-delete-actions" aria-busy={deleting}>
+              <button type="button" autoFocus disabled={deleting} onClick={dismissDelete}>취소</button>
+              <button className="learning-delete-confirm" type="button" disabled={deleting} onClick={confirmDelete}>
+                {deleting ? '삭제 중…' : '삭제'}
               </button>
             </div>
           </section>

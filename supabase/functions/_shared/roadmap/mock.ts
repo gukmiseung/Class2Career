@@ -1,7 +1,9 @@
-import type { RoadmapDependencies } from './handler.ts'
+import type { RoadmapData, RoadmapDependencies } from './handler.ts'
 import type { GeneratedRoadmap } from './response.ts'
 
-export const loadMockRoadmap: RoadmapDependencies['load'] = async ({ careerId }) => {
+export async function loadMockRoadmap(
+  { careerId }: Parameters<RoadmapDependencies['load']>[0],
+): Promise<RoadmapData | null> {
   if (careerId !== 'backend-developer') return null
 
   return {

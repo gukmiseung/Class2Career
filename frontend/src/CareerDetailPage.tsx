@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { setCareerInterest, useCareerInterests } from './careerInterests'
 import { useCourseCatalog } from './useCourseCatalog'
 import { statusLabels } from './courseRegistrations'
 import { useCourseRegistrations } from './contexts/CourseRegistrationsContext'
@@ -7,18 +6,17 @@ import { useAuth } from './contexts/AuthContext'
 import LearningLoginModal from './LearningLoginModal'
 import { EmptyState, ErrorMessage, Loading } from './AsyncState'
 import { useCareerCatalog } from './useCareerCatalog'
-import { hasCareerRoadmap } from './careerRoadmaps'
 import './CareerDetailPage.css'
 
 export default function CareerDetailPage({ careerName }: { careerName: string }) {
   const { careers, loading: careersLoading, error: careersError, retry: retryCareers } = useCareerCatalog()
   const career = careers.find((item) => item.title === careerName)
-  const { registrations, loading: registrationsLoading, error: registrationsError, retryLoad } = useCourseRegistrations()
+  const [interestActionError, setInterestActionError] = useState('')
+  const { registrations, loading: registrationsLoading, error: registrationsError, retryLoad, careerInterest } = useCourseRegistrations()
+  const isInterested = careerInterest.items.some(({ slug }) => slug === career?.slug)
   const { catalog, loading: catalogLoading, error: catalogError, retry: retryCatalog } = useCourseCatalog()
   const [showLoginModal, setShowLoginModal] = useState(false)
   const { loading, user } = useAuth()
-  const [interestSaveFailed, setInterestSaveFailed] = useState(false)
-  const isInterested = useCareerInterests(user?.id ?? null).includes(careerName)
 
   if (careersLoading || careersError) {
     return (
@@ -60,32 +58,31 @@ export default function CareerDetailPage({ careerName }: { careerName: string })
           {career.keywords.map((keyword) => <span key={keyword}>{keyword}</span>)}
         </div>
         <div className="career-detail-actions">
-          {hasCareerRoadmap(career.title) && (
-            <a className="roadmap-link" href={`#roadmap-${encodeURIComponent(career.title)}`}>로드맵 확인하기 →</a>
-          )}
+          <a className="roadmap-link" href={`#roadmap-${encodeURIComponent(career.title)}`}>로드맵 확인하기 →</a>
           <button
             className="career-interest-button"
             type="button"
             aria-pressed={isInterested}
-            disabled={loading}
-            onClick={() => {
+            disabled={loading || careerInterest.loading || careerInterest.saving || Boolean(careerInterest.error)}
+            onClick={async () => {
               if (!user) {
                 setShowLoginModal(true)
                 return
               }
-
+              setInterestActionError('')
               try {
-                setCareerInterest(user.id, career.title, !isInterested)
-                setInterestSaveFailed(false)
-              } catch {
-                setInterestSaveFailed(true)
+                if (isInterested) await careerInterest.remove(career.slug)
+                else await careerInterest.save(career.slug)
+              } catch (error) {
+                setInterestActionError(error instanceof Error ? error.message : '관심 직무를 변경하지 못했어요.')
               }
             }}
           >
-            {isInterested ? '관심 직무 해제' : '관심 직무 등록'}
+            {careerInterest.saving ? '처리 중…' : isInterested ? '관심 직무 해제' : '관심 직무 등록'}
           </button>
         </div>
-        {user && interestSaveFailed && <p role="alert">관심 직무를 저장하지 못했어요. 다시 시도해 주세요.</p>}
+        {careerInterest.error && <ErrorMessage message={careerInterest.error} onRetry={careerInterest.retry} compact />}
+        {interestActionError && <p role="alert">{interestActionError}</p>}
       </section>
 
       <section className="connected-courses" aria-labelledby="course-heading">

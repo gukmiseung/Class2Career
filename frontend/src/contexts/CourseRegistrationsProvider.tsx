@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { loadRegistrations, saveRegistration, type CourseStatus, type Registrations } from '../courseRegistrations'
 import { useAuth } from './AuthContext'
 import { CourseRegistrationsContext } from './CourseRegistrationsContext'
+import { supabase } from '../lib/supabase'
+import { loadCareerInterests, removeCareerInterest, saveCareerInterest, type CareerInterest } from '../careerInterests'
 
 type Session = {
   userId: string
@@ -18,6 +20,61 @@ type RegistrationsState = {
 const emptyRegistrations: Registrations = {}
 const emptySavingCourseIds: ReadonlySet<number> = new Set()
 
+function useCareerInterest(session: Session | null, authLoading: boolean) {
+  const activeMutations = useRef(new WeakSet<Session>())
+  const [state, setState] = useState<{ session: Session; items: CareerInterest[]; error: string | null; saving: boolean } | null>(null)
+  const [attempt, setAttempt] = useState(0)
+  const current = state?.session === session ? state : null
+
+  useEffect(() => {
+    if (!session) return
+    const controller = new AbortController()
+    loadCareerInterests(supabase, session.userId, controller.signal).then(
+      (items) => {
+        if (!controller.signal.aborted) setState({ session, items, error: null, saving: false })
+      },
+      (error: Error) => {
+        if (!controller.signal.aborted) setState({ session, items: [], error: error.message, saving: false })
+      },
+    )
+    return () => controller.abort()
+  }, [session, attempt])
+
+  async function change(action: (userId: string) => Promise<(items: CareerInterest[]) => CareerInterest[]>) {
+    if (!session || !current || current.error || activeMutations.current.has(session)) return false
+    activeMutations.current.add(session)
+    setState((previous) => previous?.session === session ? { ...previous, saving: true } : previous)
+    try {
+      const updateItems = await action(session.userId)
+      setState((previous) => previous?.session === session ? { ...previous, items: updateItems(previous.items) } : previous)
+      return true
+    } finally {
+      activeMutations.current.delete(session)
+      setState((previous) => previous?.session === session ? { ...previous, saving: false } : previous)
+    }
+  }
+
+  return {
+    items: current?.items ?? [],
+    loading: authLoading || Boolean(session && !current),
+    error: current?.error ?? null,
+    saving: current?.saving ?? false,
+    retry: () => {
+      if (!current?.error) return
+      setState(null)
+      setAttempt((value) => value + 1)
+    },
+    save: (careerSlug: string) => change(async (userId) => {
+      const item = await saveCareerInterest(supabase, userId, careerSlug)
+      return (items) => items.some(({ slug }) => slug === item.slug) ? items : [...items, item]
+    }),
+    remove: (careerSlug: string) => change(async (userId) => {
+      await removeCareerInterest(supabase, userId, careerSlug)
+      return (items) => items.filter(({ slug }) => slug !== careerSlug)
+    }),
+  }
+}
+
 export function CourseRegistrationsProvider({ children }: { children: ReactNode }) {
   const { user, loading: authLoading, recoveringPassword } = useAuth()
   const userId = recoveringPassword ? null : user?.id ?? null
@@ -25,6 +82,7 @@ export function CourseRegistrationsProvider({ children }: { children: ReactNode 
     () => userId ? { userId, writesInProgress: new Set() } : null,
     [userId],
   )
+  const careerInterest = useCareerInterest(session, authLoading)
   const [state, setState] = useState<RegistrationsState | null>(null)
   const [loadAttempt, setLoadAttempt] = useState(0)
   const current = state?.session === session ? state : null
@@ -33,7 +91,7 @@ export function CourseRegistrationsProvider({ children }: { children: ReactNode 
     if (!session) return
 
     const controller = new AbortController()
-    loadRegistrations(session.userId, controller.signal)
+    loadRegistrations(supabase, session.userId, controller.signal)
       .then((registrations) => {
         if (!controller.signal.aborted) {
           setState({ session, registrations, error: null, savingCourseIds: emptySavingCourseIds })
@@ -67,7 +125,7 @@ export function CourseRegistrationsProvider({ children }: { children: ReactNode 
       : previous)
 
     try {
-      await saveRegistration(session.userId, courseId, status)
+      await saveRegistration(supabase, session.userId, courseId, status)
       setState((previous) => {
         if (previous?.session !== session || !previous.registrations) return previous
 
@@ -97,6 +155,7 @@ export function CourseRegistrationsProvider({ children }: { children: ReactNode 
       savingCourseIds: current?.savingCourseIds ?? emptySavingCourseIds,
       retryLoad,
       saveCourseStatus,
+      careerInterest,
     }}>
       {children}
     </CourseRegistrationsContext.Provider>

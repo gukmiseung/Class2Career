@@ -15,7 +15,7 @@
 
 .learning-summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
   gap: 40px;
   margin-top: 36px;
 }
@@ -38,7 +38,7 @@
 .learning-courses { margin-top: 72px; }
 .learning-courses > p { margin: 0 0 20px; color: #65738b; font-size: 14px; }
 
-.learning-status-tabs { display: inline-flex; gap: 6px; margin-bottom: 18px; padding: 5px; border: 1px solid #d9e1ec; border-radius: 12px; background: rgba(255, 255, 255, .8); }
+.learning-status-tabs { display: inline-flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; padding: 5px; border: 1px solid #d9e1ec; border-radius: 12px; background: rgba(255, 255, 255, .8); }
 .learning-status-tabs button { min-height: 34px; padding: 0 16px; border: 0; border-radius: 8px; color: #65738b; background: transparent; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
 .learning-status-tabs button:hover { color: #2865ec; background: #f1f5fc; }
 .learning-status-tabs button[aria-pressed='true'] { color: #fff; background: #2865ec; }

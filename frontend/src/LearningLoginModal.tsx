@@ -5,9 +5,10 @@ import lockBody from './assets/login-lock-body.png'
 import lockKeyhole from './assets/login-lock-keyhole.png'
 import lockShackle from './assets/login-lock-shackle.png'
 
-export default function LearningLoginModal({ destination, onClose }: {
+export default function LearningLoginModal({ destination, onClose, description }: {
   destination: string
   onClose: () => void
+  description?: string
 }) {
   const closeButton = useRef<HTMLButtonElement>(null)
 
@@ -52,7 +53,7 @@ export default function LearningLoginModal({ destination, onClose }: {
           <img className="lock-keyhole" src={lockKeyhole} alt="" />
         </div>
         <h2 id="learning-login-title">로그인 후 이용해주세요</h2>
-        <p id="learning-login-description">로그인하면 나의 수강 과목과 학습 현황을<br />확인하고 관리할 수 있어요.</p>
+        <p id="learning-login-description">{description ?? <>로그인하면 나의 수강 과목과 학습 현황을<br />확인하고 관리할 수 있어요.</>}</p>
         <a className="learning-login-button" href={authHref('#login', destination)}>로그인하기</a>
         <p className="learning-signup-prompt">아직 계정이 없으신가요? <a href={authHref('#signup', destination)}>회원가입</a></p>
       </section>

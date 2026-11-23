@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict'
+import { execFileSync } from 'node:child_process'
+import { fileURLToPath } from 'node:url'
 import { test } from 'node:test'
 import {
   compareConceptCoverage,
@@ -7,6 +9,11 @@ import {
   type RequiredConcept,
 } from '../src/roadmap/compareConceptCoverage.ts'
 import type { RoadmapRequest } from '../src/roadmap/contracts'
+
+test('keeps the standalone frontend roadmap modules in sync with the server', () => {
+  const script = fileURLToPath(new URL('../scripts/sync-roadmap-shared.mjs', import.meta.url))
+  execFileSync(process.execPath, [script, '--check'])
+})
 
 const sql = { id: 'sql', name: 'SQL', priority: 1 }
 const api = { id: 'api', name: 'API 설계' }
